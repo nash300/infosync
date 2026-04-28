@@ -186,3 +186,8 @@ section h1 {
 .page-transition.fade-out {
   opacity: 0;
 }
+html, body {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
