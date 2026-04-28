@@ -1,0 +1,55 @@
+.hero-section {
+  position: relative;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.hero-slide {
+  background-size: cover;
+  background-position: center;
+  height: 100%;
+  width: 100%;
+  transition: background-image 0.8s ease-in-out;
+}
+
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hero-content {
+  color: #fff;
+  max-width: 700px;
+}
+
+.hero-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 2rem;
+  color: #fff;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0 1rem;
+}
+
+.hero-arrow.left {
+  left: 0;
+}
+
+.hero-arrow.right {
+  right: 0;
+}
+
+.hero-stats h4 {
+  font-weight: 700;
+}
+
+.hero-stats small {
+  opacity: 0.8;
+}
