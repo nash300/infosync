@@ -4,10 +4,10 @@ import { use, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 
 type PlaylistItem = {
-  type: "image" | "video";
   src: string;
-  duration: number | null;
 };
+
+const CACHE_NAME = "infosync-video-cache-v1";
 
 export default function DisplayPage({
   params,
@@ -23,49 +23,109 @@ export default function DisplayPage({
   const currentItem = playlist[index];
 
   const goToNextItem = () => {
-    setIndex((prev) => (prev + 1) % playlist.length);
+    setIndex((prev) => {
+      if (playlist.length === 0) return 0;
+      return (prev + 1) % playlist.length;
+    });
   };
 
-  // 🔥 Fetch playlist from Supabase
+  const cacheVideos = async (items: PlaylistItem[]) => {
+    if (!("caches" in window)) return;
+
+    const cache = await caches.open(CACHE_NAME);
+
+    for (const item of items) {
+      try {
+        const existing = await cache.match(item.src);
+
+        if (!existing) {
+          await cache.add(item.src);
+          console.log("Cached video:", item.src);
+        }
+      } catch (error) {
+        console.error("Could not cache video:", item.src, error);
+      }
+    }
+  };
+
+  const getCachedPlaylist = async () => {
+    if (!("localStorage" in window)) return [];
+
+    const saved = localStorage.getItem(`playlist-${deviceId}`);
+
+    if (!saved) return [];
+
+    try {
+      return JSON.parse(saved) as PlaylistItem[];
+    } catch {
+      return [];
+    }
+  };
+
+  const saveCachedPlaylist = (items: PlaylistItem[]) => {
+    localStorage.setItem(`playlist-${deviceId}`, JSON.stringify(items));
+  };
+
   useEffect(() => {
     const fetchPlaylist = async () => {
+      const { data: device, error: deviceError } = await supabase
+        .from("devices")
+        .select("id")
+        .eq("device_code", deviceId)
+        .single();
+      
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker
+          .register("/sw.js")
+          .then(() => console.log("Service Worker registered"))
+          .catch((err) => console.error("SW error:", err));
+      }
+      if (deviceError || !device) {
+        console.error("Device not found:", deviceError);
+
+        const cached = await getCachedPlaylist();
+        setPlaylist(cached);
+        setLoading(false);
+        return;
+      }
+
       const { data, error } = await supabase
         .from("playlists")
-        .select("*")
-        .eq("device_id", deviceId)
+        .select("src")
+        .eq("device_id", device.id)
         .order("order_index");
 
       if (error) {
-        console.error(error);
+        console.error("Playlist error:", error);
+
+        const cached = await getCachedPlaylist();
+        setPlaylist(cached);
         setLoading(false);
         return;
       }
 
-      if (!data || data.length === 0) {
-        setPlaylist([]);
-        setLoading(false);
-        return;
-      }
+      const freshPlaylist = data || [];
 
-      setPlaylist(data);
+      setPlaylist(freshPlaylist);
+      saveCachedPlaylist(freshPlaylist);
+      cacheVideos(freshPlaylist);
+
+      setIndex((currentIndex) => {
+        if (freshPlaylist.length === 0) return 0;
+        if (currentIndex >= freshPlaylist.length) return 0;
+        return currentIndex;
+      });
+
       setLoading(false);
     };
 
     fetchPlaylist();
+
+    const interval = setInterval(fetchPlaylist, 3000);
+
+    return () => clearInterval(interval);
   }, [deviceId]);
 
-  // ⏱️ Image timer
-  useEffect(() => {
-    if (!currentItem || currentItem.type !== "image") return;
-
-    const timer = setTimeout(() => {
-      goToNextItem();
-    }, currentItem.duration || 5000);
-
-    return () => clearTimeout(timer);
-  }, [currentItem]);
-
-  // ⏳ Loading state
   if (loading) {
     return (
       <main className="fixed inset-0 bg-black flex items-center justify-center text-white">
@@ -74,7 +134,6 @@ export default function DisplayPage({
     );
   }
 
-  // ⚠️ No content
   if (!currentItem) {
     return (
       <main className="fixed inset-0 bg-black flex items-center justify-center text-white text-center">
@@ -88,25 +147,17 @@ export default function DisplayPage({
 
   return (
     <main className="fixed inset-0 z-[9999] bg-black overflow-hidden">
-      {currentItem.type === "image" && (
-        <img
-          src={currentItem.src}
-          alt="Display content"
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-      )}
-
-      {currentItem.type === "video" && (
-        <video
-          key={currentItem.src}
-          src={currentItem.src}
-          autoPlay
-          muted
-          playsInline
-          onEnded={goToNextItem}
-          className="absolute inset-0 w-full h-full object-cover"
-        />
-      )}
+      <video
+        key={currentItem.src}
+        src={currentItem.src}
+        autoPlay
+        muted
+        playsInline
+        preload="auto"
+        onEnded={goToNextItem}
+        onError={goToNextItem}
+        className="absolute inset-0 h-full w-full object-cover"
+      />
 
       <div className="absolute top-2 left-2 text-white text-sm opacity-40">
         Device: {deviceId}
