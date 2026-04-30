@@ -58,8 +58,7 @@ export default function AdminDevicePage({
   };
 
   const uploadVideo = async () => {
-    if (!deviceUuid) return;
-    if (!videoFile) return;
+    if (!deviceUuid || !videoFile) return;
 
     if (videoFile.type !== "video/mp4") {
       alert("Please upload an MP4 video.");
@@ -68,12 +67,13 @@ export default function AdminDevicePage({
 
     setSaving(true);
 
-const safeFileName = videoFile.name
-  .toLowerCase()
-  .replace(/\s+/g, "-")
-  .replace(/[^a-z0-9.-]/g, "");
+    const safeFileName = videoFile.name
+      .toLowerCase()
+      .replace(/\s+/g, "-")
+      .replace(/[^a-z0-9.-]/g, "");
 
-const fileName = `${deviceId}/${Date.now()}-${safeFileName}`;
+    const fileName = `${deviceId}/${Date.now()}-${safeFileName}`;
+
     const { error: uploadError } = await supabase.storage
       .from("videos")
       .upload(fileName, videoFile);
@@ -135,7 +135,8 @@ const fileName = `${deviceId}/${Date.now()}-${safeFileName}`;
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-gray-100 p-8">
+      <main className="min-h-screen bg-gray-100 p-8 overflow-y-auto">
+        {" "}
         <p>Loading...</p>
       </main>
     );
@@ -152,10 +153,33 @@ const fileName = `${deviceId}/${Date.now()}-${safeFileName}`;
 
   return (
     <main className="min-h-screen bg-gray-100 p-8">
-      <div className="mx-auto max-w-3xl rounded-xl bg-white p-6 shadow">
+      <div className="mx-auto max-w-3xl rounded-xl bg-white p-6 shadow max-h-[90vh] overflow-y-auto">
+        {" "}
         <h1 className="text-2xl font-bold">Device: {deviceId}</h1>
-        <p className="mt-1 text-sm text-gray-500">Upload MP4 video content</p>
+        <p className="mt-1 text-sm text-gray-500">
+          Upload and manage video content
+        </p>
+        <div className="mt-6 rounded-lg border bg-black p-2">
+          <div className="mb-2 flex items-center justify-between text-white">
+            <p className="text-sm font-medium">Live screen preview</p>
 
+            <a
+              href={`/display/${deviceId}`}
+              target="_blank"
+              className="rounded bg-white px-3 py-1 text-xs text-black"
+            >
+              Open full screen
+            </a>
+          </div>
+
+          <div className="aspect-video overflow-hidden rounded bg-black">
+            <iframe
+              src={`/display/${deviceId}`}
+              className="h-full w-full border-0"
+              title="Display preview"
+            />
+          </div>
+        </div>
         <div className="mt-6 rounded-lg border p-4">
           <label className="block text-sm font-medium text-gray-700">
             Upload video (.mp4)
@@ -176,31 +200,24 @@ const fileName = `${deviceId}/${Date.now()}-${safeFileName}`;
             {saving ? "Uploading..." : "Upload video"}
           </button>
         </div>
-
         <div className="mt-6">
-          <h2 className="text-lg font-semibold">Current videos</h2>
+          <h2 className="text-lg font-semibold">Current playlist</h2>
 
           {playlist.length === 0 ? (
             <p className="mt-2 text-gray-500">No videos assigned yet.</p>
           ) : (
-            <div className="mt-3 space-y-3">
+            <div className="mt-3 space-y-4">
               {playlist.map((item) => (
-                <div
-                  key={item.id}
-                  className="flex items-center justify-between gap-4 rounded-lg border p-3"
-                >
-                  <div>
-                    <p className="text-sm font-medium">
-                      Order: {item.order_index}
-                    </p>
-                    <p className="break-all text-sm text-gray-500">
-                      {item.src}
-                    </p>
-                  </div>
+                <div key={item.id} className="rounded-lg border p-4">
+                  <p className="mb-2 text-sm text-gray-500">
+                    Order: {item.order_index}
+                  </p>
+
+                  <video src={item.src} controls className="w-full rounded" />
 
                   <button
                     onClick={() => deleteVideo(item.id)}
-                    className="rounded-lg bg-red-600 px-3 py-2 text-sm text-white"
+                    className="mt-3 rounded bg-red-600 px-3 py-2 text-sm text-white"
                   >
                     Delete
                   </button>
@@ -209,11 +226,22 @@ const fileName = `${deviceId}/${Date.now()}-${safeFileName}`;
             </div>
           )}
         </div>
-
         <div className="mt-6 rounded-lg bg-gray-50 p-4 text-sm text-gray-600">
-          Display URL:
-          <br />
-          <span className="font-mono">/display/{deviceId}</span>
+          <p>Display URL:</p>
+
+          <div className="mt-2 flex items-center justify-between gap-3">
+            <span className="font-mono text-xs break-all">
+              /display/{deviceId}
+            </span>
+
+            <a
+              href={`/display/${deviceId}`}
+              target="_blank"
+              className="rounded-lg bg-black px-3 py-2 text-xs text-white"
+            >
+              Preview
+            </a>
+          </div>
         </div>
       </div>
     </main>

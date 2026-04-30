@@ -19,14 +19,10 @@ export default function AdminLayout({
             </Link>
 
             <Link
-              href="/admin/devices"
+              href="/admin/customers"
               className="text-gray-700 hover:text-black"
             >
-              Devices
-            </Link>
-
-            <Link href="/login" className="text-gray-700 hover:text-black">
-              Login
+              Customers
             </Link>
           </nav>
         </div>

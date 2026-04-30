@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 import Link from "next/link";
 
@@ -13,16 +13,15 @@ type Device = {
 export default function CustomerDetailPage({
   params,
 }: {
-  params: { customerId: string };
+  params: Promise<{ customerId: string }>;
 }) {
-  const { customerId } = params;
+  const { customerId } = use(params);
 
   const [customerName, setCustomerName] = useState("");
   const [devices, setDevices] = useState<Device[]>([]);
   const [newDeviceName, setNewDeviceName] = useState("");
 
   const loadData = async () => {
-    // load customer
     const { data: customer } = await supabase
       .from("customers")
       .select("name")
@@ -31,11 +30,11 @@ export default function CustomerDetailPage({
 
     setCustomerName(customer?.name || "");
 
-    // load devices
     const { data: devicesData } = await supabase
       .from("devices")
-      .select("*")
-      .eq("customer_id", customerId);
+      .select("id, name, device_code")
+      .eq("customer_id", customerId)
+      .order("created_at", { ascending: false });
 
     setDevices(devicesData || []);
   };
@@ -49,25 +48,26 @@ export default function CustomerDetailPage({
       .replace(/[^a-z0-9-]/g, "");
 
     await supabase.from("devices").insert({
+      id: crypto.randomUUID(),
       name: newDeviceName,
       device_code: code,
       customer_id: customerId,
+      is_active: true,
     });
 
     setNewDeviceName("");
-    loadData();
+    await loadData();
   };
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [customerId]);
 
   return (
     <div className="mx-auto max-w-6xl p-6">
       <h1 className="text-3xl font-bold">{customerName}</h1>
       <p className="mt-2 text-gray-600">Manage devices for this customer.</p>
 
-      {/* Add device */}
       <div className="mt-6 rounded-xl bg-white p-6 shadow">
         <h2 className="text-lg font-semibold">Add device</h2>
 
@@ -88,7 +88,6 @@ export default function CustomerDetailPage({
         </div>
       </div>
 
-      {/* Device list */}
       <div className="mt-6 rounded-xl bg-white p-6 shadow">
         <h2 className="text-lg font-semibold">Devices</h2>
 
