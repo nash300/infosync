@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 
@@ -30,7 +29,7 @@ export default function AdminHomePage() {
   }, []);
 
   return (
-    <div className="mx-auto max-w-6xl p-6">
+    <div className="mx-auto max-w-6xl p-8">
       <div>
         <h1 className="text-3xl font-bold">Dashboard</h1>
         <p className="mt-2 text-gray-600">Overview of customers and screens.</p>
@@ -49,19 +48,6 @@ export default function AdminHomePage() {
           <p className="mt-2 text-4xl font-bold">
             {loading ? "..." : deviceCount}
           </p>
-        </div>
-      </div>
-
-      <div className="mt-8 rounded-xl bg-white p-6 shadow">
-        <h2 className="text-xl font-semibold">Quick actions</h2>
-
-        <div className="mt-4 flex flex-wrap gap-3">
-          <Link
-            href="/admin/customers"
-            className="rounded-lg bg-black px-4 py-2 text-white"
-          >
-            Manage customers
-          </Link>
         </div>
       </div>
     </div>
