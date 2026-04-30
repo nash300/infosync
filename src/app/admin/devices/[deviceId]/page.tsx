@@ -17,17 +17,22 @@ export default function AdminDevicePage({
   const { deviceId } = use(params);
 
   const [deviceUuid, setDeviceUuid] = useState<string | null>(null);
+  const [deviceName, setDeviceName] = useState("");
+  const [newDeviceName, setNewDeviceName] = useState("");
+
   const [playlist, setPlaylist] = useState<PlaylistItem[]>([]);
   const [videoFile, setVideoFile] = useState<File | null>(null);
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [renaming, setRenaming] = useState(false);
 
   const loadDeviceAndPlaylist = async () => {
     setLoading(true);
 
     const { data: device, error: deviceError } = await supabase
       .from("devices")
-      .select("id")
+      .select("id, name")
       .eq("device_code", deviceId)
       .single();
 
@@ -40,6 +45,8 @@ export default function AdminDevicePage({
     }
 
     setDeviceUuid(device.id);
+    setDeviceName(device.name || deviceId);
+    setNewDeviceName(device.name || deviceId);
 
     const { data, error } = await supabase
       .from("playlists")
@@ -55,6 +62,33 @@ export default function AdminDevicePage({
     }
 
     setLoading(false);
+  };
+
+  const renameDevice = async () => {
+    if (!deviceUuid) return;
+    if (!newDeviceName.trim()) {
+      alert("Device name is required");
+      return;
+    }
+
+    setRenaming(true);
+
+    const { error } = await supabase
+      .from("devices")
+      .update({
+        name: newDeviceName.trim(),
+      })
+      .eq("id", deviceUuid);
+
+    if (error) {
+      console.error("Rename device error:", error);
+      alert("Could not rename device");
+      setRenaming(false);
+      return;
+    }
+
+    await loadDeviceAndPlaylist();
+    setRenaming(false);
   };
 
   const uploadVideo = async () => {
@@ -135,8 +169,7 @@ export default function AdminDevicePage({
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-gray-100 p-8 overflow-y-auto">
-        {" "}
+      <main className="bg-gray-100 p-8">
         <p>Loading...</p>
       </main>
     );
@@ -144,7 +177,7 @@ export default function AdminDevicePage({
 
   if (!deviceUuid) {
     return (
-      <main className="min-h-screen bg-gray-100 p-8">
+      <main className="bg-gray-100 p-8">
         <h1 className="text-2xl font-bold">Device not found</h1>
         <p className="mt-2 text-gray-600">Device: {deviceId}</p>
       </main>
@@ -152,13 +185,34 @@ export default function AdminDevicePage({
   }
 
   return (
-    <main className="min-h-screen bg-gray-100 p-8">
-      <div className="mx-auto max-w-3xl rounded-xl bg-white p-6 shadow max-h-[90vh] overflow-y-auto">
-        {" "}
-        <h1 className="text-2xl font-bold">Device: {deviceId}</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          Upload and manage video content
-        </p>
+    <main className="bg-gray-100 p-8">
+      <div className="mx-auto max-w-3xl rounded-xl bg-white p-6 shadow">
+        <h1 className="text-2xl font-bold">{deviceName}</h1>
+
+        <p className="mt-1 text-sm text-gray-500">Device code: {deviceId}</p>
+
+        <div className="mt-6 rounded-lg border p-4">
+          <label className="block text-sm font-medium text-gray-700">
+            Rename device
+          </label>
+
+          <div className="mt-2 flex gap-2">
+            <input
+              value={newDeviceName}
+              onChange={(e) => setNewDeviceName(e.target.value)}
+              className="w-full rounded-lg border px-3 py-2"
+            />
+
+            <button
+              onClick={renameDevice}
+              disabled={renaming}
+              className="rounded-lg bg-black px-4 py-2 text-white disabled:opacity-50"
+            >
+              {renaming ? "Saving..." : "Save"}
+            </button>
+          </div>
+        </div>
+
         <div className="mt-6 rounded-lg border bg-black p-2">
           <div className="mb-2 flex items-center justify-between text-white">
             <p className="text-sm font-medium">Live screen preview</p>
@@ -180,6 +234,7 @@ export default function AdminDevicePage({
             />
           </div>
         </div>
+
         <div className="mt-6 rounded-lg border p-4">
           <label className="block text-sm font-medium text-gray-700">
             Upload video (.mp4)
@@ -200,6 +255,7 @@ export default function AdminDevicePage({
             {saving ? "Uploading..." : "Upload video"}
           </button>
         </div>
+
         <div className="mt-6">
           <h2 className="text-lg font-semibold">Current playlist</h2>
 
@@ -226,6 +282,7 @@ export default function AdminDevicePage({
             </div>
           )}
         </div>
+
         <div className="mt-6 rounded-lg bg-gray-50 p-4 text-sm text-gray-600">
           <p>Display URL:</p>
 

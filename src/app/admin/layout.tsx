@@ -6,9 +6,9 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-gray-100">
-      <header className="border-b bg-white">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+    <div className="h-screen bg-gray-100 overflow-hidden">
+      <header className="h-[65px] border-b bg-white">
+        <div className="mx-auto flex h-full max-w-6xl items-center justify-between px-6">
           <Link href="/admin" className="text-xl font-bold">
             InfoSync Admin
           </Link>
@@ -28,7 +28,7 @@ export default function AdminLayout({
         </div>
       </header>
 
-      <main>{children}</main>
+      <main className="h-[calc(100vh-65px)] overflow-y-auto">{children}</main>
     </div>
   );
 }
