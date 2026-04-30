@@ -1,8 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
+import Link from "next/link";
 
 type Device = {
   id: string;
@@ -10,59 +10,72 @@ type Device = {
   device_code: string;
 };
 
-export default function DevicesPage() {
-  const [devices, setDevices] = useState<Device[]>([]);
-  const [newName, setNewName] = useState("");
-  const [loading, setLoading] = useState(true);
+export default function CustomerDetailPage({
+  params,
+}: {
+  params: { customerId: string };
+}) {
+  const { customerId } = params;
 
-  const loadDevices = async () => {
-    const { data } = await supabase
+  const [customerName, setCustomerName] = useState("");
+  const [devices, setDevices] = useState<Device[]>([]);
+  const [newDeviceName, setNewDeviceName] = useState("");
+
+  const loadData = async () => {
+    // load customer
+    const { data: customer } = await supabase
+      .from("customers")
+      .select("name")
+      .eq("id", customerId)
+      .single();
+
+    setCustomerName(customer?.name || "");
+
+    // load devices
+    const { data: devicesData } = await supabase
       .from("devices")
       .select("*")
-      .order("created_at", { ascending: false });
+      .eq("customer_id", customerId);
 
-    setDevices(data || []);
-    setLoading(false);
+    setDevices(devicesData || []);
   };
 
   const createDevice = async () => {
-    if (!newName.trim()) return;
+    if (!newDeviceName.trim()) return;
 
-    const code = newName
+    const code = newDeviceName
       .toLowerCase()
       .replace(/\s+/g, "-")
       .replace(/[^a-z0-9-]/g, "");
 
     await supabase.from("devices").insert({
-      name: newName,
+      name: newDeviceName,
       device_code: code,
+      customer_id: customerId,
     });
 
-    setNewName("");
-    loadDevices();
+    setNewDeviceName("");
+    loadData();
   };
 
   useEffect(() => {
-    loadDevices();
+    loadData();
   }, []);
 
   return (
     <div className="mx-auto max-w-6xl p-6">
-      <h1 className="text-3xl font-bold">Devices</h1>
-      <p className="mt-2 text-gray-600">
-        Manage your screens and assign video content.
-      </p>
+      <h1 className="text-3xl font-bold">{customerName}</h1>
+      <p className="mt-2 text-gray-600">Manage devices for this customer.</p>
 
-      {/* Create device */}
+      {/* Add device */}
       <div className="mt-6 rounded-xl bg-white p-6 shadow">
-        <h2 className="text-lg font-semibold">Add new device</h2>
+        <h2 className="text-lg font-semibold">Add device</h2>
 
         <div className="mt-3 flex gap-2">
           <input
-            type="text"
-            placeholder="Device name (e.g. Store Screen)"
-            value={newName}
-            onChange={(e) => setNewName(e.target.value)}
+            value={newDeviceName}
+            onChange={(e) => setNewDeviceName(e.target.value)}
+            placeholder="Device name"
             className="w-full rounded-lg border px-3 py-2"
           />
 
@@ -77,11 +90,9 @@ export default function DevicesPage() {
 
       {/* Device list */}
       <div className="mt-6 rounded-xl bg-white p-6 shadow">
-        <h2 className="text-lg font-semibold">Your devices</h2>
+        <h2 className="text-lg font-semibold">Devices</h2>
 
-        {loading ? (
-          <p className="mt-4 text-gray-500">Loading...</p>
-        ) : devices.length === 0 ? (
+        {devices.length === 0 ? (
           <p className="mt-4 text-gray-500">No devices yet</p>
         ) : (
           <div className="mt-4 space-y-3">
