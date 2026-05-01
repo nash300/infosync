@@ -4,6 +4,27 @@ import { use, useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase/client";
 
+type Customer = {
+  id: string;
+  name: string;
+  email: string | null;
+  phone: string | null;
+  contact_person: string | null;
+  organisation_number: string | null;
+  address: string | null;
+  city: string | null;
+  country: string | null;
+  notes: string | null;
+  status: string | null;
+  onboarding_token: string | null;
+  onboarding_token_expires_at: string | null;
+  terms_accepted_at: string | null;
+  privacy_accepted_at: string | null;
+  marketing_consent: boolean | null;
+  payment_status: string | null;
+  activated_at: string | null;
+};
+
 type Device = {
   id: string;
   name: string | null;
@@ -17,34 +38,51 @@ export default function CustomerDetailPage({
 }) {
   const { customerId } = use(params);
 
-  const [customerName, setCustomerName] = useState("");
+  const [customer, setCustomer] = useState<Customer | null>(null);
   const [devices, setDevices] = useState<Device[]>([]);
   const [newDeviceName, setNewDeviceName] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  const generateDeviceCode = () => {
-    return Math.random().toString(36).substring(2, 8);
-  };
-
   const loadData = async () => {
     setLoading(true);
 
-    const { data: customer, error: customerError } = await supabase
+    const { data: customerData, error: customerError } = await supabase
       .from("customers")
-      .select("name")
+      .select(
+        `
+        id,
+        name,
+        email,
+        phone,
+        contact_person,
+        organisation_number,
+        address,
+        city,
+        country,
+        notes,
+        status,
+        onboarding_token,
+        onboarding_token_expires_at,
+        terms_accepted_at,
+        privacy_accepted_at,
+        marketing_consent,
+        payment_status,
+        activated_at
+      `,
+      )
       .eq("id", customerId)
       .single();
 
-    if (customerError || !customer) {
+    if (customerError || !customerData) {
       console.error("Customer error:", customerError);
-      setCustomerName("");
+      setCustomer(null);
       setDevices([]);
       setLoading(false);
       return;
     }
 
-    setCustomerName(customer.name);
+    setCustomer(customerData as Customer);
 
     const { data: devicesData, error: devicesError } = await supabase
       .from("devices")
@@ -70,37 +108,16 @@ export default function CustomerDetailPage({
 
     setSaving(true);
 
-    let created = false;
-    let attempts = 0;
+    const { error } = await supabase.from("devices").insert({
+      id: crypto.randomUUID(),
+      name: newDeviceName.trim(),
+      customer_id: customerId,
+      is_active: true,
+    });
 
-    while (!created && attempts < 5) {
-      attempts++;
-
-      const deviceCode = generateDeviceCode();
-
-      const { error } = await supabase.from("devices").insert({
-        id: crypto.randomUUID(),
-        name: newDeviceName.trim(),
-        device_code: deviceCode,
-        customer_id: customerId,
-        is_active: true,
-      });
-
-      if (!error) {
-        created = true;
-        break;
-      }
-
-      if (error.code !== "23505") {
-        console.error("Create device error:", error);
-        alert("Could not create device.");
-        setSaving(false);
-        return;
-      }
-    }
-
-    if (!created) {
-      alert("Could not generate a unique device code. Try again.");
+    if (error) {
+      console.error("Create device error:", error);
+      alert("Could not create device.");
       setSaving(false);
       return;
     }
@@ -109,6 +126,35 @@ export default function CustomerDetailPage({
     await loadData();
     setSaving(false);
   };
+
+const generateOnboardingLink = async () => {
+  if (!customer) return;
+
+  setSaving(true);
+
+  const token = crypto.randomUUID();
+  const expiresAt = new Date();
+  expiresAt.setDate(expiresAt.getDate() + 14);
+
+  const { error } = await supabase
+    .from("customers")
+    .update({
+      onboarding_token: token,
+      onboarding_token_expires_at: expiresAt.toISOString(),
+      status: "invited",
+    })
+    .eq("id", customer.id);
+
+  if (error) {
+    console.error("Generate onboarding link error:", error);
+    alert("Could not generate onboarding link.");
+    setSaving(false);
+    return;
+  }
+
+  await loadData();
+  setSaving(false);
+};
 
   useEffect(() => {
     loadData();
@@ -122,7 +168,7 @@ export default function CustomerDetailPage({
     );
   }
 
-  if (!customerName) {
+  if (!customer) {
     return (
       <div className="mx-auto max-w-6xl p-6">
         <h1 className="text-2xl font-bold">Customer not found</h1>
@@ -142,10 +188,65 @@ export default function CustomerDetailPage({
         ← Back to customers
       </Link>
 
-      <h1 className="mt-4 text-3xl font-bold">{customerName}</h1>
+      <h1 className="mt-4 text-3xl font-bold">{customer.name}</h1>
+
+      <span
+        className={`mt-3 inline-flex rounded-full px-3 py-1 text-sm font-semibold ${
+          customer.status === "active"
+            ? "bg-green-100 text-green-700"
+            : customer.status === "invited"
+              ? "bg-blue-100 text-blue-700"
+              : customer.status === "suspended"
+                ? "bg-red-100 text-red-700"
+                : customer.status === "completed_profile"
+                  ? "bg-purple-100 text-purple-700"
+                  : customer.status === "accepted_terms"
+                    ? "bg-yellow-100 text-yellow-700"
+                    : "bg-gray-100 text-gray-700"
+        }`}
+      >
+        {customer.status || "draft"}
+      </span>
+
       <p className="mt-2 text-gray-600">
-        Manage this customer’s display screens.
+        Manage this customer’s onboarding and display screens.
       </p>
+
+      <div className="mt-6 rounded-xl bg-white p-6 shadow">
+        <h2 className="text-lg font-semibold">Onboarding</h2>
+
+        <div className="mt-4 grid gap-3 text-sm md:grid-cols-2">
+          <p>
+            Onboarding token: {customer.onboarding_token || "Not generated yet"}
+          </p>
+
+          <p>
+            Token expires:{" "}
+            {customer.onboarding_token_expires_at || "Not generated yet"}
+          </p>
+
+          <p>Terms accepted: {customer.terms_accepted_at ? "Yes" : "No"}</p>
+
+          <p>Privacy accepted: {customer.privacy_accepted_at ? "Yes" : "No"}</p>
+
+          <p>Marketing consent: {customer.marketing_consent ? "Yes" : "No"}</p>
+
+          <p>Payment status: {customer.payment_status || "Not paid"}</p>
+        </div>
+
+        <button
+          onClick={generateOnboardingLink}
+          disabled={saving}
+          className="mt-4 rounded-lg bg-black px-4 py-2 text-sm text-white disabled:opacity-50"
+        >
+          {saving ? "Generating..." : "Generate onboarding link"}
+        </button>
+        {customer.onboarding_token && (
+          <p className="mt-3 break-all rounded-lg bg-gray-100 p-3 text-sm text-gray-700">
+            Onboarding link: /onboarding/{customer.onboarding_token}
+          </p>
+        )}
+      </div>
 
       <div className="mt-6 rounded-xl bg-white p-6 shadow">
         <h2 className="text-lg font-semibold">Add device</h2>

@@ -9,6 +9,14 @@ import DemoCTA from "@/components/DemoCTA";
 import Footer from "@/components/Footer";
 import useReveal from "@/hooks/useReveal";
 
+const navLinks = [
+  { href: "#hero", label: "Funktioner" },
+  { href: "#how-it-works", label: "Så fungerar det" },
+  { href: "#pricing", label: "Priser" },
+  { href: "#demo", label: "Demo" },
+  { href: "#kontakt", label: "Kontakt" },
+];
+
 export default function Home() {
   useReveal();
 
@@ -38,31 +46,13 @@ export default function Home() {
           </button>
 
           <ul className="navbar-nav ms-auto d-none d-lg-flex align-items-center gap-3">
-            <li className="nav-item">
-              <a className="nav-link" href="#hero">
-                Funktioner
-              </a>
-            </li>
-            <li className="nav-item">
-              <a className="nav-link" href="#how-it-works">
-                Så fungerar det
-              </a>
-            </li>
-            <li className="nav-item">
-              <a className="nav-link" href="#pricing">
-                Priser
-              </a>
-            </li>
-            <li className="nav-item">
-              <a className="nav-link" href="#demo">
-                Demo
-              </a>
-            </li>
-            <li className="nav-item">
-              <a className="nav-link" href="#kontakt">
-                Kontakt
-              </a>
-            </li>
+            {navLinks.map((link) => (
+              <li key={link.href} className="nav-item">
+                <a className="nav-link" href={link.href}>
+                  {link.label}
+                </a>
+              </li>
+            ))}
             <li className="nav-item">
               <button className="btn btn-dark rounded-pill px-4" type="button">
                 Boka demo
@@ -72,23 +62,20 @@ export default function Home() {
         </div>
 
         <div className={`mobile-menu ${menuOpen ? "open" : ""}`}>
-          <a href="#hero" onClick={() => setMenuOpen(false)}>
-            Funktioner
-          </a>
-          <a href="#how-it-works" onClick={() => setMenuOpen(false)}>
-            Så fungerar det
-          </a>
-          <a href="#pricing" onClick={() => setMenuOpen(false)}>
-            Priser
-          </a>
-          <a href="#demo" onClick={() => setMenuOpen(false)}>
-            Demo
-          </a>
-          <a href="#kontakt" onClick={() => setMenuOpen(false)}>
-            Kontakt
-          </a>
+          {navLinks.map((link) => (
+            <a
+              key={link.href}
+              href={link.href}
+              onClick={() => setMenuOpen(false)}
+            >
+              {link.label}
+            </a>
+          ))}
 
-          <button className="btn btn-dark rounded-pill w-100 mt-3" type="button">
+          <button
+            className="btn btn-dark rounded-pill w-100 mt-3"
+            type="button"
+          >
             Boka demo
           </button>
         </div>

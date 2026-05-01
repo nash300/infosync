@@ -19,14 +19,8 @@ export default function CustomersPage() {
   const [loading, setLoading] = useState(true);
 
   const [name, setName] = useState("");
-  const [contactPerson, setContactPerson] = useState("");
   const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [organisationNumber, setOrganisationNumber] = useState("");
-  const [address, setAddress] = useState("");
-  const [city, setCity] = useState("");
-  const [country, setCountry] = useState("Sweden");
-  const [notes, setNotes] = useState("");
+
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -49,7 +43,6 @@ export default function CustomersPage() {
   };
 
   const isValidEmail = (value: string) => {
-    if (!value.trim()) return true;
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
   };
 
@@ -61,7 +54,12 @@ export default function CustomersPage() {
       return;
     }
 
-    if (email && !isValidEmail(email)) {
+    if (!email.trim()) {
+      setMessage("Email is required.");
+      return;
+    }
+
+    if (!isValidEmail(email)) {
       setMessage("Email address is not valid.");
       return;
     }
@@ -71,15 +69,8 @@ export default function CustomersPage() {
     const { error } = await supabase.from("customers").insert({
       id: crypto.randomUUID(),
       name: name.trim(),
-      contact_person: contactPerson.trim() || null,
-      email: email.trim() || null,
-      phone: phone.trim() || null,
-      organisation_number: organisationNumber.trim() || null,
-      address: address.trim() || null,
-      city: city.trim() || null,
-      country: country.trim() || "Sweden",
-      notes: notes.trim() || null,
-      status: "active",
+      email: email.trim(),
+      status: "draft",
     });
 
     if (error) {
@@ -90,15 +81,8 @@ export default function CustomersPage() {
     }
 
     setName("");
-    setContactPerson("");
     setEmail("");
-    setPhone("");
-    setOrganisationNumber("");
-    setAddress("");
-    setCity("");
-    setCountry("Sweden");
-    setNotes("");
-    setMessage("Customer created successfully.");
+    setMessage("Customer draft created successfully.");
 
     await loadCustomers();
     setSaving(false);
@@ -122,15 +106,15 @@ export default function CustomersPage() {
     <div className="mx-auto max-w-6xl p-8">
       <h1 className="text-3xl font-bold">Customers</h1>
       <p className="mt-2 text-gray-600">
-        Add customers, search records, and open customer profiles.
+        Create customer drafts, search records, and open customer profiles.
       </p>
 
       <div className="mt-8 rounded-xl bg-white p-6 shadow">
-        <h2 className="text-xl font-semibold">Add new customer</h2>
+        <h2 className="text-xl font-semibold">Create customer draft</h2>
 
         <div className="mt-4 grid gap-4 md:grid-cols-2">
           <div>
-            <label className="text-sm font-medium">Customer name *</label>
+            <label className="text-sm font-medium">Company name *</label>
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -140,84 +124,15 @@ export default function CustomersPage() {
           </div>
 
           <div>
-            <label className="text-sm font-medium">Contact person</label>
+            <label className="text-sm font-medium">Contact email *</label>
             <input
-              value={contactPerson}
-              onChange={(e) => setContactPerson(e.target.value)}
-              placeholder="Example: Anna Svensson"
-              className="mt-1 w-full rounded-lg border px-3 py-2"
-            />
-          </div>
-
-          <div>
-            <label className="text-sm font-medium">Email</label>
-            <input
+              type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="customer@example.com"
               className="mt-1 w-full rounded-lg border px-3 py-2"
             />
           </div>
-
-          <div>
-            <label className="text-sm font-medium">Phone</label>
-            <input
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="+46..."
-              className="mt-1 w-full rounded-lg border px-3 py-2"
-            />
-          </div>
-
-          <div>
-            <label className="text-sm font-medium">Organisation number</label>
-            <input
-              value={organisationNumber}
-              onChange={(e) => setOrganisationNumber(e.target.value)}
-              placeholder="Example: 559123-4567"
-              className="mt-1 w-full rounded-lg border px-3 py-2"
-            />
-          </div>
-
-          <div>
-            <label className="text-sm font-medium">Country</label>
-            <input
-              value={country}
-              onChange={(e) => setCountry(e.target.value)}
-              className="mt-1 w-full rounded-lg border px-3 py-2"
-            />
-          </div>
-
-          <div>
-            <label className="text-sm font-medium">City</label>
-            <input
-              value={city}
-              onChange={(e) => setCity(e.target.value)}
-              placeholder="Example: Malmö"
-              className="mt-1 w-full rounded-lg border px-3 py-2"
-            />
-          </div>
-
-          <div>
-            <label className="text-sm font-medium">Address</label>
-            <input
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              placeholder="Street address"
-              className="mt-1 w-full rounded-lg border px-3 py-2"
-            />
-          </div>
-        </div>
-
-        <div className="mt-4">
-          <label className="text-sm font-medium">Notes</label>
-          <textarea
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            placeholder="Internal notes about customer, setup, agreement, etc."
-            className="mt-1 w-full rounded-lg border px-3 py-2"
-            rows={3}
-          />
         </div>
 
         {message && (
@@ -231,7 +146,7 @@ export default function CustomersPage() {
           disabled={saving}
           className="mt-4 rounded-lg bg-black px-4 py-2 text-white disabled:opacity-50"
         >
-          {saving ? "Creating..." : "Create customer"}
+          {saving ? "Creating..." : "Create customer draft"}
         </button>
       </div>
 
@@ -268,7 +183,19 @@ export default function CustomersPage() {
 
                   <div className="text-right text-sm text-gray-500">
                     <p>Devices: {customer.devices?.[0]?.count || 0}</p>
-                    <p>Status: {customer.status || "active"}</p>
+                    <span
+                      className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
+                        customer.status === "active"
+                          ? "bg-green-100 text-green-700"
+                          : customer.status === "invited"
+                            ? "bg-blue-100 text-blue-700"
+                            : customer.status === "suspended"
+                              ? "bg-red-100 text-red-700"
+                              : "bg-gray-100 text-gray-700"
+                      }`}
+                    >
+                      {customer.status || "draft"}
+                    </span>{" "}
                   </div>
                 </div>
               </Link>
