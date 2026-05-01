@@ -59,6 +59,8 @@ export async function POST(request: Request) {
       .update({
         status: "suspended",
         payment_status: "failed",
+        inactive_reason: "payment_failed",
+        cancellation_source: "stripe",
       })
       .eq("stripe_customer_id", customerId)
       .select();
@@ -82,6 +84,9 @@ export async function POST(request: Request) {
       .update({
         status: "suspended",
         payment_status: "cancelled",
+        inactive_reason: "subscription_cancelled",
+        cancelled_at: new Date().toISOString(),
+        cancellation_source: "stripe",
       })
       .eq("stripe_customer_id", customerId);
 

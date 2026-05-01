@@ -25,6 +25,9 @@ type Customer = {
   stripe_customer_id: string | null;
   stripe_subscription_id: string | null;
   activated_at: string | null;
+  inactive_reason: string | null;
+  cancelled_at: string | null;
+  cancellation_source: string | null;
 };
 
 type Device = {
@@ -72,7 +75,10 @@ export default function CustomerDetailPage({
         payment_status,
         stripe_customer_id,
         stripe_subscription_id,
-        activated_at
+        activated_at,
+        inactive_reason,
+        cancelled_at,
+        cancellation_source
       `,
       )
       .eq("id", customerId)
@@ -143,12 +149,54 @@ export default function CustomerDetailPage({
       .from("customers")
       .update({
         status: "suspended",
+        inactive_reason: "manual_suspend",
+        cancellation_source: "admin",
       })
       .eq("id", customer.id);
 
     if (error) {
       console.error("Suspend customer error:", error);
       alert("Could not suspend customer.");
+      setSaving(false);
+      return;
+    }
+
+    await loadData();
+    setSaving(false);
+  };
+
+  const cancelSubscription = async () => {
+    if (!customer) return;
+
+    if (!customer.stripe_subscription_id) {
+      alert("No Stripe subscription found.");
+      return;
+    }
+
+    const confirmed = confirm(
+      "Cancel this customer's Stripe subscription and suspend the customer?",
+    );
+
+    if (!confirmed) return;
+
+    setSaving(true);
+
+    const response = await fetch("/api/stripe/cancel-subscription", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        customerId: customer.id,
+        subscriptionId: customer.stripe_subscription_id,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.error("Cancel subscription error:", data);
+      alert(data.error || "Could not cancel subscription.");
       setSaving(false);
       return;
     }
@@ -169,6 +217,9 @@ export default function CustomerDetailPage({
       .from("customers")
       .update({
         status: "active",
+        inactive_reason: null,
+        cancelled_at: null,
+        cancellation_source: null,
       })
       .eq("id", customer.id);
 
@@ -296,6 +347,9 @@ export default function CustomerDetailPage({
           </p>
 
           <p>Activated at: {customer.activated_at || "Not active yet"}</p>
+          <p>Inactive reason: {customer.inactive_reason || "None"}</p>
+          <p>Cancelled at: {customer.cancelled_at || "Not cancelled"}</p>
+          <p>Cancellation source: {customer.cancellation_source || "None"}</p>
         </div>
 
         {customer.status === "active" ? (
@@ -307,10 +361,20 @@ export default function CustomerDetailPage({
             <button
               onClick={suspendCustomer}
               disabled={saving}
-              className="mt-4 rounded-lg bg-red-600 px-4 py-2 text-sm text-white disabled:opacity-50"
+              className="mt-4 rounded-lg bg-yellow-600 px-4 py-2 text-sm text-white disabled:opacity-50"
             >
               {saving ? "Saving..." : "Suspend customer"}
             </button>
+
+            {customer.stripe_subscription_id && (
+              <button
+                onClick={cancelSubscription}
+                disabled={saving}
+                className="ml-3 mt-4 rounded-lg bg-red-800 px-4 py-2 text-sm text-white disabled:opacity-50"
+              >
+                {saving ? "Saving..." : "Cancel subscription"}
+              </button>
+            )}
           </>
         ) : customer.status === "suspended" ? (
           <>
