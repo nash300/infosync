@@ -45,46 +45,67 @@ export default function Hero() {
 
   return (
     <section className="hero-section">
-      <div className="hero-copy">
-        <button className="hero-arrow left" onClick={prevSlide}>
-          ‹
-        </button>
+      <button
+        className="hero-arrow left"
+        onClick={prevSlide}
+        type="button"
+        aria-label="Previous slide"
+      >
+        ‹
+      </button>
 
-        <div className="hero-content text-start">
-          <h1>{title}</h1>
+      <div className="hero-shell">
+        <div className="hero-copy">
+          <div className="hero-content">
+            <p className="hero-kicker">Digital signage för moderna företag</p>
 
-          <p>{subtitle}</p>
+            <h1>{title}</h1>
 
-          <div className="hero-actions">
-            <a href="#kontakt" className="hero-primary">
-              Kontakta oss
-            </a>
-            <a href="#how-it-works" className="hero-secondary">
-              Se hur det fungerar
-            </a>
-          </div>
+            <p className="hero-subtitle">{subtitle}</p>
 
-          <div className="hero-stats">
-            <div>
-              <strong>25+</strong>
-              <span>Kunder</span>
-            </div>
-            <div>
-              <strong>80+</strong>
-              <span>Skärmar</span>
-            </div>
-            <div>
-              <strong>99%</strong>
-              <span>Uptime</span>
+            <div className="hero-actions">
+              <a href="#kontakt" className="hero-primary">
+                Kontakta oss
+              </a>
+
+              <a href="#how-it-works" className="hero-secondary">
+                Se hur det fungerar
+              </a>
             </div>
           </div>
         </div>
+
+        <div className="hero-visual">
+          <div
+            className="hero-image"
+            style={{ backgroundImage: `url(${image})` }}
+          />
+
+          <div className="hero-shape shape-one" />
+          <div className="hero-shape shape-two" />
+          <div className="hero-shape shape-three" />
+        </div>
       </div>
 
-      <div className="hero-image" style={{ backgroundImage: `url(${image})` }}>
-        <button className="hero-arrow right" onClick={nextSlide}>
-          ›
-        </button>
+      <button
+        className="hero-arrow right"
+        onClick={nextSlide}
+        type="button"
+        aria-label="Next slide"
+      >
+        ›
+      </button>
+
+      <div className="hero-dots" aria-label="Hero slides">
+        {slides.map((slide, index) => (
+          <button
+            key={slide.title}
+            type="button"
+            className={index === current ? "hero-dot active" : "hero-dot"}
+            onClick={() => setCurrent(index)}
+            aria-label={`Go to slide ${index + 1}`}
+          />
+        ))}
       </div>
     </section>
   );
