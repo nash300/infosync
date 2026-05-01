@@ -22,6 +22,8 @@ type Customer = {
   privacy_accepted_at: string | null;
   marketing_consent: boolean | null;
   payment_status: string | null;
+  stripe_customer_id: string | null;
+  stripe_subscription_id: string | null;
   activated_at: string | null;
 };
 
@@ -68,6 +70,8 @@ export default function CustomerDetailPage({
         privacy_accepted_at,
         marketing_consent,
         payment_status,
+        stripe_customer_id,
+        stripe_subscription_id,
         activated_at
       `,
       )
@@ -127,34 +131,34 @@ export default function CustomerDetailPage({
     setSaving(false);
   };
 
-const generateOnboardingLink = async () => {
-  if (!customer) return;
+  const generateOnboardingLink = async () => {
+    if (!customer) return;
 
-  setSaving(true);
+    setSaving(true);
 
-  const token = crypto.randomUUID();
-  const expiresAt = new Date();
-  expiresAt.setDate(expiresAt.getDate() + 14);
+    const token = crypto.randomUUID();
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 14);
 
-  const { error } = await supabase
-    .from("customers")
-    .update({
-      onboarding_token: token,
-      onboarding_token_expires_at: expiresAt.toISOString(),
-      status: "invited",
-    })
-    .eq("id", customer.id);
+    const { error } = await supabase
+      .from("customers")
+      .update({
+        onboarding_token: token,
+        onboarding_token_expires_at: expiresAt.toISOString(),
+        status: "invited",
+      })
+      .eq("id", customer.id);
 
-  if (error) {
-    console.error("Generate onboarding link error:", error);
-    alert("Could not generate onboarding link.");
+    if (error) {
+      console.error("Generate onboarding link error:", error);
+      alert("Could not generate onboarding link.");
+      setSaving(false);
+      return;
+    }
+
+    await loadData();
     setSaving(false);
-    return;
-  }
-
-  await loadData();
-  setSaving(false);
-};
+  };
 
   useEffect(() => {
     loadData();
@@ -232,19 +236,38 @@ const generateOnboardingLink = async () => {
           <p>Marketing consent: {customer.marketing_consent ? "Yes" : "No"}</p>
 
           <p>Payment status: {customer.payment_status || "Not paid"}</p>
+          <p>
+            Stripe customer: {customer.stripe_customer_id || "Not created yet"}
+          </p>
+
+          <p>
+            Stripe subscription:{" "}
+            {customer.stripe_subscription_id || "Not created yet"}
+          </p>
+
+          <p>Activated at: {customer.activated_at || "Not active yet"}</p>
         </div>
 
-        <button
-          onClick={generateOnboardingLink}
-          disabled={saving}
-          className="mt-4 rounded-lg bg-black px-4 py-2 text-sm text-white disabled:opacity-50"
-        >
-          {saving ? "Generating..." : "Generate onboarding link"}
-        </button>
-        {customer.onboarding_token && (
-          <p className="mt-3 break-all rounded-lg bg-gray-100 p-3 text-sm text-gray-700">
-            Onboarding link: /onboarding/{customer.onboarding_token}
+        {customer.status === "active" ? (
+          <p className="mt-4 rounded-lg bg-green-50 p-3 text-sm text-green-700">
+            Onboarding completed. Customer is active and paid.
           </p>
+        ) : (
+          <>
+            <button
+              onClick={generateOnboardingLink}
+              disabled={saving}
+              className="mt-4 rounded-lg bg-black px-4 py-2 text-sm text-white disabled:opacity-50"
+            >
+              {saving ? "Generating..." : "Generate onboarding link"}
+            </button>
+
+            {customer.onboarding_token && (
+              <p className="mt-3 break-all rounded-lg bg-gray-100 p-3 text-sm text-gray-700">
+                Onboarding link: /onboarding/{customer.onboarding_token}
+              </p>
+            )}
+          </>
         )}
       </div>
 
