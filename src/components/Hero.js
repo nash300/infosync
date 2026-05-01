@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import "./Hero.css";
 
 const slides = [
@@ -21,8 +21,8 @@ const slides = [
   },
   {
     image: "./salon4.jpg",
-    title: "rge erhger hgergh",
-    subtitle: "Professionell digital signage för salonger och butiker.",
+    title: "Gör varje skärm till en del av varumärket",
+    subtitle: "Visa priser, tjänster och kampanjer med en premiumkänsla.",
   },
 ];
 
@@ -33,6 +33,7 @@ export default function Hero() {
     const timer = setInterval(() => {
       setCurrent((prev) => (prev + 1) % slides.length);
     }, 5000);
+
     return () => clearInterval(timer);
   }, []);
 
@@ -43,46 +44,47 @@ export default function Hero() {
   const { image, title, subtitle } = slides[current];
 
   return (
-    <section id="hero" className="hero-section">
-      <div className="hero-slide" style={{ backgroundImage: `url(${image})` }}>
-        <div className="hero-overlay">
-          <div className="hero-content container text-start">
-            <span className="badge bg-success mb-3">För salonger</span>
-            <h1 className="fw-bold mb-3">{title}</h1>
-            <p className="text-light mb-4">{subtitle}</p>
+    <section className="hero-section">
+      <div className="hero-copy">
+        <button className="hero-arrow left" onClick={prevSlide}>
+          ‹
+        </button>
 
-            <div className="d-flex gap-3">
-              <button className="btn btn-light rounded-pill px-4">
-                Boka demo
-              </button>
-              <button className="btn btn-outline-light rounded-pill px-4">
-                Se hur det fungerar
-              </button>
-            </div>
+        <div className="hero-content text-start">
+          <h1>{title}</h1>
 
-            <div className="hero-stats mt-5 d-flex gap-5 text-light">
-              <div>
-                <h4>25+</h4>
-                <small>Kunder</small>
-              </div>
-              <div>
-                <h4>80+</h4>
-                <small>Skärmar</small>
-              </div>
-              <div>
-                <h4>99%</h4>
-                <small>Uptime</small>
-              </div>
-            </div>
+          <p>{subtitle}</p>
+
+          <div className="hero-actions">
+            <a href="#kontakt" className="hero-primary">
+              Kontakta oss
+            </a>
+            <a href="#how-it-works" className="hero-secondary">
+              Se hur det fungerar
+            </a>
           </div>
 
-          <button className="hero-arrow left" onClick={prevSlide}>
-            ‹
-          </button>
-          <button className="hero-arrow right" onClick={nextSlide}>
-            ›
-          </button>
+          <div className="hero-stats">
+            <div>
+              <strong>25+</strong>
+              <span>Kunder</span>
+            </div>
+            <div>
+              <strong>80+</strong>
+              <span>Skärmar</span>
+            </div>
+            <div>
+              <strong>99%</strong>
+              <span>Uptime</span>
+            </div>
+          </div>
         </div>
+      </div>
+
+      <div className="hero-image" style={{ backgroundImage: `url(${image})` }}>
+        <button className="hero-arrow right" onClick={nextSlide}>
+          ›
+        </button>
       </div>
     </section>
   );

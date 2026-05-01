@@ -24,14 +24,25 @@ export default function Home() {
 
   return (
     <div className="min-vh-100 bg-white text-dark overflow-auto">
-      <nav className="navbar navbar-light bg-white shadow-sm py-3 fixed-top">
+      <nav className="navbar navbar-light navbar-glass fixed-top">
         <div className="container d-flex align-items-center justify-content-between">
           <a
-            className="navbar-brand fw-bold fs-4"
+            className="navbar-brand brand-logo"
             href="#hero"
             onClick={() => setMenuOpen(false)}
           >
-            Infosync
+            <span className="brand-logo-inner">
+              <img
+                src="/brand/infosync-logo1.png"
+                alt=""
+                className="brand-mark"
+              />
+
+              <span className="brand-wordmark" aria-label="InfoSync">
+                <span className="brand-info">INFO</span>
+                <span className="brand-sync">SYNC</span>
+              </span>
+            </span>
           </a>
 
           <button
@@ -56,10 +67,10 @@ export default function Home() {
 
             <li className="nav-item">
               <a
-                href="#demo"
+                href="#kontakt"
                 className="btn btn-dark rounded-pill px-4 fw-semibold"
               >
-                Boka demo
+                Kontakta oss
               </a>
             </li>
           </ul>
@@ -77,11 +88,11 @@ export default function Home() {
           ))}
 
           <a
-            href="#demo"
+            href="#kontakt"
             onClick={() => setMenuOpen(false)}
             className="btn btn-dark rounded-pill w-100 mt-3"
           >
-            Boka demo
+            Kontakta oss
           </a>
         </div>
       </nav>
