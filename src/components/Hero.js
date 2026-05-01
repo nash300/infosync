@@ -3,16 +3,19 @@ import "./Hero.css";
 
 const slides = [
   {
-    image: "./salon1.jpg",
-    title: "Förvandla din TV till en säljande skärm",
-    subtitle:
-      "Priser, erbjudanden och stilinspiration – uppdatera direkt från mobilen.",
+    image: "./window_screen1.jpg",
+    title: "Förvandla ditt fönster till en säljare",
+    subtitle: "Använd glasytan som en kraftfull reklamplats.",
   },
   {
     image: "./salon2.jpg",
-    title: "Visa kampanjer och erbjudanden i realtid",
-    subtitle:
-      "Infosync gör det enkelt att uppdatera dina skärmar var du än är.",
+    title: "Ingen teknik. Inget krångel.",
+    subtitle: "Plugga in – vi tar hand om resten.",
+  },
+  {
+    image: "./window_screen2.jpg",
+    title: "Din skärm arbetar för dig – dygnet runt",
+    subtitle: "Till en kostnad lägre än en Netflix-prenumeration",
   },
   {
     image: "./salon3.jpg",
@@ -61,7 +64,7 @@ export default function Hero() {
 
             <h1>{title}</h1>
 
-            <p className="hero-subtitle">{subtitle}</p>
+            <h3 className="hero-subtitle">{subtitle}</h3>
 
             <div className="hero-actions">
               <a href="#kontakt" className="hero-primary">
@@ -82,8 +85,6 @@ export default function Hero() {
           />
 
           <div className="hero-shape shape-one" />
-          <div className="hero-shape shape-two" />
-          <div className="hero-shape shape-three" />
         </div>
       </div>
 

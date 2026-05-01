@@ -73,7 +73,7 @@
   hyphens: auto;
 }
 
-.hero-subtitle {
+.hero-subtitle h3 {
   margin: 0;
   max-width: 420px;
   color: #4b5b70;
@@ -139,43 +139,65 @@
   transition: background-image 0.8s ease-in-out;
 }
 
+
+
 .hero-visual::after {
   content: "";
   position: absolute;
   inset: 0;
+  z-index: 1;
+  pointer-events: none;
   background:
-    linear-gradient(90deg, rgba(255, 138, 0, 0.92), rgba(255, 61, 0, 0.48)),
+    linear-gradient(
+      90deg,
+      rgba(34, 0, 255, 0.766),
+      rgba(255, 61, 0, 0.38)
+    ),
     radial-gradient(
-      circle at 80% 20%,
-      rgba(255, 255, 255, 0.2),
-      transparent 28%
+      circle at 78% 18%,
+      rgba(255, 255, 255, 0.34),
+      transparent 32%
+    ),
+    linear-gradient(
+      120deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.02) 30%,
+      rgba(255, 255, 255, 0.42) 48%,
+      rgba(255, 255, 255, 0.08) 66%,
+      transparent 100%
     );
-  mix-blend-mode: multiply;
+  mix-blend-mode: soft-light;
 }
+
+
+
+
+
+
+
+
 
 .hero-shape {
   position: absolute;
   z-index: 2;
-  top: -12%;
-  bottom: -12%;
-  width: 34%;
+  top: -16%;
+  bottom: -16%;
+  width: 38%;
   border-radius: 999px;
-  transform: rotate(8deg);
+  transform: rotate(9deg);
+  filter: blur(1px);
+  pointer-events: none;
 }
 
 .shape-one {
-  left: -8%;
-  background: #ffffff;
-}
-
-.shape-two {
-  left: 24%;
-  background: rgba(255, 255, 255, 0.18);
-}
-
-.shape-three {
-  right: 10%;
-  background: rgba(255, 255, 255, 0.12);
+  left: -30%;
+  background: linear-gradient(
+    105deg,
+    rgba(255, 255, 255, 0.98) 0%,
+    rgb(255, 255, 255) 42%,
+    rgb(255, 255, 255) 72%,
+    rgb(255, 255, 255) 100%
+  );
 }
 
 .hero-arrow {
@@ -226,8 +248,8 @@
 }
 
 .hero-dot {
-  width: 0.60rem;
-  height: 0.60rem;
+  width: 0.6rem;
+  height: 0.6rem;
   padding: 0;
   border: 0;
   border-radius: 999px;
