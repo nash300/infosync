@@ -49,6 +49,23 @@ export default function CustomerDetailPage({
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
+  const formatInactiveReason = (reason: string | null) => {
+    if (reason === "manual_suspend") return "Manually suspended";
+    if (reason === "payment_failed") return "Payment failed";
+    if (reason === "subscription_cancelled") return "Subscription cancelled";
+    if (reason === "customer_cancelled") return "Cancelled by customer";
+
+    return "None";
+  };
+
+  const formatCancellationSource = (source: string | null) => {
+    if (source === "admin") return "Admin";
+    if (source === "customer") return "Customer";
+    if (source === "stripe") return "Stripe";
+
+    return "None";
+  };
+
   const loadData = async () => {
     setLoading(true);
 
@@ -347,9 +364,14 @@ export default function CustomerDetailPage({
           </p>
 
           <p>Activated at: {customer.activated_at || "Not active yet"}</p>
-          <p>Inactive reason: {customer.inactive_reason || "None"}</p>
+          <p>
+            Inactive reason: {formatInactiveReason(customer.inactive_reason)}
+          </p>
           <p>Cancelled at: {customer.cancelled_at || "Not cancelled"}</p>
-          <p>Cancellation source: {customer.cancellation_source || "None"}</p>
+          <p>
+            Cancellation source:{" "}
+            {formatCancellationSource(customer.cancellation_source)}
+          </p>
         </div>
 
         {customer.status === "active" ? (

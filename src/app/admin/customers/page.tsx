@@ -16,6 +16,15 @@ type Customer = {
 export default function CustomersPage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const statusFilters = [
+    { value: "all", label: "All" },
+    { value: "draft", label: "Draft" },
+    { value: "invited", label: "Invited" },
+    { value: "accepted_terms", label: "Accepted terms" },
+    { value: "active", label: "Active" },
+    { value: "suspended", label: "Suspended" },
+  ];
   const [loading, setLoading] = useState(true);
 
   const [name, setName] = useState("");
@@ -95,10 +104,14 @@ export default function CustomersPage() {
   const filteredCustomers = customers.filter((customer) => {
     const value = search.toLowerCase();
 
+    const matchesStatus =
+      statusFilter === "all" || customer.status === statusFilter;
+
     return (
-      customer.name.toLowerCase().includes(value) ||
-      customer.email?.toLowerCase().includes(value) ||
-      customer.phone?.toLowerCase().includes(value)
+      matchesStatus &&
+      (customer.name.toLowerCase().includes(value) ||
+        customer.email?.toLowerCase().includes(value) ||
+        customer.phone?.toLowerCase().includes(value))
     );
   });
 
@@ -152,6 +165,22 @@ export default function CustomersPage() {
 
       <div className="mt-8 rounded-xl bg-white p-6 shadow">
         <h2 className="text-xl font-semibold">Search customer</h2>
+
+        <div className="mt-4 flex flex-wrap gap-2">
+          {statusFilters.map((status) => (
+            <button
+              key={status.value}
+              onClick={() => setStatusFilter(status.value)}
+              className={`rounded-full px-3 py-1 text-sm ${
+                statusFilter === status.value
+                  ? "bg-black text-white"
+                  : "bg-gray-100 text-gray-700"
+              }`}
+            >
+              {status.label}
+            </button>
+          ))}
+        </div>
 
         <input
           value={search}
