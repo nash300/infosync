@@ -257,7 +257,13 @@ export default function OnboardingPage({
               checked={acceptedTerms}
               onChange={(e) => setAcceptedTerms(e.target.checked)}
             />
-            <span>I accept the Terms & Conditions *</span>
+            <span>
+              I accept the{" "}
+              <a href="/terms" target="_blank" className="underline">
+                Terms & Conditions
+              </a>{" "}
+              *
+            </span>
           </label>
 
           <label className="flex gap-2">
@@ -266,7 +272,13 @@ export default function OnboardingPage({
               checked={acceptedPrivacy}
               onChange={(e) => setAcceptedPrivacy(e.target.checked)}
             />
-            <span>I accept the Privacy Policy *</span>
+            <span>
+              I accept the{" "}
+              <a href="/privacy" target="_blank" className="underline">
+                Privacy Policy
+              </a>{" "}
+              *
+            </span>
           </label>
 
           <label className="flex gap-2">

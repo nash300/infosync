@@ -49,5 +49,46 @@ export async function POST(request: Request) {
     }
   }
 
+  if (event.type === "invoice.payment_failed") {
+    const invoice = event.data.object as Stripe.Invoice;
+
+    const customerId = invoice.customer;
+
+    const { data, error } = await supabaseAdmin
+      .from("customers")
+      .update({
+        status: "suspended",
+        payment_status: "failed",
+      })
+      .eq("stripe_customer_id", customerId)
+      .select();
+
+    if (error) {
+      console.error("Payment failed update error:", error);
+    }
+
+    if (!data || data.length === 0) {
+      console.warn("No customer found for failed payment:", customerId);
+    }
+  }
+
+  if (event.type === "customer.subscription.deleted") {
+    const subscription = event.data.object as Stripe.Subscription;
+
+    const customerId = subscription.customer;
+
+    const { error } = await supabaseAdmin
+      .from("customers")
+      .update({
+        status: "suspended",
+        payment_status: "cancelled",
+      })
+      .eq("stripe_customer_id", customerId);
+
+    if (error) {
+      console.error("Subscription deleted error:", error);
+    }
+  }
+
   return NextResponse.json({ received: true });
 }
