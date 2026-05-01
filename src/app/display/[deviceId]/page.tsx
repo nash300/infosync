@@ -7,6 +7,13 @@ type PlaylistItem = {
   src: string;
 };
 
+type Device = {
+  id: string;
+  customers: {
+    status: string | null;
+  } | null;
+};
+
 const CACHE_NAME = "infosync-video-cache-v1";
 
 export default function DisplayPage({
@@ -19,6 +26,7 @@ export default function DisplayPage({
   const [playlist, setPlaylist] = useState<PlaylistItem[]>([]);
   const [index, setIndex] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   const currentItem = playlist[index];
 
@@ -68,23 +76,39 @@ export default function DisplayPage({
 
   useEffect(() => {
     const fetchPlaylist = async () => {
+      setError("");
+
       const { data: device, error: deviceError } = await supabase
         .from("devices")
-        .select("id")
+        .select(
+          `
+          id,
+          customers(status)
+        `,
+        )
         .eq("device_code", deviceId)
-        .single();
-      
+        .single<Device>();
+
       if ("serviceWorker" in navigator) {
         navigator.serviceWorker
           .register("/sw.js")
           .then(() => console.log("Service Worker registered"))
           .catch((err) => console.error("SW error:", err));
       }
+
       if (deviceError || !device) {
         console.error("Device not found:", deviceError);
 
         const cached = await getCachedPlaylist();
         setPlaylist(cached);
+        setLoading(false);
+        return;
+      }
+
+      const customerStatus = device.customers?.status;
+
+      if (customerStatus !== "active") {
+        setError("This display is not active.");
         setLoading(false);
         return;
       }
@@ -130,6 +154,18 @@ export default function DisplayPage({
     return (
       <main className="fixed inset-0 bg-black flex items-center justify-center text-white">
         Loading...
+      </main>
+    );
+  }
+
+  if (error) {
+    return (
+      <main className="fixed inset-0 bg-black flex items-center justify-center text-white text-center">
+        <div>
+          <p className="text-xl mb-2">Display inactive</p>
+          <p className="text-sm opacity-70">Please contact InfoSync.</p>
+          <p className="text-sm opacity-50">Device: {deviceId}</p>
+        </div>
       </main>
     );
   }

@@ -131,6 +131,58 @@ export default function CustomerDetailPage({
     setSaving(false);
   };
 
+  const suspendCustomer = async () => {
+    if (!customer) return;
+
+    const confirmed = confirm("Suspend this customer?");
+    if (!confirmed) return;
+
+    setSaving(true);
+
+    const { error } = await supabase
+      .from("customers")
+      .update({
+        status: "suspended",
+      })
+      .eq("id", customer.id);
+
+    if (error) {
+      console.error("Suspend customer error:", error);
+      alert("Could not suspend customer.");
+      setSaving(false);
+      return;
+    }
+
+    await loadData();
+    setSaving(false);
+  };
+
+  const reactivateCustomer = async () => {
+    if (!customer) return;
+
+    const confirmed = confirm("Reactivate this customer?");
+    if (!confirmed) return;
+
+    setSaving(true);
+
+    const { error } = await supabase
+      .from("customers")
+      .update({
+        status: "active",
+      })
+      .eq("id", customer.id);
+
+    if (error) {
+      console.error("Reactivate customer error:", error);
+      alert("Could not reactivate customer.");
+      setSaving(false);
+      return;
+    }
+
+    await loadData();
+    setSaving(false);
+  };
+
   const generateOnboardingLink = async () => {
     if (!customer) return;
 
@@ -230,12 +282,10 @@ export default function CustomerDetailPage({
           </p>
 
           <p>Terms accepted: {customer.terms_accepted_at ? "Yes" : "No"}</p>
-
           <p>Privacy accepted: {customer.privacy_accepted_at ? "Yes" : "No"}</p>
-
           <p>Marketing consent: {customer.marketing_consent ? "Yes" : "No"}</p>
-
           <p>Payment status: {customer.payment_status || "Not paid"}</p>
+
           <p>
             Stripe customer: {customer.stripe_customer_id || "Not created yet"}
           </p>
@@ -249,9 +299,33 @@ export default function CustomerDetailPage({
         </div>
 
         {customer.status === "active" ? (
-          <p className="mt-4 rounded-lg bg-green-50 p-3 text-sm text-green-700">
-            Onboarding completed. Customer is active and paid.
-          </p>
+          <>
+            <p className="mt-4 rounded-lg bg-green-50 p-3 text-sm text-green-700">
+              Onboarding completed. Customer is active and paid.
+            </p>
+
+            <button
+              onClick={suspendCustomer}
+              disabled={saving}
+              className="mt-4 rounded-lg bg-red-600 px-4 py-2 text-sm text-white disabled:opacity-50"
+            >
+              {saving ? "Saving..." : "Suspend customer"}
+            </button>
+          </>
+        ) : customer.status === "suspended" ? (
+          <>
+            <p className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">
+              Customer is suspended. Displays should not run for this customer.
+            </p>
+
+            <button
+              onClick={reactivateCustomer}
+              disabled={saving}
+              className="mt-4 rounded-lg bg-green-600 px-4 py-2 text-sm text-white disabled:opacity-50"
+            >
+              {saving ? "Saving..." : "Reactivate customer"}
+            </button>
+          </>
         ) : (
           <>
             <button

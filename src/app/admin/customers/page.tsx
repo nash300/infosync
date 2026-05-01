@@ -189,13 +189,15 @@ export default function CustomersPage() {
                           ? "bg-green-100 text-green-700"
                           : customer.status === "invited"
                             ? "bg-blue-100 text-blue-700"
-                            : customer.status === "suspended"
-                              ? "bg-red-100 text-red-700"
-                              : "bg-gray-100 text-gray-700"
+                            : customer.status === "accepted_terms"
+                              ? "bg-yellow-100 text-yellow-700"
+                              : customer.status === "suspended"
+                                ? "bg-red-100 text-red-700"
+                                : "bg-gray-100 text-gray-700"
                       }`}
                     >
                       {customer.status || "draft"}
-                    </span>{" "}
+                    </span>
                   </div>
                 </div>
               </Link>
