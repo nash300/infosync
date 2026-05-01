@@ -23,11 +23,11 @@ export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
-    <div>
+    <div className="min-vh-100 bg-white text-dark overflow-auto">
       <nav className="navbar navbar-light bg-white shadow-sm py-3 fixed-top">
         <div className="container d-flex align-items-center justify-content-between">
           <a
-            className="navbar-brand fw-bold"
+            className="navbar-brand fw-bold fs-4"
             href="#hero"
             onClick={() => setMenuOpen(false)}
           >
@@ -35,7 +35,7 @@ export default function Home() {
           </a>
 
           <button
-            className="mobile-toggle d-lg-none"
+            className="mobile-toggle d-lg-none border-0 bg-transparent"
             onClick={() => setMenuOpen(!menuOpen)}
             type="button"
             aria-label="Toggle menu"
@@ -45,18 +45,22 @@ export default function Home() {
             <span className={menuOpen ? "bar open" : "bar"}></span>
           </button>
 
-          <ul className="navbar-nav ms-auto d-none d-lg-flex align-items-center gap-3">
+          <ul className="navbar-nav ms-auto d-none d-lg-flex flex-row align-items-center gap-4">
             {navLinks.map((link) => (
               <li key={link.href} className="nav-item">
-                <a className="nav-link" href={link.href}>
+                <a className="nav-link fw-medium text-dark" href={link.href}>
                   {link.label}
                 </a>
               </li>
             ))}
+
             <li className="nav-item">
-              <button className="btn btn-dark rounded-pill px-4" type="button">
+              <a
+                href="#demo"
+                className="btn btn-dark rounded-pill px-4 fw-semibold"
+              >
                 Boka demo
-              </button>
+              </a>
             </li>
           </ul>
         </div>
@@ -72,12 +76,13 @@ export default function Home() {
             </a>
           ))}
 
-          <button
+          <a
+            href="#demo"
+            onClick={() => setMenuOpen(false)}
             className="btn btn-dark rounded-pill w-100 mt-3"
-            type="button"
           >
             Boka demo
-          </button>
+          </a>
         </div>
       </nav>
 
@@ -86,11 +91,27 @@ export default function Home() {
         onClick={() => setMenuOpen(false)}
       ></div>
 
-      <Hero />
-      <HowItWorks />
-      <Pricing />
-      <DemoCTA />
-      <Footer />
+      <main style={{ paddingTop: "76px" }}>
+        <section id="hero">
+          <Hero />
+        </section>
+
+        <section id="how-it-works">
+          <HowItWorks />
+        </section>
+
+        <section id="pricing">
+          <Pricing />
+        </section>
+
+        <section id="demo">
+          <DemoCTA />
+        </section>
+
+        <section id="kontakt">
+          <Footer />
+        </section>
+      </main>
     </div>
   );
 }
