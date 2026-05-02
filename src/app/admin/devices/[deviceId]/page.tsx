@@ -19,6 +19,7 @@ export default function AdminDevicePage({
   const [deviceUuid, setDeviceUuid] = useState<string | null>(null);
   const [deviceName, setDeviceName] = useState("");
   const [newDeviceName, setNewDeviceName] = useState("");
+  const [isActive, setIsActive] = useState(true);
 
   const [playlist, setPlaylist] = useState<PlaylistItem[]>([]);
   const [videoFile, setVideoFile] = useState<File | null>(null);
@@ -32,7 +33,7 @@ export default function AdminDevicePage({
 
     const { data: device, error: deviceError } = await supabase
       .from("devices")
-      .select("id, name")
+      .select("id, name, is_active")
       .eq("device_code", deviceId)
       .single();
 
@@ -46,6 +47,7 @@ export default function AdminDevicePage({
 
     setDeviceUuid(device.id);
     setDeviceName(device.name || deviceId);
+    setIsActive(device.is_active);
     setNewDeviceName(device.name || deviceId);
 
     const { data, error } = await supabase
@@ -89,6 +91,48 @@ export default function AdminDevicePage({
 
     await loadDeviceAndPlaylist();
     setRenaming(false);
+  };
+  const deleteDevice = async () => {
+    if (!deviceUuid) return;
+
+    const confirmed = window.confirm(
+      "Delete this device? This will also remove its playlist.",
+    );
+
+    if (!confirmed) return;
+
+    await supabase.from("playlists").delete().eq("device_id", deviceUuid);
+
+    const { error } = await supabase
+      .from("devices")
+      .delete()
+      .eq("id", deviceUuid);
+
+    if (error) {
+      console.error("Delete device error:", error);
+      alert("Could not delete device");
+      return;
+    }
+
+    window.location.href = "/admin/devices";
+  };
+  const toggleDeviceActive = async () => {
+    if (!deviceUuid) return;
+
+    const nextValue = !isActive;
+
+    const { error } = await supabase
+      .from("devices")
+      .update({ is_active: nextValue })
+      .eq("id", deviceUuid);
+
+    if (error) {
+      console.error("Device status error:", error);
+      alert("Could not update device status");
+      return;
+    }
+
+    setIsActive(nextValue);
   };
 
   const uploadVideo = async () => {
@@ -191,6 +235,20 @@ export default function AdminDevicePage({
 
         <p className="mt-1 text-sm text-gray-500">Device code: {deviceId}</p>
 
+        <button
+          onClick={toggleDeviceActive}
+          className={`mt-4 rounded-lg px-4 py-2 text-white ${
+            isActive ? "bg-red-600" : "bg-green-600"
+          }`}
+        >
+          {isActive ? "Deactivate device" : "Activate device"}
+        </button>
+        <button
+          onClick={deleteDevice}
+          className="mt-4 ml-2 rounded-lg bg-gray-800 px-4 py-2 text-white"
+        >
+          Delete device
+        </button>
         <div className="mt-6 rounded-lg border p-4">
           <label className="block text-sm font-medium text-gray-700">
             Rename device

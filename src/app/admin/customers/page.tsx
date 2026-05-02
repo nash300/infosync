@@ -10,7 +10,10 @@ type Customer = {
   email: string | null;
   phone: string | null;
   status: string | null;
-  devices: { count: number }[];
+  devices: {
+    id: string;
+    playlists: { count: number }[];
+  }[];
 };
 
 export default function CustomersPage() {
@@ -19,9 +22,10 @@ export default function CustomersPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const statusFilters = [
     { value: "all", label: "All" },
+    { value: "needs_device", label: "Needs device" },
+    { value: "needs_playlist", label: "Needs playlist" },
     { value: "draft", label: "Draft" },
     { value: "invited", label: "Invited" },
-    { value: "accepted_terms", label: "Accepted terms" },
     { value: "active", label: "Active" },
     { value: "suspended", label: "Suspended" },
   ];
@@ -38,7 +42,19 @@ export default function CustomersPage() {
 
     const { data, error } = await supabase
       .from("customers")
-      .select("id, name, email, phone, status, devices(count)")
+      .select(
+        `
+        id,
+        name,
+        email,
+        phone,
+        status,
+        devices(
+          id,
+          playlists(count)
+        )
+      `,
+      )
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -101,14 +117,43 @@ export default function CustomersPage() {
     loadCustomers();
   }, []);
 
+  const getDeviceCount = (customer: Customer) => {
+    return customer.devices?.length || 0;
+  };
+
+  const hasDeviceWithoutPlaylist = (customer: Customer) => {
+    return customer.devices?.some(
+      (device) => (device.playlists?.[0]?.count || 0) === 0,
+    );
+  };
+
+  const matchesCustomerFilter = (customer: Customer, filter: string) => {
+    const deviceCount = getDeviceCount(customer);
+
+    if (filter === "all") return true;
+
+    if (filter === "needs_device") {
+      return customer.status === "active" && deviceCount === 0;
+    }
+
+    if (filter === "needs_playlist") {
+      return customer.status === "active" && hasDeviceWithoutPlaylist(customer);
+    }
+
+    return customer.status === filter;
+  };
+
+  const getFilterCount = (filter: string) => {
+    return customers.filter((customer) =>
+      matchesCustomerFilter(customer, filter),
+    ).length;
+  };
+
   const filteredCustomers = customers.filter((customer) => {
     const value = search.toLowerCase();
 
-    const matchesStatus =
-      statusFilter === "all" || customer.status === statusFilter;
-
     return (
-      matchesStatus &&
+      matchesCustomerFilter(customer, statusFilter) &&
       (customer.name.toLowerCase().includes(value) ||
         customer.email?.toLowerCase().includes(value) ||
         customer.phone?.toLowerCase().includes(value))
@@ -167,19 +212,36 @@ export default function CustomersPage() {
         <h2 className="text-xl font-semibold">Search customer</h2>
 
         <div className="mt-4 flex flex-wrap gap-2">
-          {statusFilters.map((status) => (
-            <button
-              key={status.value}
-              onClick={() => setStatusFilter(status.value)}
-              className={`rounded-full px-3 py-1 text-sm ${
-                statusFilter === status.value
-                  ? "bg-black text-white"
-                  : "bg-gray-100 text-gray-700"
-              }`}
-            >
-              {status.label}
-            </button>
-          ))}
+          {statusFilters.map((status) => {
+            const count = getFilterCount(status.value);
+            const isActive = statusFilter === status.value;
+            const shouldFlag =
+              (status.value === "needs_device" ||
+                status.value === "needs_playlist") &&
+              count > 0 &&
+              !isActive;
+
+            return (
+              <button
+                key={status.value}
+                onClick={() => setStatusFilter(status.value)}
+                className={`rounded-full px-3 py-1 text-sm font-medium transition ${
+                  isActive
+                    ? "bg-black text-white shadow-sm"
+                    : shouldFlag
+                      ? "border border-red-200 bg-red-50 text-red-700 shadow-sm ring-2 ring-red-100"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                }`}
+              >
+                <span className="inline-flex items-center gap-1.5">
+                  {shouldFlag && (
+                    <span className="h-2 w-2 rounded-full bg-red-500" />
+                  )}
+                  {status.label} ({count})
+                </span>
+              </button>
+            );
+          })}
         </div>
 
         <input
@@ -195,42 +257,60 @@ export default function CustomersPage() {
           ) : filteredCustomers.length === 0 ? (
             <p className="text-gray-500">No customers found.</p>
           ) : (
-            filteredCustomers.map((customer) => (
-              <Link
-                key={customer.id}
-                href={`/admin/customers/${customer.id}`}
-                className="block rounded-lg border p-4 hover:bg-gray-50"
-              >
-                <div className="flex items-center justify-between gap-4">
-                  <div>
-                    <p className="font-semibold">{customer.name}</p>
-                    <p className="text-sm text-gray-500">
-                      {customer.email || "No email"} ·{" "}
-                      {customer.phone || "No phone"}
-                    </p>
-                  </div>
+            filteredCustomers.map((customer) => {
+              const deviceCount = getDeviceCount(customer);
 
-                  <div className="text-right text-sm text-gray-500">
-                    <p>Devices: {customer.devices?.[0]?.count || 0}</p>
-                    <span
-                      className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
-                        customer.status === "active"
-                          ? "bg-green-100 text-green-700"
-                          : customer.status === "invited"
-                            ? "bg-blue-100 text-blue-700"
-                            : customer.status === "accepted_terms"
-                              ? "bg-yellow-100 text-yellow-700"
+              const customerHasDeviceWithoutPlaylist =
+                hasDeviceWithoutPlaylist(customer);
+
+              return (
+                <Link
+                  key={customer.id}
+                  href={`/admin/customers/${customer.id}`}
+                  className="block rounded-lg border p-4 hover:bg-gray-50"
+                >
+                  <div className="flex items-center justify-between gap-4">
+                    <div>
+                      <p className="font-semibold">{customer.name}</p>
+                      <p className="text-sm text-gray-500">
+                        {customer.email || "No email"} ·{" "}
+                        {customer.phone || "No phone"}
+                      </p>
+
+                      {customer.status === "active" && deviceCount === 0 && (
+                        <p className="mt-1 text-sm font-medium text-orange-600">
+                          Needs device
+                        </p>
+                      )}
+
+                      {customer.status === "active" &&
+                        customerHasDeviceWithoutPlaylist && (
+                          <p className="mt-1 text-sm font-medium text-red-600">
+                            Device needs playlist
+                          </p>
+                        )}
+                    </div>
+
+                    <div className="text-right text-sm text-gray-500">
+                      <p>Devices: {deviceCount}</p>
+                      <span
+                        className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
+                          customer.status === "active"
+                            ? "bg-green-100 text-green-700"
+                            : customer.status === "invited"
+                              ? "bg-blue-100 text-blue-700"
                               : customer.status === "suspended"
                                 ? "bg-red-100 text-red-700"
                                 : "bg-gray-100 text-gray-700"
-                      }`}
-                    >
-                      {customer.status || "draft"}
-                    </span>
+                        }`}
+                      >
+                        {customer.status || "draft"}
+                      </span>
+                    </div>
                   </div>
-                </div>
-              </Link>
-            ))
+                </Link>
+              );
+            })
           )}
         </div>
       </div>

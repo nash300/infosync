@@ -25,23 +25,22 @@ export default function DevicesPage() {
     setLoading(false);
   };
 
-  const createDevice = async () => {
-    if (!newName.trim()) return;
+const createDevice = async () => {
+  if (!newName.trim()) return;
 
-    const code = newName
-      .toLowerCase()
-      .replace(/\s+/g, "-")
-      .replace(/[^a-z0-9-]/g, "");
+  const { error } = await supabase.from("devices").insert({
+    name: newName.trim(),
+  });
 
-    await supabase.from("devices").insert({
-      name: newName,
-      device_code: code,
-    });
+  if (error) {
+    console.error(error);
+    alert("Error creating device");
+    return;
+  }
 
-    setNewName("");
-    loadDevices();
-  };
-
+  setNewName("");
+  loadDevices();
+};
   useEffect(() => {
     loadDevices();
   }, []);

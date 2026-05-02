@@ -9,6 +9,7 @@ type PlaylistItem = {
 
 type Device = {
   id: string;
+  is_active: boolean;
   customers: {
     status: string | null;
   } | null;
@@ -83,11 +84,12 @@ export default function DisplayPage({
         .select(
           `
           id,
+          is_active,
           customers(status)
         `,
         )
         .eq("device_code", deviceId)
-        .single<Device>();
+        .maybeSingle<Device>();
 
       if ("serviceWorker" in navigator) {
         navigator.serviceWorker
@@ -101,6 +103,12 @@ export default function DisplayPage({
 
         const cached = await getCachedPlaylist();
         setPlaylist(cached);
+        setLoading(false);
+        return;
+      }
+
+      if (!device.is_active) {
+        setError("This display is not active.");
         setLoading(false);
         return;
       }
