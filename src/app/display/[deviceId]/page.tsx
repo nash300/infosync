@@ -61,7 +61,6 @@ export default function DisplayPage({
     if (!("localStorage" in window)) return [];
 
     const saved = localStorage.getItem(`playlist-${deviceId}`);
-
     if (!saved) return [];
 
     try {
@@ -79,6 +78,13 @@ export default function DisplayPage({
     const fetchPlaylist = async () => {
       setError("");
 
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker
+          .register("/sw.js")
+          .then(() => console.log("Service Worker registered"))
+          .catch((err) => console.error("SW error:", err));
+      }
+
       const { data: device, error: deviceError } = await supabase
         .from("devices")
         .select(
@@ -91,13 +97,6 @@ export default function DisplayPage({
         .eq("device_code", deviceId)
         .maybeSingle<Device>();
 
-      if ("serviceWorker" in navigator) {
-        navigator.serviceWorker
-          .register("/sw.js")
-          .then(() => console.log("Service Worker registered"))
-          .catch((err) => console.error("SW error:", err));
-      }
-
       if (deviceError || !device) {
         console.error("Device not found:", deviceError);
 
@@ -107,15 +106,7 @@ export default function DisplayPage({
         return;
       }
 
-      if (!device.is_active) {
-        setError("This display is not active.");
-        setLoading(false);
-        return;
-      }
-
-      const customerStatus = device.customers?.status;
-
-      if (customerStatus !== "active") {
+      if (!device.is_active || device.customers?.status !== "active") {
         setError("This display is not active.");
         setLoading(false);
         return;
@@ -160,37 +151,36 @@ export default function DisplayPage({
 
   if (loading) {
     return (
-      <main className="fixed inset-0 bg-black flex items-center justify-center text-white">
-        Loading...
-      </main>
+      <DisplayMessage
+        title="Loading..."
+        subtitle="Preparing display content."
+        deviceId={deviceId}
+      />
     );
   }
 
   if (error) {
     return (
-      <main className="fixed inset-0 bg-black flex items-center justify-center text-white text-center">
-        <div>
-          <p className="text-xl mb-2">Display inactive</p>
-          <p className="text-sm opacity-70">Please contact InfoSync.</p>
-          <p className="text-sm opacity-50">Device: {deviceId}</p>
-        </div>
-      </main>
+      <DisplayMessage
+        title="Display inactive"
+        subtitle="Please contact InfoSync."
+        deviceId={deviceId}
+      />
     );
   }
 
   if (!currentItem) {
     return (
-      <main className="fixed inset-0 bg-black flex items-center justify-center text-white text-center">
-        <div>
-          <p className="text-xl mb-2">No content assigned</p>
-          <p className="text-sm opacity-50">Device: {deviceId}</p>
-        </div>
-      </main>
+      <DisplayMessage
+        title="No content assigned"
+        subtitle="This device has no playlist yet."
+        deviceId={deviceId}
+      />
     );
   }
 
   return (
-    <main className="fixed inset-0 z-[9999] bg-black overflow-hidden">
+    <main className="fixed inset-0 z-[9999] overflow-hidden bg-black">
       <video
         key={currentItem.src}
         src={currentItem.src}
@@ -203,8 +193,28 @@ export default function DisplayPage({
         className="absolute inset-0 h-full w-full object-cover"
       />
 
-      <div className="absolute top-2 left-2 text-white text-sm opacity-40">
+      <div className="absolute left-2 top-2 text-sm text-white opacity-40">
         Device: {deviceId}
+      </div>
+    </main>
+  );
+}
+
+function DisplayMessage({
+  title,
+  subtitle,
+  deviceId,
+}: {
+  title: string;
+  subtitle: string;
+  deviceId: string;
+}) {
+  return (
+    <main className="fixed inset-0 flex items-center justify-center bg-black text-center text-white">
+      <div>
+        <p className="mb-2 text-xl">{title}</p>
+        <p className="text-sm opacity-70">{subtitle}</p>
+        <p className="mt-2 text-sm opacity-50">Device: {deviceId}</p>
       </div>
     </main>
   );

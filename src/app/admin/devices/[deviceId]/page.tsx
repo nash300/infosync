@@ -1,6 +1,7 @@
 "use client";
 
 import { use, useEffect, useState } from "react";
+import Link from "next/link";
 import { supabase } from "@/lib/supabase/client";
 
 type PlaylistItem = {
@@ -104,6 +105,7 @@ export default function AdminDevicePage({
 
   const renameDevice = async () => {
     if (!deviceUuid) return;
+
     if (!newDeviceName.trim()) {
       alert("Device name is required");
       return;
@@ -113,9 +115,7 @@ export default function AdminDevicePage({
 
     const { error } = await supabase
       .from("devices")
-      .update({
-        name: newDeviceName.trim(),
-      })
+      .update({ name: newDeviceName.trim() })
       .eq("id", deviceUuid);
 
     if (error) {
@@ -165,11 +165,11 @@ export default function AdminDevicePage({
   const deleteDevice = async () => {
     if (!deviceUuid) return;
 
-    const confirmed = window.confirm(
-      "Delete this device? This will also remove its playlist.",
-    );
-
-    if (!confirmed) return;
+    if (
+      !window.confirm("Delete this device? This will also remove its playlist.")
+    ) {
+      return;
+    }
 
     await supabase.from("playlists").delete().eq("device_id", deviceUuid);
 
@@ -238,14 +238,12 @@ export default function AdminDevicePage({
       .from("videos")
       .getPublicUrl(fileName);
 
-    const nextOrderIndex = playlist.length + 1;
-
     const { error: playlistError } = await supabase.from("playlists").insert({
       id: crypto.randomUUID(),
       device_id: deviceUuid,
       type: "video",
       src: publicUrlData.publicUrl,
-      order_index: nextOrderIndex,
+      order_index: playlist.length + 1,
     });
 
     if (playlistError) {
@@ -261,8 +259,7 @@ export default function AdminDevicePage({
   };
 
   const deleteVideo = async (playlistId: string) => {
-    const confirmed = window.confirm("Delete this video?");
-    if (!confirmed) return;
+    if (!window.confirm("Delete this video?")) return;
 
     const { error } = await supabase
       .from("playlists")
@@ -284,285 +281,325 @@ export default function AdminDevicePage({
 
   if (loading) {
     return (
-      <main className="bg-gray-100 p-8">
-        <p>Loading...</p>
-      </main>
+      <div className="admin-card p-6">
+        <p className="admin-muted">Loading device...</p>
+      </div>
     );
   }
 
   if (!deviceUuid) {
     return (
-      <main className="bg-gray-100 p-8">
-        <h1 className="text-2xl font-bold">Device not found</h1>
-        <p className="mt-2 text-gray-600">Device: {deviceId}</p>
-      </main>
+      <div>
+        <div className="admin-page-header">
+          <h1 className="admin-title">Device not found</h1>
+          <p className="admin-subtitle">Device code: {deviceId}</p>
+        </div>
+      </div>
     );
   }
 
   return (
-    <main className="bg-gray-100 p-8">
-      <div className="mx-auto max-w-3xl rounded-xl bg-white p-6 shadow">
-        <h1 className="text-2xl font-bold">{deviceName}</h1>
+    <div>
+      {/* Page Header */}
+      <div className="admin-page-header">
+        <Link
+          href="/admin/devices"
+          className="text-sm font-semibold text-[var(--admin-cyan)] no-underline"
+        >
+          ← Back to devices
+        </Link>
 
-        <p className="mt-1 text-sm text-gray-500">Device code: {deviceId}</p>
+        <div className="mt-4 flex flex-col justify-between gap-4 md:flex-row md:items-end">
+          <div>
+            <h1 className="admin-title">{deviceName}</h1>
+            <p className="admin-subtitle">Device code: {deviceId}</p>
+          </div>
 
-        {device && (
-          <div className="mt-4 rounded-lg bg-gray-50 p-4 text-sm text-gray-700">
-            <p>
-              <strong>Make:</strong> {device.make || "Not set"}
+          <span
+            className={`inline-flex w-fit rounded-full px-3 py-1 text-sm font-semibold ${
+              isActive
+                ? "bg-green-100 text-green-700"
+                : "bg-red-100 text-red-700"
+            }`}
+          >
+            {isActive ? "Active" : "Inactive"}
+          </span>
+        </div>
+      </div>
+
+      {/* Device Summary */}
+      {device && (
+        <div className="admin-card p-6">
+          <h2 className="admin-card-title text-xl">Device summary</h2>
+
+          <div className="mt-4 grid gap-4 text-sm md:grid-cols-2">
+            <InfoRow label="Make" value={device.make || "Not set"} />
+            <InfoRow label="Model" value={device.model || "Not set"} />
+            <InfoRow
+              label="Serial number"
+              value={device.serial_number || "Not set"}
+            />
+            <InfoRow label="Location" value={device.location || "Not set"} />
+            <InfoRow
+              label="Purchase cost"
+              value={device.purchase_cost || "Not set"}
+            />
+            <InfoRow
+              label="Purchase date"
+              value={device.purchase_date || "Not set"}
+            />
+            <InfoRow
+              label="Warranty period"
+              value={
+                device.warranty_period_months
+                  ? `${device.warranty_period_months} months`
+                  : "Not set"
+              }
+            />
+            <InfoRow label="Supplier" value={device.supplier || "Not set"} />
+          </div>
+
+          <div className="mt-4 rounded-2xl bg-slate-50 p-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+              Notes
             </p>
-            <p>
-              <strong>Model:</strong> {device.model || "Not set"}
-            </p>
-            <p>
-              <strong>Serial number:</strong>{" "}
-              {device.serial_number || "Not set"}
-            </p>
-            <p>
-              <strong>Location:</strong> {device.location || "Not set"}
-            </p>
-            <p>
-              <strong>Purchase cost:</strong>{" "}
-              {device.purchase_cost || "Not set"}
-            </p>
-            <p>
-              <strong>Purchase date:</strong>{" "}
-              {device.purchase_date || "Not set"}
-            </p>
-            <p>
-              <strong>Warranty period:</strong>{" "}
-              {device.warranty_period_months
-                ? `${device.warranty_period_months} months`
-                : "Not set"}
-            </p>
-            <p>
-              <strong>Supplier:</strong> {device.supplier || "Not set"}
-            </p>
-            <p>
-              <strong>Notes:</strong> {device.internal_notes || "None"}
+            <p className="mt-1 text-sm font-semibold text-slate-900">
+              {device.internal_notes || "None"}
             </p>
           </div>
-        )}
 
-        <button
-          onClick={toggleDeviceActive}
-          className={`mt-4 rounded-lg px-4 py-2 text-white ${
-            isActive ? "bg-red-600" : "bg-green-600"
-          }`}
-        >
-          {isActive ? "Deactivate device" : "Activate device"}
-        </button>
-
-        <button
-          onClick={deleteDevice}
-          className="mt-4 ml-2 rounded-lg bg-gray-800 px-4 py-2 text-white"
-        >
-          Delete device
-        </button>
-
-        <div className="mt-6 rounded-lg border p-4">
-          <label className="block text-sm font-medium text-gray-700">
-            Rename device
-          </label>
-
-          <div className="mt-2 flex gap-2">
-            <input
-              value={newDeviceName}
-              onChange={(e) => setNewDeviceName(e.target.value)}
-              className="w-full rounded-lg border px-3 py-2"
-            />
+          <div className="mt-5 flex flex-wrap gap-3">
+            <button
+              onClick={toggleDeviceActive}
+              className={`rounded-xl px-4 py-2 text-sm font-semibold text-white ${
+                isActive ? "bg-red-600" : "bg-green-600"
+              }`}
+            >
+              {isActive ? "Deactivate device" : "Activate device"}
+            </button>
 
             <button
-              onClick={renameDevice}
-              disabled={renaming}
-              className="rounded-lg bg-black px-4 py-2 text-white disabled:opacity-50"
+              onClick={deleteDevice}
+              className="rounded-xl bg-slate-950 px-4 py-2 text-sm font-semibold text-white"
             >
-              {renaming ? "Saving..." : "Save"}
+              Delete device
             </button>
           </div>
         </div>
+      )}
 
-        <div className="mt-6 rounded-lg border p-4">
-          <h2 className="text-lg font-semibold">Device details</h2>
+      {/* Rename */}
+      <div className="admin-card mt-6 p-6">
+        <h2 className="admin-card-title text-xl">Rename device</h2>
 
-          <div className="mt-4 grid gap-4 md:grid-cols-2">
-            <label className="text-sm font-medium text-gray-700">Make</label>
-            <input
-              value={editMake}
-              onChange={(e) => setEditMake(e.target.value)}
-              placeholder="Make"
-              className="rounded-lg border px-3 py-2"
-            />
-            <label className="text-sm font-medium text-gray-700">Model</label>
-            <input
-              value={editModel}
-              onChange={(e) => setEditModel(e.target.value)}
-              placeholder="Model"
-              className="rounded-lg border px-3 py-2"
-            />
-            <label className="text-sm font-medium text-gray-700">
-              SerialNumber
-            </label>
-            <input
-              value={editSerialNumber}
-              onChange={(e) => setEditSerialNumber(e.target.value)}
-              placeholder="Serial number"
-              className="rounded-lg border px-3 py-2"
-            />
-            <label className="text-sm font-medium text-gray-700">
-              Location
-            </label>
-            <input
-              value={editLocation}
-              onChange={(e) => setEditLocation(e.target.value)}
-              placeholder="Location"
-              className="rounded-lg border px-3 py-2"
-            />
-            <label className="text-sm font-medium text-gray-700">
-              Purchase Cost
-            </label>
-            <input
-              type="number"
-              value={editPurchaseCost}
-              onChange={(e) => setEditPurchaseCost(e.target.value)}
-              placeholder="Purchase cost"
-              className="rounded-lg border px-3 py-2"
-            />
-            <label className="text-sm font-medium text-gray-700">
-              Purchase Date
-            </label>
-            <input
-              type="date"
-              value={editPurchaseDate}
-              onChange={(e) => setEditPurchaseDate(e.target.value)}
-              className="rounded-lg border px-3 py-2"
-            />
-            <label className="text-sm font-medium text-gray-700">
-              Warranty Period
-            </label>
-            <input
-              type="number"
-              value={editWarrantyPeriod}
-              onChange={(e) => setEditWarrantyPeriod(e.target.value)}
-              placeholder="Warranty period months"
-              className="rounded-lg border px-3 py-2"
-            />
-            <label className="text-sm font-medium text-gray-700">
-              Supplier
-            </label>
-            <input
-              value={editSupplier}
-              onChange={(e) => setEditSupplier(e.target.value)}
-              placeholder="Supplier"
-              className="rounded-lg border px-3 py-2"
-            />
-          </div>
-
-          <textarea
-            value={editInternalNotes}
-            onChange={(e) => setEditInternalNotes(e.target.value)}
-            placeholder="Internal notes"
-            className="mt-4 w-full rounded-lg border px-3 py-2"
-            rows={3}
-          />
-
-          <button
-            onClick={saveDeviceDetails}
-            disabled={saving}
-            className="mt-4 rounded-lg bg-black px-4 py-2 text-sm text-white disabled:opacity-50"
-          >
-            {saving ? "Saving..." : "Save device details"}
-          </button>
-        </div>
-
-        <div className="mt-6 rounded-lg border bg-black p-2">
-          <div className="mb-2 flex items-center justify-between text-white">
-            <p className="text-sm font-medium">Live screen preview</p>
-
-            <a
-              href={`/display/${deviceId}`}
-              target="_blank"
-              className="rounded bg-white px-3 py-1 text-xs text-black"
-            >
-              Open full screen
-            </a>
-          </div>
-
-          <div className="aspect-video overflow-hidden rounded bg-black">
-            <iframe
-              src={`/display/${deviceId}`}
-              className="h-full w-full border-0"
-              title="Display preview"
-            />
-          </div>
-        </div>
-
-        <div className="mt-6 rounded-lg border p-4">
-          <label className="block text-sm font-medium text-gray-700">
-            Upload video (.mp4)
-          </label>
-
+        <div className="mt-4 flex flex-col gap-3 md:flex-row">
           <input
-            type="file"
-            accept="video/mp4"
-            onChange={(e) => setVideoFile(e.target.files?.[0] || null)}
-            className="mt-2 w-full rounded-lg border px-3 py-2"
+            value={newDeviceName}
+            onChange={(e) => setNewDeviceName(e.target.value)}
+            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-900 outline-none transition focus:border-[var(--admin-cyan)] focus:ring-2 focus:ring-cyan-100"
           />
 
           <button
-            onClick={uploadVideo}
-            disabled={saving || !videoFile}
-            className="mt-3 rounded-lg bg-black px-4 py-2 text-white disabled:opacity-50"
+            onClick={renameDevice}
+            disabled={renaming}
+            className="admin-button-primary disabled:opacity-50"
           >
-            {saving ? "Uploading..." : "Upload video"}
+            {renaming ? "Saving..." : "Save"}
           </button>
-        </div>
-
-        <div className="mt-6">
-          <h2 className="text-lg font-semibold">Current playlist</h2>
-
-          {playlist.length === 0 ? (
-            <p className="mt-2 text-gray-500">No videos assigned yet.</p>
-          ) : (
-            <div className="mt-3 space-y-4">
-              {playlist.map((item) => (
-                <div key={item.id} className="rounded-lg border p-4">
-                  <p className="mb-2 text-sm text-gray-500">
-                    Order: {item.order_index}
-                  </p>
-
-                  <video src={item.src} controls className="w-full rounded" />
-
-                  <button
-                    onClick={() => deleteVideo(item.id)}
-                    className="mt-3 rounded bg-red-600 px-3 py-2 text-sm text-white"
-                  >
-                    Delete
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <div className="mt-6 rounded-lg bg-gray-50 p-4 text-sm text-gray-600">
-          <p>Display URL:</p>
-
-          <div className="mt-2 flex items-center justify-between gap-3">
-            <span className="font-mono text-xs break-all">
-              /display/{deviceId}
-            </span>
-
-            <a
-              href={`/display/${deviceId}`}
-              target="_blank"
-              className="rounded-lg bg-black px-3 py-2 text-xs text-white"
-            >
-              Preview
-            </a>
-          </div>
         </div>
       </div>
-    </main>
+
+      {/* Device Details Form */}
+      <div className="admin-card mt-6 p-6">
+        <h2 className="admin-card-title text-xl">Device details</h2>
+
+        <div className="mt-4 grid gap-4 md:grid-cols-2">
+          <Input label="Make" value={editMake} onChange={setEditMake} />
+          <Input label="Model" value={editModel} onChange={setEditModel} />
+          <Input
+            label="Serial number"
+            value={editSerialNumber}
+            onChange={setEditSerialNumber}
+          />
+          <Input
+            label="Location"
+            value={editLocation}
+            onChange={setEditLocation}
+          />
+          <Input
+            label="Purchase cost"
+            type="number"
+            value={editPurchaseCost}
+            onChange={setEditPurchaseCost}
+          />
+          <Input
+            label="Purchase date"
+            type="date"
+            value={editPurchaseDate}
+            onChange={setEditPurchaseDate}
+          />
+          <Input
+            label="Warranty period months"
+            type="number"
+            value={editWarrantyPeriod}
+            onChange={setEditWarrantyPeriod}
+          />
+          <Input
+            label="Supplier"
+            value={editSupplier}
+            onChange={setEditSupplier}
+          />
+        </div>
+
+        <textarea
+          value={editInternalNotes}
+          onChange={(e) => setEditInternalNotes(e.target.value)}
+          placeholder="Internal notes"
+          className="mt-4 w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-900 outline-none transition focus:border-[var(--admin-cyan)] focus:ring-2 focus:ring-cyan-100"
+          rows={3}
+        />
+
+        <button
+          onClick={saveDeviceDetails}
+          disabled={saving}
+          className="admin-button-primary mt-4 disabled:opacity-50"
+        >
+          {saving ? "Saving..." : "Save device details"}
+        </button>
+      </div>
+
+      {/* Live Preview */}
+      <div className="mt-6 rounded-3xl border border-slate-800 bg-black p-3 shadow-xl">
+        <div className="mb-3 flex items-center justify-between text-white">
+          <p className="text-sm font-semibold">Live screen preview</p>
+
+          <a
+            href={`/display/${deviceId}`}
+            target="_blank"
+            className="rounded-xl bg-white px-3 py-2 text-xs font-semibold text-black no-underline"
+          >
+            Open full screen
+          </a>
+        </div>
+
+        <div className="aspect-video overflow-hidden rounded-2xl bg-black">
+          <iframe
+            src={`/display/${deviceId}`}
+            className="h-full w-full border-0"
+            title="Display preview"
+          />
+        </div>
+      </div>
+
+      {/* Upload Video */}
+      <div className="admin-card mt-6 p-6">
+        <h2 className="admin-card-title text-xl">Upload video</h2>
+        <p className="admin-muted mt-1 text-sm">
+          Only MP4 files are supported.
+        </p>
+
+        <input
+          type="file"
+          accept="video/mp4"
+          onChange={(e) => setVideoFile(e.target.files?.[0] || null)}
+          className="mt-4 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900"
+        />
+
+        <button
+          onClick={uploadVideo}
+          disabled={saving || !videoFile}
+          className="admin-button-primary mt-4 disabled:opacity-50"
+        >
+          {saving ? "Uploading..." : "Upload video"}
+        </button>
+      </div>
+
+      {/* Playlist */}
+      <div className="admin-card mt-6 p-6">
+        <h2 className="admin-card-title text-xl">Current playlist</h2>
+
+        {playlist.length === 0 ? (
+          <p className="admin-muted mt-3">No videos assigned yet.</p>
+        ) : (
+          <div className="mt-4 space-y-4">
+            {playlist.map((item) => (
+              <div
+                key={item.id}
+                className="rounded-2xl border border-slate-200 bg-white/70 p-4"
+              >
+                <p className="mb-2 text-sm font-semibold text-slate-500">
+                  Order: {item.order_index}
+                </p>
+
+                <video src={item.src} controls className="w-full rounded-xl" />
+
+                <button
+                  onClick={() => deleteVideo(item.id)}
+                  className="mt-3 rounded-xl bg-red-600 px-3 py-2 text-sm font-semibold text-white"
+                >
+                  Delete
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Display URL */}
+      <div className="admin-card mt-6 p-6">
+        <h2 className="admin-card-title text-xl">Display URL</h2>
+
+        <div className="mt-3 flex flex-col justify-between gap-3 rounded-2xl bg-slate-50 p-4 md:flex-row md:items-center">
+          <span className="break-all font-mono text-xs text-slate-700">
+            /display/{deviceId}
+          </span>
+
+          <a
+            href={`/display/${deviceId}`}
+            target="_blank"
+            className="rounded-xl bg-slate-950 px-3 py-2 text-xs font-semibold text-white no-underline"
+          >
+            Preview
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function InfoRow({ label, value }: { label: string; value: string | number }) {
+  return (
+    <div className="rounded-2xl bg-slate-50 p-4">
+      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+        {label}
+      </p>
+      <p className="mt-1 break-all text-sm font-semibold text-slate-900">
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function Input({
+  label,
+  value,
+  onChange,
+  type = "text",
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  type?: string;
+}) {
+  return (
+    <div>
+      <label className="text-sm font-semibold text-slate-700">{label}</label>
+      <input
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-900 outline-none transition focus:border-[var(--admin-cyan)] focus:ring-2 focus:ring-cyan-100"
+      />
+    </div>
   );
 }

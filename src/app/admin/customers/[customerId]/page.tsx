@@ -53,7 +53,6 @@ export default function CustomerDetailPage({
     if (reason === "payment_failed") return "Payment failed";
     if (reason === "subscription_cancelled") return "Subscription cancelled";
     if (reason === "customer_cancelled") return "Cancelled by customer";
-
     return "None";
   };
 
@@ -61,8 +60,16 @@ export default function CustomerDetailPage({
     if (source === "admin") return "Admin";
     if (source === "customer") return "Customer";
     if (source === "stripe") return "Stripe";
-
     return "None";
+  };
+
+  const getStatusClass = (status: string | null) => {
+    if (status === "active") return "bg-green-100 text-green-700";
+    if (status === "invited") return "bg-blue-100 text-blue-700";
+    if (status === "suspended") return "bg-red-100 text-red-700";
+    if (status === "completed_profile") return "bg-purple-100 text-purple-700";
+    if (status === "accepted_terms") return "bg-yellow-100 text-yellow-700";
+    return "bg-slate-100 text-slate-700";
   };
 
   const loadData = async () => {
@@ -128,9 +135,7 @@ export default function CustomerDetailPage({
 
   const suspendCustomer = async () => {
     if (!customer) return;
-
-    const confirmed = confirm("Suspend this customer?");
-    if (!confirmed) return;
+    if (!confirm("Suspend this customer?")) return;
 
     setSaving(true);
 
@@ -162,11 +167,13 @@ export default function CustomerDetailPage({
       return;
     }
 
-    const confirmed = confirm(
-      "Cancel this customer's Stripe subscription and suspend the customer?",
-    );
-
-    if (!confirmed) return;
+    if (
+      !confirm(
+        "Cancel this customer's Stripe subscription and suspend the customer?",
+      )
+    ) {
+      return;
+    }
 
     setSaving(true);
 
@@ -196,9 +203,7 @@ export default function CustomerDetailPage({
 
   const reactivateCustomer = async () => {
     if (!customer) return;
-
-    const confirmed = confirm("Reactivate this customer?");
-    if (!confirmed) return;
+    if (!confirm("Reactivate this customer?")) return;
 
     setSaving(true);
 
@@ -258,20 +263,23 @@ export default function CustomerDetailPage({
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-6xl p-6">
-        <p>Loading customer...</p>
+      <div className="admin-card p-6">
+        <p className="admin-muted">Loading customer...</p>
       </div>
     );
   }
 
   if (!customer) {
     return (
-      <div className="mx-auto max-w-6xl p-6">
-        <h1 className="text-2xl font-bold">Customer not found</h1>
-        <Link
-          href="/admin/customers"
-          className="mt-4 inline-block text-blue-600"
-        >
+      <div>
+        <div className="admin-page-header">
+          <h1 className="admin-title">Customer not found</h1>
+          <p className="admin-subtitle">
+            This customer could not be found in the database.
+          </p>
+        </div>
+
+        <Link href="/admin/customers" className="admin-button-primary">
           Back to customers
         </Link>
       </div>
@@ -279,171 +287,205 @@ export default function CustomerDetailPage({
   }
 
   return (
-    <div className="mx-auto max-w-6xl p-6">
-      <Link href="/admin/customers" className="text-sm text-gray-600">
-        ← Back to customers
-      </Link>
+    <div>
+      {/* ==============================
+          Page Header
+      ============================== */}
+      <div className="admin-page-header">
+        <Link
+          href="/admin/customers"
+          className="text-sm font-semibold text-[rgb(8,184,238)] no-underline"
+        >
+          ← Back to customers
+        </Link>
 
-      <h1 className="mt-4 text-3xl font-bold">{customer.name}</h1>
+        <div className="mt-4 flex flex-col justify-between gap-4 md:flex-row md:items-end">
+          <div>
+            <h1 className="admin-title">{customer.name}</h1>
+            <p className="admin-subtitle">
+              Manage this customer’s onboarding and display screens.
+            </p>
+          </div>
 
-      <span
-        className={`mt-3 inline-flex rounded-full px-3 py-1 text-sm font-semibold ${
-          customer.status === "active"
-            ? "bg-green-100 text-green-700"
-            : customer.status === "invited"
-              ? "bg-blue-100 text-blue-700"
-              : customer.status === "suspended"
-                ? "bg-red-100 text-red-700"
-                : customer.status === "completed_profile"
-                  ? "bg-purple-100 text-purple-700"
-                  : customer.status === "accepted_terms"
-                    ? "bg-yellow-100 text-yellow-700"
-                    : "bg-gray-100 text-gray-700"
-        }`}
-      >
-        {customer.status || "draft"}
-      </span>
-
-      <p className="mt-2 text-gray-600">
-        Manage this customer’s onboarding and display screens.
-      </p>
-
-      <div className="mt-6 rounded-xl bg-white p-6 shadow">
-        <h2 className="text-lg font-semibold">Onboarding</h2>
-
-        <div className="mt-4 grid gap-3 text-sm md:grid-cols-2">
-          <p>
-            Onboarding token: {customer.onboarding_token || "Not generated yet"}
-          </p>
-
-          <p>
-            Token expires:{" "}
-            {customer.onboarding_token_expires_at || "Not generated yet"}
-          </p>
-
-          <p>Terms accepted: {customer.terms_accepted_at ? "Yes" : "No"}</p>
-          <p>Privacy accepted: {customer.privacy_accepted_at ? "Yes" : "No"}</p>
-          <p>Marketing consent: {customer.marketing_consent ? "Yes" : "No"}</p>
-          <p>Payment status: {customer.payment_status || "Not paid"}</p>
-
-          <p>
-            Stripe customer: {customer.stripe_customer_id || "Not created yet"}
-          </p>
-
-          <p>
-            Stripe subscription:{" "}
-            {customer.stripe_subscription_id || "Not created yet"}
-          </p>
-
-          <p>Activated at: {customer.activated_at || "Not active yet"}</p>
-          <p>
-            Inactive reason: {formatInactiveReason(customer.inactive_reason)}
-          </p>
-          <p>Cancelled at: {customer.cancelled_at || "Not cancelled"}</p>
-          <p>
-            Cancellation source:{" "}
-            {formatCancellationSource(customer.cancellation_source)}
-          </p>
+          <span
+            className={`inline-flex w-fit rounded-full px-3 py-1 text-sm font-semibold ${getStatusClass(
+              customer.status,
+            )}`}
+          >
+            {customer.status || "draft"}
+          </span>
         </div>
-
-        {customer.status === "active" ? (
-          <>
-            <p className="mt-4 rounded-lg bg-green-50 p-3 text-sm text-green-700">
-              Onboarding completed. Customer is active and paid.
-            </p>
-
-            <button
-              onClick={suspendCustomer}
-              disabled={saving}
-              className="mt-4 rounded-lg bg-yellow-600 px-4 py-2 text-sm text-white disabled:opacity-50"
-            >
-              {saving ? "Saving..." : "Suspend customer"}
-            </button>
-
-            {customer.stripe_subscription_id && (
-              <button
-                onClick={cancelSubscription}
-                disabled={saving}
-                className="ml-3 mt-4 rounded-lg bg-red-800 px-4 py-2 text-sm text-white disabled:opacity-50"
-              >
-                {saving ? "Saving..." : "Cancel subscription"}
-              </button>
-            )}
-          </>
-        ) : customer.status === "suspended" ? (
-          <>
-            <p className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">
-              Customer is suspended. Displays should not run for this customer.
-            </p>
-
-            <button
-              onClick={reactivateCustomer}
-              disabled={saving}
-              className="mt-4 rounded-lg bg-green-600 px-4 py-2 text-sm text-white disabled:opacity-50"
-            >
-              {saving ? "Saving..." : "Reactivate customer"}
-            </button>
-          </>
-        ) : (
-          <>
-            <button
-              onClick={generateOnboardingLink}
-              disabled={saving}
-              className="mt-4 rounded-lg bg-black px-4 py-2 text-sm text-white disabled:opacity-50"
-            >
-              {saving ? "Generating..." : "Generate onboarding link"}
-            </button>
-
-            {customer.onboarding_token && (
-              <p className="mt-3 break-all rounded-lg bg-gray-100 p-3 text-sm text-gray-700">
-                Onboarding link: /onboarding/{customer.onboarding_token}
-              </p>
-            )}
-          </>
-        )}
       </div>
 
-      <div className="mt-6 rounded-xl bg-white p-6 shadow">
-        <h2 className="text-lg font-semibold">Device management</h2>
+      {/* ==============================
+          Onboarding
+      ============================== */}
+      <div className="admin-card p-6">
+        <h2 className="admin-card-title text-xl">Onboarding</h2>
 
-        <p className="mt-2 text-sm text-gray-600">
+        <div className="mt-4 grid gap-4 text-sm md:grid-cols-2">
+          <InfoRow
+            label="Onboarding token"
+            value={customer.onboarding_token || "Not generated yet"}
+          />
+          <InfoRow
+            label="Token expires"
+            value={customer.onboarding_token_expires_at || "Not generated yet"}
+          />
+          <InfoRow
+            label="Terms accepted"
+            value={customer.terms_accepted_at ? "Yes" : "No"}
+          />
+          <InfoRow
+            label="Privacy accepted"
+            value={customer.privacy_accepted_at ? "Yes" : "No"}
+          />
+          <InfoRow
+            label="Marketing consent"
+            value={customer.marketing_consent ? "Yes" : "No"}
+          />
+          <InfoRow
+            label="Payment status"
+            value={customer.payment_status || "Not paid"}
+          />
+          <InfoRow
+            label="Stripe customer"
+            value={customer.stripe_customer_id || "Not created yet"}
+          />
+          <InfoRow
+            label="Stripe subscription"
+            value={customer.stripe_subscription_id || "Not created yet"}
+          />
+          <InfoRow
+            label="Activated at"
+            value={customer.activated_at || "Not active yet"}
+          />
+          <InfoRow
+            label="Inactive reason"
+            value={formatInactiveReason(customer.inactive_reason)}
+          />
+          <InfoRow
+            label="Cancelled at"
+            value={customer.cancelled_at || "Not cancelled"}
+          />
+          <InfoRow
+            label="Cancellation source"
+            value={formatCancellationSource(customer.cancellation_source)}
+          />
+        </div>
+
+        <div className="mt-6">
+          {customer.status === "active" ? (
+            <>
+              <p className="rounded-2xl bg-green-50 p-4 text-sm font-medium text-green-700">
+                Onboarding completed. Customer is active and paid.
+              </p>
+
+              <div className="mt-4 flex flex-wrap gap-3">
+                <button
+                  onClick={suspendCustomer}
+                  disabled={saving}
+                  className="rounded-xl bg-yellow-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+                >
+                  {saving ? "Saving..." : "Suspend customer"}
+                </button>
+
+                {customer.stripe_subscription_id && (
+                  <button
+                    onClick={cancelSubscription}
+                    disabled={saving}
+                    className="rounded-xl bg-red-800 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+                  >
+                    {saving ? "Saving..." : "Cancel subscription"}
+                  </button>
+                )}
+              </div>
+            </>
+          ) : customer.status === "suspended" ? (
+            <>
+              <p className="rounded-2xl bg-red-50 p-4 text-sm font-medium text-red-700">
+                Customer is suspended. Displays should not run for this
+                customer.
+              </p>
+
+              <button
+                onClick={reactivateCustomer}
+                disabled={saving}
+                className="mt-4 rounded-xl bg-green-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50"
+              >
+                {saving ? "Saving..." : "Reactivate customer"}
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={generateOnboardingLink}
+                disabled={saving}
+                className="admin-button-primary"
+              >
+                {saving ? "Generating..." : "Generate onboarding link"}
+              </button>
+
+              {customer.onboarding_token && (
+                <p className="mt-4 break-all rounded-2xl bg-slate-100 p-4 text-sm text-slate-700">
+                  Onboarding link: /onboarding/{customer.onboarding_token}
+                </p>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* ==============================
+          Device Management
+      ============================== */}
+      <div className="admin-card mt-6 p-6">
+        <h2 className="admin-card-title text-xl">Device management</h2>
+
+        <p className="admin-muted mt-2 text-sm">
           Add a device through Device Management so inventory, warranty, and
           assignment records are stored correctly.
         </p>
 
         <Link
           href={`/admin/devices/new?customerId=${customer.id}`}
-          className="mt-4 inline-flex rounded-lg bg-black px-4 py-2 text-sm text-white"
+          className="admin-button-primary mt-4"
         >
           Add device for this customer
         </Link>
       </div>
 
-      <div className="mt-6 rounded-xl bg-white p-6 shadow">
-        <h2 className="text-lg font-semibold">Devices</h2>
+      {/* ==============================
+          Devices
+      ============================== */}
+      <div className="admin-card mt-6 p-6">
+        <h2 className="admin-card-title text-xl">Devices</h2>
 
         {devices.length === 0 ? (
-          <p className="mt-4 text-gray-500">No devices yet.</p>
+          <p className="admin-muted mt-4">No devices yet.</p>
         ) : (
           <div className="mt-4 space-y-3">
             {devices.map((device) => (
-              <div key={device.id} className="rounded-lg border p-4">
-                <p className="font-semibold">
+              <div
+                key={device.id}
+                className="rounded-2xl border border-slate-200 bg-white/70 p-4"
+              >
+                <p className="font-semibold text-slate-950">
                   {device.name || "Unnamed device"}
                 </p>
 
-                <p className="text-sm text-gray-500">
+                <p className="mt-1 text-sm text-slate-500">
                   Device code: {device.device_code}
                 </p>
 
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-slate-500">
                   Display: /display/{device.device_code}
                 </p>
 
-                <div className="mt-3 flex gap-2">
+                <div className="mt-3 flex flex-wrap gap-2">
                   <Link
                     href={`/admin/devices/${device.device_code}`}
-                    className="rounded bg-black px-3 py-2 text-xs text-white"
+                    className="rounded-xl bg-slate-950 px-3 py-2 text-xs font-semibold text-white no-underline"
                   >
                     Manage
                   </Link>
@@ -451,7 +493,7 @@ export default function CustomerDetailPage({
                   <a
                     href={`/display/${device.device_code}`}
                     target="_blank"
-                    className="rounded border px-3 py-2 text-xs"
+                    className="rounded-xl border border-slate-300 px-3 py-2 text-xs font-semibold text-slate-700 no-underline"
                   >
                     Preview
                   </a>
@@ -461,6 +503,19 @@ export default function CustomerDetailPage({
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+function InfoRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl bg-slate-50 p-4">
+      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+        {label}
+      </p>
+      <p className="mt-1 break-all text-sm font-semibold text-slate-900">
+        {value}
+      </p>
     </div>
   );
 }

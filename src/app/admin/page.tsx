@@ -53,49 +53,51 @@ export default function AdminHomePage() {
   }, []);
 
   return (
-    <div className="mx-auto max-w-7xl">
-      <div className="rounded-3xl border border-white bg-white/80 p-8 shadow-sm">
-        <p className="text-sm font-semibold uppercase tracking-[0.25em] text-blue-600">
-          InfoSync Admin
-        </p>
+    <div>
+      {/* ==============================
+          Page Header
+      ============================== */}
+      <div className="admin-page-header flex flex-col justify-between gap-4 md:flex-row md:items-end">
+        <div>
+          <p className="text-sm font-semibold uppercase tracking-[0.25em] text-[var(--admin-cyan)]">
+            {" "}
+            InfoSync Admin
+          </p>
 
-        <div className="mt-3 flex flex-col justify-between gap-4 md:flex-row md:items-end">
-          <div>
-            <h1 className="text-4xl font-bold tracking-tight text-slate-950">
-              Dashboard
-            </h1>
-            <p className="mt-2 text-slate-500">
-              Overview of customers, screens, and tasks that need attention.
-            </p>
-          </div>
+          <h1 className="admin-title mt-3">Dashboard</h1>
 
-          <button
-            onClick={loadStats}
-            className="rounded-2xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white shadow-lg shadow-slate-300 transition hover:bg-slate-800"
-          >
-            Refresh
-          </button>
+          <p className="admin-subtitle">
+            Overview of customers, screens, and tasks that need attention.
+          </p>
         </div>
+
+        <button onClick={loadStats} className="admin-button-primary">
+          Refresh
+        </button>
       </div>
 
-      <div className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+      {/* ==============================
+          Stats Cards
+      ============================== */}
+      <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+        <div className="admin-card p-6">
           <p className="text-sm font-medium text-slate-500">Total customers</p>
           <p className="mt-4 text-5xl font-bold tracking-tight text-slate-950">
             {loading ? "..." : customerCount}
           </p>
         </div>
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+
+        <div className="admin-card p-6">
           <p className="text-sm font-medium text-slate-500">Total devices</p>
           <p className="mt-4 text-5xl font-bold tracking-tight text-slate-950">
             {loading ? "..." : deviceCount}
           </p>
         </div>
+
         <Link
           href="/admin/customers?filter=needs_device"
-          className="rounded-3xl border border-orange-200 bg-gradient-to-br from-orange-50 to-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-md"
+          className="admin-card block p-6 no-underline transition hover:-translate-y-1 hover:shadow-xl"
         >
-          {" "}
           <p className="text-sm font-medium text-orange-700">
             Clients need device
           </p>
@@ -103,22 +105,25 @@ export default function AdminHomePage() {
             {loading ? "..." : needsDeviceCount}
           </p>
         </Link>
+
         <Link
           href="/admin/customers?filter=needs_playlist"
-          className="rounded-3xl border border-red-200 bg-gradient-to-br from-red-50 to-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-md"
+          className="admin-card block p-6 no-underline transition hover:-translate-y-1 hover:shadow-xl"
         >
-          {" "}
           <p className="text-sm font-medium text-red-700">
             Devices need playlist
           </p>
           <p className="mt-4 text-5xl font-bold tracking-tight text-red-900">
             {loading ? "..." : needsPlaylistCount}
           </p>
-        </Link>{" "}
+        </Link>
       </div>
 
-      <div className="mt-8 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="text-xl font-bold text-slate-950">Today’s priorities</h2>
+      {/* ==============================
+          Today Priorities
+      ============================== */}
+      <div className="admin-card mt-8 p-6">
+        <h2 className="admin-card-title text-xl">Today’s priorities</h2>
 
         <div className="mt-4 space-y-3">
           <div className="flex items-center justify-between rounded-2xl bg-orange-50 px-5 py-4">
@@ -128,9 +133,10 @@ export default function AdminHomePage() {
               </p>
               <p className="text-sm text-orange-700">
                 Active customers without any screen assigned. Go to Customers -
-                Needs Device
+                Needs Device.
               </p>
             </div>
+
             <span className="rounded-full bg-orange-200 px-3 py-1 text-sm font-bold text-orange-900">
               {needsDeviceCount}
             </span>
@@ -143,9 +149,10 @@ export default function AdminHomePage() {
               </p>
               <p className="text-sm text-red-700">
                 Devices that exist but have no content. Go to Customers -
-                missing playlists
+                Missing Playlists.
               </p>
             </div>
+
             <span className="rounded-full bg-red-200 px-3 py-1 text-sm font-bold text-red-900">
               {needsPlaylistCount}
             </span>

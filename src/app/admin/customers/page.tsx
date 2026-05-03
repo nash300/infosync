@@ -17,6 +17,16 @@ type Customer = {
   }[];
 };
 
+const statusFilters = [
+  { value: "all", label: "All" },
+  { value: "needs_device", label: "Needs device" },
+  { value: "needs_playlist", label: "Needs playlist" },
+  { value: "draft", label: "Draft" },
+  { value: "invited", label: "Invited" },
+  { value: "active", label: "Active" },
+  { value: "suspended", label: "Suspended" },
+];
+
 export default function CustomersPage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [search, setSearch] = useState("");
@@ -25,20 +35,10 @@ export default function CustomersPage() {
   const [statusFilter, setStatusFilter] = useState(
     searchParams.get("filter") || "all",
   );
-  const statusFilters = [
-    { value: "all", label: "All" },
-    { value: "needs_device", label: "Needs device" },
-    { value: "needs_playlist", label: "Needs playlist" },
-    { value: "draft", label: "Draft" },
-    { value: "invited", label: "Invited" },
-    { value: "active", label: "Active" },
-    { value: "suspended", label: "Suspended" },
-  ];
-  const [loading, setLoading] = useState(true);
 
+  const [loading, setLoading] = useState(true);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -73,9 +73,12 @@ export default function CustomersPage() {
   };
 
   useEffect(() => {
-    const filterFromUrl = searchParams.get("filter") || "all";
-    setStatusFilter(filterFromUrl);
+    setStatusFilter(searchParams.get("filter") || "all");
   }, [searchParams]);
+
+  useEffect(() => {
+    loadCustomers();
+  }, []);
 
   const isValidEmail = (value: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
@@ -123,10 +126,6 @@ export default function CustomersPage() {
     setSaving(false);
   };
 
-  useEffect(() => {
-    loadCustomers();
-  }, []);
-
   const getDeviceCount = (customer: Customer) => {
     return customer.devices?.length || 0;
   };
@@ -159,6 +158,13 @@ export default function CustomersPage() {
     ).length;
   };
 
+  const getStatusClass = (status: string | null) => {
+    if (status === "active") return "bg-green-100 text-green-700";
+    if (status === "invited") return "bg-blue-100 text-blue-700";
+    if (status === "suspended") return "bg-red-100 text-red-700";
+    return "bg-slate-100 text-slate-700";
+  };
+
   const filteredCustomers = customers.filter((customer) => {
     const value = search.toLowerCase();
 
@@ -171,40 +177,52 @@ export default function CustomersPage() {
   });
 
   return (
-    <div className="mx-auto max-w-6xl p-8">
-      <h1 className="text-3xl font-bold">Customers</h1>
-      <p className="mt-2 text-gray-600">
-        Create customer drafts, search records, and open customer profiles.
-      </p>
+    <div>
+      {/* ==============================
+          Page Header
+      ============================== */}
+      <div className="admin-page-header">
+        <h1 className="admin-title">Customers</h1>
+        <p className="admin-subtitle">
+          Create customer drafts, search records, and open customer profiles.
+        </p>
+      </div>
 
-      <div className="mt-8 rounded-xl bg-white p-6 shadow">
-        <h2 className="text-xl font-semibold">Create customer draft</h2>
+      {/* ==============================
+          Create Customer Draft
+      ============================== */}
+      <div className="admin-card p-6">
+        <h2 className="admin-card-title text-xl">Create customer draft</h2>
 
         <div className="mt-4 grid gap-4 md:grid-cols-2">
           <div>
-            <label className="text-sm font-medium">Company name *</label>
+            <label className="text-sm font-semibold text-slate-700">
+              Company name *
+            </label>
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Example: Salon Bella"
-              className="mt-1 w-full rounded-lg border px-3 py-2"
+              className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-900 outline-none transition focus:border-[rgb(8,184,238)] focus:ring-2 focus:ring-cyan-100"
             />
           </div>
 
           <div>
-            <label className="text-sm font-medium">Contact email *</label>
+            <label className="text-sm font-semibold text-slate-700">
+              Contact email *
+            </label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="customer@example.com"
-              className="mt-1 w-full rounded-lg border px-3 py-2"
+              className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-900 outline-none transition focus:border-[rgb(8,184,238)] focus:ring-2 focus:ring-cyan-100"
             />
           </div>
         </div>
 
         {message && (
-          <p className="mt-4 rounded-lg bg-gray-100 p-3 text-sm text-gray-700">
+          <p className="mt-4 rounded-2xl bg-slate-100 p-4 text-sm font-medium text-slate-700">
             {message}
           </p>
         )}
@@ -212,14 +230,17 @@ export default function CustomersPage() {
         <button
           onClick={createCustomer}
           disabled={saving}
-          className="mt-4 rounded-lg bg-black px-4 py-2 text-white disabled:opacity-50"
+          className="admin-button-primary mt-4 disabled:opacity-50"
         >
           {saving ? "Creating..." : "Create customer draft"}
         </button>
       </div>
 
-      <div className="mt-8 rounded-xl bg-white p-6 shadow">
-        <h2 className="text-xl font-semibold">Search customer</h2>
+      {/* ==============================
+          Search + Customer List
+      ============================== */}
+      <div className="admin-card mt-8 p-6">
+        <h2 className="admin-card-title text-xl">Search customers</h2>
 
         <div className="mt-4 flex flex-wrap gap-2">
           {statusFilters.map((status) => {
@@ -235,12 +256,12 @@ export default function CustomersPage() {
               <button
                 key={status.value}
                 onClick={() => setStatusFilter(status.value)}
-                className={`rounded-full px-3 py-1 text-sm font-medium transition ${
+                className={`rounded-full px-3 py-1 text-sm font-semibold transition ${
                   isActive
-                    ? "bg-black text-white shadow-sm"
+                    ? "bg-slate-950 text-white shadow-sm"
                     : shouldFlag
                       ? "border border-red-200 bg-red-50 text-red-700 shadow-sm ring-2 ring-red-100"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      : "bg-slate-100 text-slate-700 hover:bg-slate-200"
                 }`}
               >
                 <span className="inline-flex items-center gap-1.5">
@@ -258,18 +279,17 @@ export default function CustomersPage() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search by name, email, or phone..."
-          className="mt-4 w-full rounded-lg border px-3 py-2"
+          className="mt-4 w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-900 outline-none transition focus:border-[rgb(8,184,238)] focus:ring-2 focus:ring-cyan-100"
         />
 
         <div className="mt-4 space-y-3">
           {loading ? (
-            <p className="text-gray-500">Loading...</p>
+            <p className="admin-muted">Loading...</p>
           ) : filteredCustomers.length === 0 ? (
-            <p className="text-gray-500">No customers found.</p>
+            <p className="admin-muted">No customers found.</p>
           ) : (
             filteredCustomers.map((customer) => {
               const deviceCount = getDeviceCount(customer);
-
               const customerHasDeviceWithoutPlaylist =
                 hasDeviceWithoutPlaylist(customer);
 
@@ -286,12 +306,14 @@ export default function CustomersPage() {
                 <Link
                   key={customer.id}
                   href={`/admin/customers/${customer.id}`}
-                  className="block rounded-lg border p-4 hover:bg-gray-50"
+                  className="block rounded-2xl border border-slate-200 bg-white/70 p-4 no-underline transition hover:bg-white hover:shadow-md"
                 >
                   <div className="flex items-center justify-between gap-4">
                     <div>
-                      <p className="font-semibold">{customer.name}</p>
-                      <p className="text-sm text-gray-500">
+                      <p className="font-semibold text-slate-950">
+                        {customer.name}
+                      </p>
+                      <p className="mt-1 text-sm text-slate-500">
                         {customer.email || "No email"} ·{" "}
                         {customer.phone || "No phone"}
                       </p>
@@ -311,18 +333,12 @@ export default function CustomersPage() {
                       )}
                     </div>
 
-                    <div className="text-right text-sm text-gray-500">
+                    <div className="text-right text-sm text-slate-500">
                       <p>Devices: {deviceCount}</p>
                       <span
-                        className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
-                          customer.status === "active"
-                            ? "bg-green-100 text-green-700"
-                            : customer.status === "invited"
-                              ? "bg-blue-100 text-blue-700"
-                              : customer.status === "suspended"
-                                ? "bg-red-100 text-red-700"
-                                : "bg-gray-100 text-gray-700"
-                        }`}
+                        className={`mt-2 inline-flex rounded-full px-3 py-1 text-xs font-semibold ${getStatusClass(
+                          customer.status,
+                        )}`}
                       >
                         {customer.status || "draft"}
                       </span>

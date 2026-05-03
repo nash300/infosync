@@ -18,6 +18,13 @@ type Device = {
   playlists: { count: number }[];
 };
 
+const deviceFilters = [
+  { value: "all", label: "All" },
+  { value: "active", label: "Active" },
+  { value: "inactive", label: "Inactive" },
+  { value: "needs_playlist", label: "Needs playlist" },
+];
+
 export default function DevicesPage() {
   const [devices, setDevices] = useState<Device[]>([]);
   const [loading, setLoading] = useState(true);
@@ -25,7 +32,9 @@ export default function DevicesPage() {
   const [filter, setFilter] = useState("all");
 
   const loadDevices = async () => {
-    const { data } = await supabase
+    setLoading(true);
+
+    const { data, error } = await supabase
       .from("devices")
       .select(
         `
@@ -41,7 +50,13 @@ export default function DevicesPage() {
       )
       .order("created_at", { ascending: false });
 
-    setDevices((data || []) as unknown as Device[]);
+    if (error) {
+      console.error("Load devices error:", error);
+      setDevices([]);
+    } else {
+      setDevices((data || []) as unknown as Device[]);
+    }
+
     setLoading(false);
   };
 
@@ -50,14 +65,15 @@ export default function DevicesPage() {
   }, []);
 
   const filteredDevices = devices.filter((device) => {
+    const value = search.toLowerCase();
     const playlistCount = device.playlists?.[0]?.count || 0;
 
     const matchesSearch =
-      device.name?.toLowerCase().includes(search.toLowerCase()) ||
-      device.device_code.toLowerCase().includes(search.toLowerCase()) ||
-      device.serial_number?.toLowerCase().includes(search.toLowerCase()) ||
-      device.location?.toLowerCase().includes(search.toLowerCase()) ||
-      device.customers?.name?.toLowerCase().includes(search.toLowerCase());
+      device.name?.toLowerCase().includes(value) ||
+      device.device_code.toLowerCase().includes(value) ||
+      device.serial_number?.toLowerCase().includes(value) ||
+      device.location?.toLowerCase().includes(value) ||
+      device.customers?.name?.toLowerCase().includes(value);
 
     const matchesFilter =
       filter === "all" ||
@@ -69,48 +85,42 @@ export default function DevicesPage() {
   });
 
   return (
-    <div className="mx-auto max-w-6xl p-6">
-      <div className="flex items-center justify-between gap-4">
+    <div>
+      {/* Page Header */}
+      <div className="admin-page-header flex flex-col justify-between gap-4 md:flex-row md:items-end">
         <div>
-          <h1 className="text-3xl font-bold">Devices</h1>
-          <p className="mt-2 text-gray-600">
-            Manage your screens and assign video content.
+          <h1 className="admin-title">Devices</h1>
+          <p className="admin-subtitle">
+            Manage device inventory, assignments, and playlist readiness.
           </p>
         </div>
 
-        <Link
-          href="/admin/devices/new"
-          className="rounded-xl bg-black px-4 py-2 text-sm font-semibold text-white"
-        >
+        <Link href="/admin/devices/new" className="admin-button-primary">
           Add device
         </Link>
       </div>
 
-      <div className="mt-6 rounded-xl bg-white p-6 shadow">
-        <h2 className="text-lg font-semibold">Your devices</h2>
+      {/* Device List */}
+      <div className="admin-card p-6">
+        <h2 className="admin-card-title text-xl">Your devices</h2>
 
         <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by name, code, customer, serial, location..."
-            className="w-full rounded-lg border px-3 py-2 md:max-w-md"
+            className="w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-900 outline-none transition focus:border-[var(--admin-cyan)] focus:ring-2 focus:ring-cyan-100 md:max-w-md"
           />
 
           <div className="flex flex-wrap gap-2">
-            {[
-              { value: "all", label: "All" },
-              { value: "active", label: "Active" },
-              { value: "inactive", label: "Inactive" },
-              { value: "needs_playlist", label: "Needs playlist" },
-            ].map((item) => (
+            {deviceFilters.map((item) => (
               <button
                 key={item.value}
                 onClick={() => setFilter(item.value)}
-                className={`rounded-full px-3 py-1 text-sm ${
+                className={`rounded-full px-3 py-1 text-sm font-semibold transition ${
                   filter === item.value
-                    ? "bg-black text-white"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    ? "bg-slate-950 text-white"
+                    : "bg-slate-100 text-slate-700 hover:bg-slate-200"
                 }`}
               >
                 {item.label}
@@ -119,47 +129,47 @@ export default function DevicesPage() {
           </div>
         </div>
 
-        {loading ? (
-          <p className="mt-4 text-gray-500">Loading...</p>
-        ) : filteredDevices.length === 0 ? (
-          <p className="mt-4 text-gray-500">No devices yet</p>
-        ) : (
-          <div className="mt-4 space-y-3">
-            {filteredDevices.map((device) => {
+        <div className="mt-4 space-y-3">
+          {loading ? (
+            <p className="admin-muted">Loading...</p>
+          ) : filteredDevices.length === 0 ? (
+            <p className="admin-muted">No devices found.</p>
+          ) : (
+            filteredDevices.map((device) => {
               const playlistCount = device.playlists?.[0]?.count || 0;
 
               return (
                 <Link
                   key={device.id}
                   href={`/admin/devices/${device.device_code}`}
-                  className="block rounded-lg border p-4 hover:bg-gray-50"
+                  className="block rounded-2xl border border-slate-200 bg-white/70 p-4 no-underline transition hover:bg-white hover:shadow-md"
                 >
                   <div className="flex items-center justify-between gap-4">
                     <div>
-                      <p className="font-semibold">
+                      <p className="font-semibold text-slate-950">
                         {device.name || "Unnamed device"}
                       </p>
 
-                      <p className="text-sm text-gray-500">
+                      <p className="mt-1 text-sm text-slate-500">
                         Code: {device.device_code}
                       </p>
 
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-slate-500">
                         Customer: {device.customers?.name || "Not assigned"}
                       </p>
 
-                      <p className="text-sm text-gray-500">
+                      <p className="text-sm text-slate-500">
                         Location: {device.location || "Not set"}
                       </p>
 
                       {playlistCount === 0 && (
-                        <p className="mt-2 text-sm font-medium text-red-600">
+                        <p className="mt-2 text-sm font-semibold text-red-600">
                           Needs playlist
                         </p>
                       )}
                     </div>
 
-                    <div className="text-right text-sm text-gray-500">
+                    <div className="text-right text-sm text-slate-500">
                       <p>Videos: {playlistCount}</p>
 
                       <span
@@ -175,9 +185,9 @@ export default function DevicesPage() {
                   </div>
                 </Link>
               );
-            })}
-          </div>
-        )}
+            })
+          )}
+        </div>
       </div>
     </div>
   );

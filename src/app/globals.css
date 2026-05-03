@@ -1,43 +1,40 @@
 @import "tailwindcss";
 
+/* ==============================
+   Theme Variables
+============================== */
 :root {
-  --background: #ffffff;
-  --foreground: #101827;
+  --background: rgb(255, 255, 255);
+  --foreground: rgb(16, 24, 39);
 
-  --brand-navy: #08254a;
-  --brand-navy-soft: #123a66;
-  --brand-blue: #0077d9;
-  --brand-cyan: #08b8ee;
-  --brand-orange: #ff8a00;
-  --brand-orange-dark: #f05a00;
-  --brand-red-orange: #ff3d00;
-  --brand-dark: #172033;
-  --brand-light: #f8fbff;
+  --brand-navy: rgb(8, 37, 74);
+  --brand-navy-soft: rgb(18, 58, 102);
+  --brand-blue: rgb(0, 119, 217);
+  --brand-cyan: rgb(8, 184, 238);
+  --brand-orange: rgb(255, 138, 0);
+  --brand-orange-dark: rgb(240, 90, 0);
+  --brand-red-orange: rgb(255, 61, 0);
+  --brand-dark: rgb(23, 32, 51);
+  --brand-light: rgb(248, 251, 255);
 
   --nav-height: 76px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #ffffff;
-    --foreground: #101827;
-  }
-}
-
-/* Base */
-html {
-  margin: 0;
-  min-height: 100%;
-  scroll-behavior: smooth;
-  overflow-x: hidden;
-  overflow-y: auto;
-}
-
+/* ==============================
+   Base
+============================== */
+html,
 body {
   margin: 0;
   min-height: 100%;
   overflow-x: hidden;
-  overflow-y: auto;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
   background: var(--brand-light);
   color: var(--foreground);
   font-family: "Inter", Arial, Helvetica, sans-serif;
@@ -47,22 +44,19 @@ section h1 {
   font-size: 2.5rem;
 }
 
-/* Navbar */
+/* ==============================
+   Navbar
+============================== */
 .navbar {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
+  inset: 0 0 auto 0;
   height: var(--nav-height);
-  min-height: var(--nav-height);
   padding: 0 !important;
   z-index: 1000;
 }
 
 .navbar-glass {
-  position: relative;
   height: var(--nav-height);
-  min-height: var(--nav-height);
   padding: 0 !important;
   background: linear-gradient(
     90deg,
@@ -78,7 +72,6 @@ section h1 {
 
 .navbar .container {
   height: var(--nav-height);
-  min-height: var(--nav-height);
   max-width: none;
   padding-left: 0;
   padding-right: clamp(1rem, 6vw, 7rem);
@@ -91,21 +84,23 @@ section h1 {
 .navbar-nav .nav-link {
   padding: 0 !important;
   font-weight: 700;
-  color: #111827 !important;
+  color: rgb(17, 24, 39) !important;
 }
 
-.navbar-nav .nav-link:hover {
+.navbar-nav .nav-link:hover,
+.nav-link.active {
   color: var(--brand-navy) !important;
 }
 
 .nav-link.active {
   font-weight: 800;
-  color: var(--brand-navy) !important;
   border-bottom: 2px solid var(--brand-navy);
   padding-bottom: 2px !important;
 }
 
-/* Brand Logo */
+/* ==============================
+   Brand Logo
+============================== */
 .navbar-brand {
   font-size: 1.5rem;
 }
@@ -123,9 +118,6 @@ section h1 {
   margin: 0;
   text-decoration: none;
   overflow: hidden;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
   z-index: 2;
 }
 
@@ -146,6 +138,7 @@ section h1 {
 }
 
 .brand-logo::after {
+  content: "";
   position: absolute;
   top: 0;
   right: -1px;
@@ -170,7 +163,6 @@ section h1 {
 .brand-wordmark {
   display: inline-flex;
   align-items: center;
-  font-family: "Inter", Arial, Helvetica, sans-serif;
   font-size: 1.3rem;
   font-weight: 900;
   letter-spacing: 0.08em;
@@ -186,7 +178,9 @@ section h1 {
   color: var(--brand-orange-dark);
 }
 
-/* Buttons */
+/* ==============================
+   Buttons
+============================== */
 .btn-dark {
   background-color: var(--brand-dark);
   border: none;
@@ -196,7 +190,9 @@ section h1 {
   background-color: var(--brand-navy);
 }
 
-/* Mobile Menu */
+/* ==============================
+   Mobile Menu
+============================== */
 .mobile-toggle {
   border: none;
   background: none;
@@ -211,8 +207,8 @@ section h1 {
   width: 26px;
   height: 3px;
   background: var(--brand-navy);
-  transition: 0.3s ease;
   border-radius: 2px;
+  transition: 0.3s ease;
 }
 
 .mobile-toggle .bar.open:nth-child(1) {
@@ -228,14 +224,14 @@ section h1 {
 }
 
 .mobile-menu {
-  display: flex;
-  flex-direction: column;
-  background: white;
-  padding: 20px;
   position: absolute;
   top: var(--nav-height);
   left: 0;
   right: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  background: rgb(255, 255, 255);
   opacity: 0;
   transform: translateY(-15px);
   pointer-events: none;
@@ -243,9 +239,9 @@ section h1 {
     opacity 0.25s ease,
     transform 0.25s ease;
   border-bottom: 1px solid rgba(8, 37, 74, 0.08);
-  z-index: 999;
   border-radius: 0 0 12px 12px;
   box-shadow: 0 16px 32px rgba(8, 37, 74, 0.12);
+  z-index: 999;
 }
 
 .mobile-menu.open {
@@ -260,7 +256,7 @@ section h1 {
   text-decoration: none;
   font-size: 1.1rem;
   font-weight: 700;
-  border-bottom: 1px solid #eef2f7;
+  border-bottom: 1px solid rgb(238, 242, 247);
 }
 
 .mobile-menu a:last-of-type {
@@ -283,7 +279,9 @@ section h1 {
   pointer-events: auto;
 }
 
-/* Page Transition */
+/* ==============================
+   Page Transition
+============================== */
 .page-transition {
   transition: opacity 0.25s ease;
 }
@@ -296,16 +294,15 @@ section h1 {
   opacity: 0;
 }
 
-/* Responsive */
+/* ==============================
+   Responsive
+============================== */
 @media (min-width: 992px) {
   .navbar-nav {
     flex-direction: row !important;
   }
 
-  .mobile-toggle {
-    display: none;
-  }
-
+  .mobile-toggle,
   .mobile-menu {
     display: none;
   }
@@ -317,7 +314,6 @@ section h1 {
   }
 
   .navbar .container {
-    padding-left: 0;
     padding-right: 1rem;
   }
 

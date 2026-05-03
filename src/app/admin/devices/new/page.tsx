@@ -94,130 +94,99 @@ export default function NewDevicePage() {
   }, []);
 
   return (
-    <div className="mx-auto max-w-4xl">
-      <h1 className="text-3xl font-bold">Add device</h1>
-      <p className="mt-2 text-slate-500">
-        Register a physical device and assign it to a customer.
-      </p>
+    <div>
+      {/* Page Header */}
+      <div className="admin-page-header">
+        <h1 className="admin-title">Add device</h1>
+        <p className="admin-subtitle">
+          Register a physical device and assign it to a customer.
+        </p>
+      </div>
 
-      <div className="mt-6 rounded-3xl bg-white p-6 shadow-sm">
+      {/* Device Form */}
+      <div className="admin-card p-6">
         <div className="grid gap-4 md:grid-cols-2">
-          <div>
-            <label className="text-sm font-medium">Customer *</label>
-            <select
-              value={customerId}
-              onChange={(e) => setCustomerId(e.target.value)}
-              className="mt-1 w-full rounded-xl border px-3 py-2"
-            >
-              <option value="">Select customer</option>
-              {customers.map((customer) => (
-                <option key={customer.id} value={customer.id}>
-                  {customer.name} ({customer.status || "draft"})
-                </option>
-              ))}
-            </select>
-          </div>
+          <SelectInput
+            label="Customer *"
+            value={customerId}
+            onChange={setCustomerId}
+          >
+            <option value="">Select customer</option>
+            {customers.map((customer) => (
+              <option key={customer.id} value={customer.id}>
+                {customer.name} ({customer.status || "draft"})
+              </option>
+            ))}
+          </SelectInput>
 
-          <div>
-            <label className="text-sm font-medium">Device name *</label>
-            <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Menu screen, price list, special offers..."
-              className="mt-1 w-full rounded-xl border px-3 py-2"
-            />
-          </div>
+          <TextInput
+            label="Device name *"
+            value={name}
+            onChange={setName}
+            placeholder="Menu screen, price list, special offers..."
+          />
 
-          <div>
-            <label className="text-sm font-medium">Location</label>
-            <input
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              placeholder="Reception, entrance, waiting area..."
-              className="mt-1 w-full rounded-xl border px-3 py-2"
-            />
-          </div>
+          <TextInput
+            label="Location"
+            value={location}
+            onChange={setLocation}
+            placeholder="Reception, entrance, waiting area..."
+          />
 
-          <div>
-            <label className="text-sm font-medium">Make</label>
-            <input
-              value={make}
-              onChange={(e) => setMake(e.target.value)}
-              className="mt-1 w-full rounded-xl border px-3 py-2"
-            />
-          </div>
+          <TextInput label="Make" value={make} onChange={setMake} />
 
-          <div>
-            <label className="text-sm font-medium">Model</label>
-            <input
-              value={model}
-              onChange={(e) => setModel(e.target.value)}
-              placeholder="TV Box S 2nd Gen"
-              className="mt-1 w-full rounded-xl border px-3 py-2"
-            />
-          </div>
+          <TextInput
+            label="Model"
+            value={model}
+            onChange={setModel}
+            placeholder="TV Box S 2nd Gen"
+          />
 
-          <div>
-            <label className="text-sm font-medium">Serial number</label>
-            <input
-              value={serialNumber}
-              onChange={(e) => setSerialNumber(e.target.value)}
-              className="mt-1 w-full rounded-xl border px-3 py-2"
-            />
-          </div>
+          <TextInput
+            label="Serial number"
+            value={serialNumber}
+            onChange={setSerialNumber}
+          />
 
-          <div>
-            <label className="text-sm font-medium">Purchase cost</label>
-            <input
-              type="number"
-              value={purchaseCost}
-              onChange={(e) => setPurchaseCost(e.target.value)}
-              placeholder="599"
-              className="mt-1 w-full rounded-xl border px-3 py-2"
-            />
-          </div>
+          <TextInput
+            label="Purchase cost"
+            type="number"
+            value={purchaseCost}
+            onChange={setPurchaseCost}
+            placeholder="599"
+          />
 
-          <div>
-            <label className="text-sm font-medium">Purchase date</label>
-            <input
-              type="date"
-              value={purchaseDate}
-              onChange={(e) => setPurchaseDate(e.target.value)}
-              className="mt-1 w-full rounded-xl border px-3 py-2"
-            />
-          </div>
+          <TextInput
+            label="Purchase date"
+            type="date"
+            value={purchaseDate}
+            onChange={setPurchaseDate}
+          />
 
-          <div>
-            <label className="text-sm font-medium">
-              Warranty period (months)
-            </label>
-            <input
-              type="number"
-              min="0"
-              value={warrantyPeriod}
-              onChange={(e) => setWarrantyPeriod(e.target.value)}
-              placeholder="12"
-              className="mt-1 w-full rounded-xl border px-3 py-2"
-            />
-          </div>
+          <TextInput
+            label="Warranty period (months)"
+            type="number"
+            value={warrantyPeriod}
+            onChange={setWarrantyPeriod}
+            placeholder="12"
+          />
 
-          <div>
-            <label className="text-sm font-medium">Supplier</label>
-            <input
-              value={supplier}
-              onChange={(e) => setSupplier(e.target.value)}
-              placeholder="Elgiganten, Amazon, etc."
-              className="mt-1 w-full rounded-xl border px-3 py-2"
-            />
-          </div>
+          <TextInput
+            label="Supplier"
+            value={supplier}
+            onChange={setSupplier}
+            placeholder="Elgiganten, Amazon, etc."
+          />
         </div>
 
         <div className="mt-4">
-          <label className="text-sm font-medium">Internal notes</label>
+          <label className="text-sm font-semibold text-slate-700">
+            Internal notes
+          </label>
           <textarea
             value={internalNotes}
             onChange={(e) => setInternalNotes(e.target.value)}
-            className="mt-1 w-full rounded-xl border px-3 py-2"
+            className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-900 outline-none transition focus:border-[var(--admin-cyan)] focus:ring-2 focus:ring-cyan-100"
             rows={4}
           />
         </div>
@@ -225,11 +194,63 @@ export default function NewDevicePage() {
         <button
           onClick={createDevice}
           disabled={saving}
-          className="mt-6 rounded-xl bg-black px-5 py-3 text-sm font-semibold text-white disabled:opacity-50"
+          className="admin-button-primary mt-6 disabled:opacity-50"
         >
           {saving ? "Creating..." : "Create device"}
         </button>
       </div>
+    </div>
+  );
+}
+
+function TextInput({
+  label,
+  value,
+  onChange,
+  placeholder,
+  type = "text",
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+  type?: string;
+}) {
+  return (
+    <div>
+      <label className="text-sm font-semibold text-slate-700">{label}</label>
+      <input
+        type={type}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-900 outline-none transition focus:border-[var(--admin-cyan)] focus:ring-2 focus:ring-cyan-100"
+      />
+    </div>
+  );
+}
+
+function SelectInput({
+  label,
+  value,
+  onChange,
+  children,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <div>
+      <label className="text-sm font-semibold text-slate-700">{label}</label>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-900 outline-none transition focus:border-[var(--admin-cyan)] focus:ring-2 focus:ring-cyan-100"
+      >
+        {children}
+      </select>
     </div>
   );
 }
