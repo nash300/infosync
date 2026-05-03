@@ -1,13 +1,15 @@
 import Link from "next/link";
 import "./admin.css";
+import AdminPageTitle from "@/components/AdminPageTitle";
 
 // ==============================
 // Navigation Items
 // ==============================
 const navItems = [
-  { href: "/admin", label: "Dashboard", icon: "📊" },
-  { href: "/admin/customers", label: "Customers", icon: "👥" },
-  { href: "/admin/devices", label: "Device Management", icon: "🖥️" },
+  { href: "/admin", label: "Dashboard", icon: "" },
+  { href: "/admin/customers", label: "Customers", icon: "" },
+  { href: "/admin/devices", label: "Device Management", icon: "️" },
+  { href: "/admin/pricing", label: "Pricing", icon: "" },
 ];
 
 export default function AdminLayout({
@@ -58,8 +60,8 @@ export default function AdminLayout({
             <div className="admin-sidebar-progress-fill" />
           </div>
         </div>
+        <AdminPageTitle />
       </aside>
-
       {/* Main Content */}
       <main className="ml-72 min-h-screen">
         <div className="admin-page">{children}</div>
