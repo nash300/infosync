@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
+import Link from "next/link";
 
 export default function AdminHomePage() {
   const [customerCount, setCustomerCount] = useState(0);
@@ -84,31 +85,36 @@ export default function AdminHomePage() {
             {loading ? "..." : customerCount}
           </p>
         </div>
-
         <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
           <p className="text-sm font-medium text-slate-500">Total devices</p>
           <p className="mt-4 text-5xl font-bold tracking-tight text-slate-950">
             {loading ? "..." : deviceCount}
           </p>
         </div>
-
-        <div className="rounded-3xl border border-orange-200 bg-gradient-to-br from-orange-50 to-white p-6 shadow-sm">
+        <Link
+          href="/admin/customers?filter=needs_device"
+          className="rounded-3xl border border-orange-200 bg-gradient-to-br from-orange-50 to-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-md"
+        >
+          {" "}
           <p className="text-sm font-medium text-orange-700">
             Clients need device
           </p>
           <p className="mt-4 text-5xl font-bold tracking-tight text-orange-900">
             {loading ? "..." : needsDeviceCount}
           </p>
-        </div>
-
-        <div className="rounded-3xl border border-red-200 bg-gradient-to-br from-red-50 to-white p-6 shadow-sm">
+        </Link>
+        <Link
+          href="/admin/customers?filter=needs_playlist"
+          className="rounded-3xl border border-red-200 bg-gradient-to-br from-red-50 to-white p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-md"
+        >
+          {" "}
           <p className="text-sm font-medium text-red-700">
             Devices need playlist
           </p>
           <p className="mt-4 text-5xl font-bold tracking-tight text-red-900">
             {loading ? "..." : needsPlaylistCount}
           </p>
-        </div>
+        </Link>{" "}
       </div>
 
       <div className="mt-8 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -121,7 +127,8 @@ export default function AdminHomePage() {
                 Create missing devices
               </p>
               <p className="text-sm text-orange-700">
-                Active customers without any screen assigned.
+                Active customers without any screen assigned. Go to Customers -
+                Needs Device
               </p>
             </div>
             <span className="rounded-full bg-orange-200 px-3 py-1 text-sm font-bold text-orange-900">
@@ -135,7 +142,8 @@ export default function AdminHomePage() {
                 Upload missing playlists
               </p>
               <p className="text-sm text-red-700">
-                Devices that exist but have no content.
+                Devices that exist but have no content. Go to Customers -
+                missing playlists
               </p>
             </div>
             <span className="rounded-full bg-red-200 px-3 py-1 text-sm font-bold text-red-900">

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase/client";
 
@@ -19,7 +20,11 @@ type Customer = {
 export default function CustomersPage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const searchParams = useSearchParams();
+
+  const [statusFilter, setStatusFilter] = useState(
+    searchParams.get("filter") || "all",
+  );
   const statusFilters = [
     { value: "all", label: "All" },
     { value: "needs_device", label: "Needs device" },
@@ -66,6 +71,11 @@ export default function CustomersPage() {
 
     setLoading(false);
   };
+
+  useEffect(() => {
+    const filterFromUrl = searchParams.get("filter") || "all";
+    setStatusFilter(filterFromUrl);
+  }, [searchParams]);
 
   const isValidEmail = (value: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
@@ -263,6 +273,15 @@ export default function CustomersPage() {
               const customerHasDeviceWithoutPlaylist =
                 hasDeviceWithoutPlaylist(customer);
 
+              const setupStatus =
+                customer.status !== "active"
+                  ? null
+                  : deviceCount === 0
+                    ? "Needs device"
+                    : customerHasDeviceWithoutPlaylist
+                      ? "Needs playlist"
+                      : "Ready";
+
               return (
                 <Link
                   key={customer.id}
@@ -277,18 +296,19 @@ export default function CustomersPage() {
                         {customer.phone || "No phone"}
                       </p>
 
-                      {customer.status === "active" && deviceCount === 0 && (
-                        <p className="mt-1 text-sm font-medium text-orange-600">
-                          Needs device
+                      {setupStatus && (
+                        <p
+                          className={`mt-1 text-sm font-semibold ${
+                            setupStatus === "Ready"
+                              ? "text-green-600"
+                              : setupStatus === "Needs device"
+                                ? "text-orange-600"
+                                : "text-red-600"
+                          }`}
+                        >
+                          Setup: {setupStatus}
                         </p>
                       )}
-
-                      {customer.status === "active" &&
-                        customerHasDeviceWithoutPlaylist && (
-                          <p className="mt-1 text-sm font-medium text-red-600">
-                            Device needs playlist
-                          </p>
-                        )}
                     </div>
 
                     <div className="text-right text-sm text-gray-500">

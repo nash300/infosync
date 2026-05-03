@@ -45,7 +45,6 @@ export default function CustomerDetailPage({
 
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [devices, setDevices] = useState<Device[]>([]);
-  const [newDeviceName, setNewDeviceName] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -125,33 +124,6 @@ export default function CustomerDetailPage({
     }
 
     setLoading(false);
-  };
-
-  const createDevice = async () => {
-    if (!newDeviceName.trim()) {
-      alert("Device name is required");
-      return;
-    }
-
-    setSaving(true);
-
-    const { error } = await supabase.from("devices").insert({
-      id: crypto.randomUUID(),
-      name: newDeviceName.trim(),
-      customer_id: customerId,
-      is_active: true,
-    });
-
-    if (error) {
-      console.error("Create device error:", error);
-      alert("Could not create device.");
-      setSaving(false);
-      return;
-    }
-
-    setNewDeviceName("");
-    await loadData();
-    setSaving(false);
   };
 
   const suspendCustomer = async () => {
@@ -432,24 +404,19 @@ export default function CustomerDetailPage({
       </div>
 
       <div className="mt-6 rounded-xl bg-white p-6 shadow">
-        <h2 className="text-lg font-semibold">Add device</h2>
+        <h2 className="text-lg font-semibold">Device management</h2>
 
-        <div className="mt-3 flex gap-2">
-          <input
-            value={newDeviceName}
-            onChange={(e) => setNewDeviceName(e.target.value)}
-            placeholder="Example: Reception Screen"
-            className="w-full rounded-lg border px-3 py-2"
-          />
+        <p className="mt-2 text-sm text-gray-600">
+          Add a device through Device Management so inventory, warranty, and
+          assignment records are stored correctly.
+        </p>
 
-          <button
-            onClick={createDevice}
-            disabled={saving}
-            className="rounded-lg bg-black px-4 py-2 text-white disabled:opacity-50"
-          >
-            {saving ? "Adding..." : "Add"}
-          </button>
-        </div>
+        <Link
+          href={`/admin/devices/new?customerId=${customer.id}`}
+          className="mt-4 inline-flex rounded-lg bg-black px-4 py-2 text-sm text-white"
+        >
+          Add device for this customer
+        </Link>
       </div>
 
       <div className="mt-6 rounded-xl bg-white p-6 shadow">

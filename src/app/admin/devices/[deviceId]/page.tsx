@@ -27,13 +27,39 @@ export default function AdminDevicePage({
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [renaming, setRenaming] = useState(false);
+  const [device, setDevice] = useState<any>(null);
+
+  const [editMake, setEditMake] = useState("");
+  const [editModel, setEditModel] = useState("");
+  const [editSerialNumber, setEditSerialNumber] = useState("");
+  const [editLocation, setEditLocation] = useState("");
+  const [editPurchaseCost, setEditPurchaseCost] = useState("");
+  const [editPurchaseDate, setEditPurchaseDate] = useState("");
+  const [editWarrantyPeriod, setEditWarrantyPeriod] = useState("");
+  const [editSupplier, setEditSupplier] = useState("");
+  const [editInternalNotes, setEditInternalNotes] = useState("");
 
   const loadDeviceAndPlaylist = async () => {
     setLoading(true);
 
     const { data: device, error: deviceError } = await supabase
       .from("devices")
-      .select("id, name, is_active")
+      .select(
+        `
+        id,
+        name,
+        is_active,
+        make,
+        model,
+        serial_number,
+        purchase_cost,
+        purchase_date,
+        warranty_period_months,
+        supplier,
+        location,
+        internal_notes
+      `,
+      )
       .eq("device_code", deviceId)
       .single();
 
@@ -45,10 +71,20 @@ export default function AdminDevicePage({
       return;
     }
 
+    setDevice(device);
+    setEditMake(device.make || "");
+    setEditModel(device.model || "");
+    setEditSerialNumber(device.serial_number || "");
+    setEditLocation(device.location || "");
+    setEditPurchaseCost(device.purchase_cost?.toString() || "");
+    setEditPurchaseDate(device.purchase_date || "");
+    setEditWarrantyPeriod(device.warranty_period_months?.toString() || "");
+    setEditSupplier(device.supplier || "");
+    setEditInternalNotes(device.internal_notes || "");
     setDeviceUuid(device.id);
     setDeviceName(device.name || deviceId);
-    setIsActive(device.is_active);
     setNewDeviceName(device.name || deviceId);
+    setIsActive(device.is_active);
 
     const { data, error } = await supabase
       .from("playlists")
@@ -92,6 +128,40 @@ export default function AdminDevicePage({
     await loadDeviceAndPlaylist();
     setRenaming(false);
   };
+
+  const saveDeviceDetails = async () => {
+    if (!deviceUuid) return;
+
+    setSaving(true);
+
+    const { error } = await supabase
+      .from("devices")
+      .update({
+        make: editMake.trim() || null,
+        model: editModel.trim() || null,
+        serial_number: editSerialNumber.trim() || null,
+        location: editLocation.trim() || null,
+        purchase_cost: editPurchaseCost ? Number(editPurchaseCost) : null,
+        purchase_date: editPurchaseDate || null,
+        warranty_period_months: editWarrantyPeriod
+          ? Number(editWarrantyPeriod)
+          : null,
+        supplier: editSupplier.trim() || null,
+        internal_notes: editInternalNotes.trim() || null,
+      })
+      .eq("id", deviceUuid);
+
+    if (error) {
+      console.error("Save device details error:", error);
+      alert(error.message);
+      setSaving(false);
+      return;
+    }
+
+    await loadDeviceAndPlaylist();
+    setSaving(false);
+  };
+
   const deleteDevice = async () => {
     if (!deviceUuid) return;
 
@@ -116,6 +186,7 @@ export default function AdminDevicePage({
 
     window.location.href = "/admin/devices";
   };
+
   const toggleDeviceActive = async () => {
     if (!deviceUuid) return;
 
@@ -235,6 +306,44 @@ export default function AdminDevicePage({
 
         <p className="mt-1 text-sm text-gray-500">Device code: {deviceId}</p>
 
+        {device && (
+          <div className="mt-4 rounded-lg bg-gray-50 p-4 text-sm text-gray-700">
+            <p>
+              <strong>Make:</strong> {device.make || "Not set"}
+            </p>
+            <p>
+              <strong>Model:</strong> {device.model || "Not set"}
+            </p>
+            <p>
+              <strong>Serial number:</strong>{" "}
+              {device.serial_number || "Not set"}
+            </p>
+            <p>
+              <strong>Location:</strong> {device.location || "Not set"}
+            </p>
+            <p>
+              <strong>Purchase cost:</strong>{" "}
+              {device.purchase_cost || "Not set"}
+            </p>
+            <p>
+              <strong>Purchase date:</strong>{" "}
+              {device.purchase_date || "Not set"}
+            </p>
+            <p>
+              <strong>Warranty period:</strong>{" "}
+              {device.warranty_period_months
+                ? `${device.warranty_period_months} months`
+                : "Not set"}
+            </p>
+            <p>
+              <strong>Supplier:</strong> {device.supplier || "Not set"}
+            </p>
+            <p>
+              <strong>Notes:</strong> {device.internal_notes || "None"}
+            </p>
+          </div>
+        )}
+
         <button
           onClick={toggleDeviceActive}
           className={`mt-4 rounded-lg px-4 py-2 text-white ${
@@ -243,12 +352,14 @@ export default function AdminDevicePage({
         >
           {isActive ? "Deactivate device" : "Activate device"}
         </button>
+
         <button
           onClick={deleteDevice}
           className="mt-4 ml-2 rounded-lg bg-gray-800 px-4 py-2 text-white"
         >
           Delete device
         </button>
+
         <div className="mt-6 rounded-lg border p-4">
           <label className="block text-sm font-medium text-gray-700">
             Rename device
@@ -269,6 +380,99 @@ export default function AdminDevicePage({
               {renaming ? "Saving..." : "Save"}
             </button>
           </div>
+        </div>
+
+        <div className="mt-6 rounded-lg border p-4">
+          <h2 className="text-lg font-semibold">Device details</h2>
+
+          <div className="mt-4 grid gap-4 md:grid-cols-2">
+            <label className="text-sm font-medium text-gray-700">Make</label>
+            <input
+              value={editMake}
+              onChange={(e) => setEditMake(e.target.value)}
+              placeholder="Make"
+              className="rounded-lg border px-3 py-2"
+            />
+            <label className="text-sm font-medium text-gray-700">Model</label>
+            <input
+              value={editModel}
+              onChange={(e) => setEditModel(e.target.value)}
+              placeholder="Model"
+              className="rounded-lg border px-3 py-2"
+            />
+            <label className="text-sm font-medium text-gray-700">
+              SerialNumber
+            </label>
+            <input
+              value={editSerialNumber}
+              onChange={(e) => setEditSerialNumber(e.target.value)}
+              placeholder="Serial number"
+              className="rounded-lg border px-3 py-2"
+            />
+            <label className="text-sm font-medium text-gray-700">
+              Location
+            </label>
+            <input
+              value={editLocation}
+              onChange={(e) => setEditLocation(e.target.value)}
+              placeholder="Location"
+              className="rounded-lg border px-3 py-2"
+            />
+            <label className="text-sm font-medium text-gray-700">
+              Purchase Cost
+            </label>
+            <input
+              type="number"
+              value={editPurchaseCost}
+              onChange={(e) => setEditPurchaseCost(e.target.value)}
+              placeholder="Purchase cost"
+              className="rounded-lg border px-3 py-2"
+            />
+            <label className="text-sm font-medium text-gray-700">
+              Purchase Date
+            </label>
+            <input
+              type="date"
+              value={editPurchaseDate}
+              onChange={(e) => setEditPurchaseDate(e.target.value)}
+              className="rounded-lg border px-3 py-2"
+            />
+            <label className="text-sm font-medium text-gray-700">
+              Warranty Period
+            </label>
+            <input
+              type="number"
+              value={editWarrantyPeriod}
+              onChange={(e) => setEditWarrantyPeriod(e.target.value)}
+              placeholder="Warranty period months"
+              className="rounded-lg border px-3 py-2"
+            />
+            <label className="text-sm font-medium text-gray-700">
+              Supplier
+            </label>
+            <input
+              value={editSupplier}
+              onChange={(e) => setEditSupplier(e.target.value)}
+              placeholder="Supplier"
+              className="rounded-lg border px-3 py-2"
+            />
+          </div>
+
+          <textarea
+            value={editInternalNotes}
+            onChange={(e) => setEditInternalNotes(e.target.value)}
+            placeholder="Internal notes"
+            className="mt-4 w-full rounded-lg border px-3 py-2"
+            rows={3}
+          />
+
+          <button
+            onClick={saveDeviceDetails}
+            disabled={saving}
+            className="mt-4 rounded-lg bg-black px-4 py-2 text-sm text-white disabled:opacity-50"
+          >
+            {saving ? "Saving..." : "Save device details"}
+          </button>
         </div>
 
         <div className="mt-6 rounded-lg border bg-black p-2">
