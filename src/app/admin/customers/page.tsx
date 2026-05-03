@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase/client";
+import { showAdminNotification } from "@/lib/admin/notifications";
 
 type Customer = {
   id: string;
@@ -35,12 +36,14 @@ export default function CustomersPage() {
   const [statusFilter, setStatusFilter] = useState(
     searchParams.get("filter") || "all",
   );
+  const [hasSelectedFilter, setHasSelectedFilter] = useState(
+    Boolean(searchParams.get("filter")),
+  );
 
   const [loading, setLoading] = useState(true);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState("");
 
   const loadCustomers = async () => {
     setLoading(true);
@@ -73,7 +76,9 @@ export default function CustomersPage() {
   };
 
   useEffect(() => {
-    setStatusFilter(searchParams.get("filter") || "all");
+    const filter = searchParams.get("filter");
+    setStatusFilter(filter || "all");
+    setHasSelectedFilter(Boolean(filter));
   }, [searchParams]);
 
   useEffect(() => {
@@ -85,20 +90,18 @@ export default function CustomersPage() {
   };
 
   const createCustomer = async () => {
-    setMessage("");
-
     if (!name.trim()) {
-      setMessage("Customer name is required.");
+      showAdminNotification("warning", "Customer name is required.");
       return;
     }
 
     if (!email.trim()) {
-      setMessage("Email is required.");
+      showAdminNotification("warning", "Email is required.");
       return;
     }
 
     if (!isValidEmail(email)) {
-      setMessage("Email address is not valid.");
+      showAdminNotification("warning", "Email address is not valid.");
       return;
     }
 
@@ -113,14 +116,14 @@ export default function CustomersPage() {
 
     if (error) {
       console.error("Create customer error:", error);
-      setMessage(error.message);
+      showAdminNotification("error", error.message || "Could not create customer.");
       setSaving(false);
       return;
     }
 
     setName("");
     setEmail("");
-    setMessage("Customer draft created successfully.");
+    showAdminNotification("success", "Customer draft created successfully.");
 
     await loadCustomers();
     setSaving(false);
@@ -177,7 +180,7 @@ export default function CustomersPage() {
   });
 
   return (
-    <div>
+    <div className="admin-customers-page">
       {/* ==============================
           Page Header
       ============================== */}
@@ -188,101 +191,115 @@ export default function CustomersPage() {
         </p>
       </div>
 
-      {/* ==============================
-          Create Customer Draft
-      ============================== */}
-      <div className="admin-card p-6">
-        <h2 className="admin-card-title text-xl">Create customer draft</h2>
+      <div className="admin-customers-controls">
+        {/* ==============================
+            Create Customer Draft
+        ============================== */}
+        <section className="admin-card admin-customers-create p-6">
+          <h2 className="admin-card-title text-xl">Create customer draft</h2>
 
-        <div className="mt-4 grid gap-4 md:grid-cols-2">
-          <div>
-            <label className="text-sm font-semibold text-slate-700">
-              Company name *
-            </label>
-            <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Example: Salon Bella"
-              className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-900 outline-none transition focus:border-[rgb(8,184,238)] focus:ring-2 focus:ring-cyan-100"
-            />
+          <div className="mt-4 grid gap-4 md:grid-cols-2">
+            <div>
+              <label className="text-sm font-semibold text-slate-700">
+                Company name *
+              </label>
+              <input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Example: Salon Bella"
+                className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-900 outline-none transition focus:border-[rgb(8,184,238)] focus:ring-2 focus:ring-cyan-100"
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-semibold text-slate-700">
+                Contact email *
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="customer@example.com"
+                className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-900 outline-none transition focus:border-[rgb(8,184,238)] focus:ring-2 focus:ring-cyan-100"
+              />
+            </div>
           </div>
 
-          <div>
-            <label className="text-sm font-semibold text-slate-700">
-              Contact email *
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="customer@example.com"
-              className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-900 outline-none transition focus:border-[rgb(8,184,238)] focus:ring-2 focus:ring-cyan-100"
-            />
+          <button
+            onClick={createCustomer}
+            disabled={saving}
+            className="admin-button-primary mt-4 disabled:opacity-50"
+          >
+            {saving ? "Creating..." : "Create customer draft"}
+          </button>
+        </section>
+
+        {/* ==============================
+            Search Customers
+        ============================== */}
+        <section className="admin-card admin-customers-search p-6">
+          <h2 className="admin-card-title text-xl">Search customers</h2>
+
+          <div className="mt-4 flex flex-wrap gap-2">
+            {statusFilters.map((status) => {
+              const count = getFilterCount(status.value);
+              const isActive = hasSelectedFilter && statusFilter === status.value;
+              const shouldFlag =
+                (status.value === "needs_device" ||
+                  status.value === "needs_playlist") &&
+                count > 0 &&
+                !isActive;
+
+              return (
+                <button
+                  key={status.value}
+                  onClick={() => {
+                    setStatusFilter(status.value);
+                    setHasSelectedFilter(true);
+                  }}
+                  className={`rounded-full px-3 py-1 text-sm font-semibold transition ${
+                    isActive
+                      ? "bg-slate-950 text-white shadow-sm"
+                      : shouldFlag
+                        ? "border border-red-200 bg-red-50 text-red-700 shadow-sm ring-2 ring-red-100"
+                        : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                  }`}
+                >
+                  <span className="inline-flex items-center gap-1.5">
+                    {shouldFlag && (
+                      <span className="h-2 w-2 rounded-full bg-red-500" />
+                    )}
+                    {status.label} ({count})
+                  </span>
+                </button>
+              );
+            })}
           </div>
-        </div>
 
-        {message && (
-          <p className="mt-4 rounded-2xl bg-slate-100 p-4 text-sm font-medium text-slate-700">
-            {message}
-          </p>
-        )}
-
-        <button
-          onClick={createCustomer}
-          disabled={saving}
-          className="admin-button-primary mt-4 disabled:opacity-50"
-        >
-          {saving ? "Creating..." : "Create customer draft"}
-        </button>
+          <input
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setHasSelectedFilter(e.target.value.trim().length > 0);
+            }}
+            placeholder="Search by name, email, or phone..."
+            className="mt-4 w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-900 outline-none transition focus:border-[rgb(8,184,238)] focus:ring-2 focus:ring-cyan-100"
+          />
+        </section>
       </div>
 
       {/* ==============================
-          Search + Customer List
+          Customer List
       ============================== */}
-      <div className="admin-card mt-8 p-6">
-        <h2 className="admin-card-title text-xl">Search customers</h2>
+      <section
+        className={`admin-card admin-customers-list-panel p-6 ${
+          hasSelectedFilter ? "" : "admin-customers-list-panel-empty"
+        }`}
+      >
+        <h2 className="admin-card-title text-xl">Customer list</h2>
 
-        <div className="mt-4 flex flex-wrap gap-2">
-          {statusFilters.map((status) => {
-            const count = getFilterCount(status.value);
-            const isActive = statusFilter === status.value;
-            const shouldFlag =
-              (status.value === "needs_device" ||
-                status.value === "needs_playlist") &&
-              count > 0 &&
-              !isActive;
-
-            return (
-              <button
-                key={status.value}
-                onClick={() => setStatusFilter(status.value)}
-                className={`rounded-full px-3 py-1 text-sm font-semibold transition ${
-                  isActive
-                    ? "bg-slate-950 text-white shadow-sm"
-                    : shouldFlag
-                      ? "border border-red-200 bg-red-50 text-red-700 shadow-sm ring-2 ring-red-100"
-                      : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                }`}
-              >
-                <span className="inline-flex items-center gap-1.5">
-                  {shouldFlag && (
-                    <span className="h-2 w-2 rounded-full bg-red-500" />
-                  )}
-                  {status.label} ({count})
-                </span>
-              </button>
-            );
-          })}
-        </div>
-
-        <input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search by name, email, or phone..."
-          className="mt-4 w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-900 outline-none transition focus:border-[rgb(8,184,238)] focus:ring-2 focus:ring-cyan-100"
-        />
-
-        <div className="mt-4 space-y-3">
+        {hasSelectedFilter ? (
+          <div className="admin-customer-list mt-4 space-y-3">
           {loading ? (
             <p className="admin-muted">Loading...</p>
           ) : filteredCustomers.length === 0 ? (
@@ -348,8 +365,13 @@ export default function CustomersPage() {
               );
             })
           )}
-        </div>
-      </div>
+          </div>
+        ) : (
+          <div className="admin-customers-empty-message">
+            Select a filter above to load matching customers.
+          </div>
+        )}
+      </section>
     </div>
   );
 }

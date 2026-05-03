@@ -3,6 +3,7 @@
 import { use, useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase/client";
+import { showAdminNotification } from "@/lib/admin/notifications";
 
 type PlaylistItem = {
   id: string;
@@ -107,7 +108,7 @@ export default function AdminDevicePage({
     if (!deviceUuid) return;
 
     if (!newDeviceName.trim()) {
-      alert("Device name is required");
+      showAdminNotification("warning", "Device name is required.");
       return;
     }
 
@@ -120,12 +121,13 @@ export default function AdminDevicePage({
 
     if (error) {
       console.error("Rename device error:", error);
-      alert("Could not rename device");
+      showAdminNotification("error", "Could not rename device.");
       setRenaming(false);
       return;
     }
 
     await loadDeviceAndPlaylist();
+    showAdminNotification("success", "Device renamed.");
     setRenaming(false);
   };
 
@@ -153,12 +155,13 @@ export default function AdminDevicePage({
 
     if (error) {
       console.error("Save device details error:", error);
-      alert(error.message);
+      showAdminNotification("error", error.message || "Could not save device details.");
       setSaving(false);
       return;
     }
 
     await loadDeviceAndPlaylist();
+    showAdminNotification("success", "Device details updated.");
     setSaving(false);
   };
 
@@ -180,10 +183,11 @@ export default function AdminDevicePage({
 
     if (error) {
       console.error("Delete device error:", error);
-      alert("Could not delete device");
+      showAdminNotification("error", "Could not delete device.");
       return;
     }
 
+    showAdminNotification("success", "Device deleted.");
     window.location.href = "/admin/devices";
   };
 
@@ -199,18 +203,22 @@ export default function AdminDevicePage({
 
     if (error) {
       console.error("Device status error:", error);
-      alert("Could not update device status");
+      showAdminNotification("error", "Could not update device status.");
       return;
     }
 
     setIsActive(nextValue);
+    showAdminNotification(
+      "success",
+      nextValue ? "Device activated." : "Device deactivated.",
+    );
   };
 
   const uploadVideo = async () => {
     if (!deviceUuid || !videoFile) return;
 
     if (videoFile.type !== "video/mp4") {
-      alert("Please upload an MP4 video.");
+      showAdminNotification("warning", "Please upload an MP4 video.");
       return;
     }
 
@@ -229,7 +237,7 @@ export default function AdminDevicePage({
 
     if (uploadError) {
       console.error("Upload error:", uploadError);
-      alert("Could not upload video");
+      showAdminNotification("error", "Could not upload video.");
       setSaving(false);
       return;
     }
@@ -248,13 +256,17 @@ export default function AdminDevicePage({
 
     if (playlistError) {
       console.error("Playlist error:", playlistError);
-      alert("Video uploaded, but could not add it to playlist");
+      showAdminNotification(
+        "error",
+        "Video uploaded, but could not add it to playlist.",
+      );
       setSaving(false);
       return;
     }
 
     setVideoFile(null);
     await loadDeviceAndPlaylist();
+    showAdminNotification("success", "Video uploaded and added to playlist.");
     setSaving(false);
   };
 
@@ -268,11 +280,12 @@ export default function AdminDevicePage({
 
     if (error) {
       console.error("Delete video error:", error);
-      alert("Could not delete video");
+      showAdminNotification("error", "Could not delete video.");
       return;
     }
 
     await loadDeviceAndPlaylist();
+    showAdminNotification("success", "Video removed from playlist.");
   };
 
   useEffect(() => {

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
+import { showAdminNotification } from "@/lib/admin/notifications";
 
 type Customer = {
   id: string;
@@ -48,12 +49,12 @@ export default function NewDevicePage() {
 
   const createDevice = async () => {
     if (!customerId) {
-      alert("Please select a customer.");
+      showAdminNotification("warning", "Please select a customer.");
       return;
     }
 
     if (!name.trim()) {
-      alert("Device name is required.");
+      showAdminNotification("warning", "Device name is required.");
       return;
     }
 
@@ -81,11 +82,12 @@ export default function NewDevicePage() {
 
     if (error) {
       console.error("Create device error:", error);
-      alert(error.message);
+      showAdminNotification("error", error.message || "Could not create device.");
       setSaving(false);
       return;
     }
 
+    showAdminNotification("success", "Device created successfully.");
     router.push(`/admin/devices/${data.device_code}`);
   };
 

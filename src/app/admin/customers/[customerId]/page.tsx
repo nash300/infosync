@@ -3,6 +3,7 @@
 import { use, useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase/client";
+import { showAdminNotification } from "@/lib/admin/notifications";
 
 type Customer = {
   id: string;
@@ -47,6 +48,13 @@ export default function CustomerDetailPage({
   const [devices, setDevices] = useState<Device[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [editName, setEditName] = useState("");
+  const [editContactPerson, setEditContactPerson] = useState("");
+  const [editPhone, setEditPhone] = useState("");
+  const [editAddress, setEditAddress] = useState("");
+  const [editCity, setEditCity] = useState("");
+  const [editCountry, setEditCountry] = useState("");
+  const [editNotes, setEditNotes] = useState("");
 
   const formatInactiveReason = (reason: string | null) => {
     if (reason === "manual_suspend") return "Manually suspended";
@@ -115,7 +123,16 @@ export default function CustomerDetailPage({
       return;
     }
 
-    setCustomer(customerData as Customer);
+    const loadedCustomer = customerData as Customer;
+
+    setCustomer(loadedCustomer);
+    setEditName(loadedCustomer.name || "");
+    setEditContactPerson(loadedCustomer.contact_person || "");
+    setEditPhone(loadedCustomer.phone || "");
+    setEditAddress(loadedCustomer.address || "");
+    setEditCity(loadedCustomer.city || "");
+    setEditCountry(loadedCustomer.country || "");
+    setEditNotes(loadedCustomer.notes || "");
 
     const { data: devicesData, error: devicesError } = await supabase
       .from("devices")
@@ -131,6 +148,41 @@ export default function CustomerDetailPage({
     }
 
     setLoading(false);
+  };
+
+  const saveCustomerDetails = async () => {
+    if (!customer) return;
+
+    if (!editName.trim()) {
+      showAdminNotification("warning", "Company name is required.");
+      return;
+    }
+
+    setSaving(true);
+
+    const { error } = await supabase
+      .from("customers")
+      .update({
+        name: editName.trim(),
+        contact_person: editContactPerson.trim() || null,
+        phone: editPhone.trim() || null,
+        address: editAddress.trim() || null,
+        city: editCity.trim() || null,
+        country: editCountry.trim() || null,
+        notes: editNotes.trim() || null,
+      })
+      .eq("id", customer.id);
+
+    if (error) {
+      console.error("Save customer details error:", error);
+      showAdminNotification("error", "Could not save customer details.");
+      setSaving(false);
+      return;
+    }
+
+    await loadData();
+    showAdminNotification("success", "Customer details updated.");
+    setSaving(false);
   };
 
   const suspendCustomer = async () => {
@@ -150,12 +202,13 @@ export default function CustomerDetailPage({
 
     if (error) {
       console.error("Suspend customer error:", error);
-      alert("Could not suspend customer.");
+      showAdminNotification("error", "Could not suspend customer.");
       setSaving(false);
       return;
     }
 
     await loadData();
+    showAdminNotification("warning", "Customer suspended.");
     setSaving(false);
   };
 
@@ -163,7 +216,7 @@ export default function CustomerDetailPage({
     if (!customer) return;
 
     if (!customer.stripe_subscription_id) {
-      alert("No Stripe subscription found.");
+      showAdminNotification("warning", "No Stripe subscription found.");
       return;
     }
 
@@ -192,12 +245,16 @@ export default function CustomerDetailPage({
 
     if (!response.ok) {
       console.error("Cancel subscription error:", data);
-      alert(data.error || "Could not cancel subscription.");
+      showAdminNotification(
+        "error",
+        data.error || "Could not cancel subscription.",
+      );
       setSaving(false);
       return;
     }
 
     await loadData();
+    showAdminNotification("success", "Subscription cancelled and customer suspended.");
     setSaving(false);
   };
 
@@ -219,12 +276,13 @@ export default function CustomerDetailPage({
 
     if (error) {
       console.error("Reactivate customer error:", error);
-      alert("Could not reactivate customer.");
+      showAdminNotification("error", "Could not reactivate customer.");
       setSaving(false);
       return;
     }
 
     await loadData();
+    showAdminNotification("success", "Customer reactivated.");
     setSaving(false);
   };
 
@@ -248,12 +306,13 @@ export default function CustomerDetailPage({
 
     if (error) {
       console.error("Generate onboarding link error:", error);
-      alert("Could not generate onboarding link.");
+      showAdminNotification("error", "Could not generate onboarding link.");
       setSaving(false);
       return;
     }
 
     await loadData();
+    showAdminNotification("success", "Onboarding link generated.");
     setSaving(false);
   };
 
@@ -315,6 +374,68 @@ export default function CustomerDetailPage({
             {customer.status || "draft"}
           </span>
         </div>
+      </div>
+
+      {/* ==============================
+          Customer Details
+      ============================== */}
+      <div className="admin-card p-6">
+        <h2 className="admin-card-title text-xl">Customer details</h2>
+
+        <div className="mt-4 grid gap-4 md:grid-cols-2">
+          <Input
+            label="Company name"
+            value={editName}
+            onChange={setEditName}
+            required
+          />
+          <Input
+            label="Contact person"
+            value={editContactPerson}
+            onChange={setEditContactPerson}
+          />
+          <Input label="Phone" value={editPhone} onChange={setEditPhone} />
+          <Input label="City" value={editCity} onChange={setEditCity} />
+          <Input
+            label="Address"
+            value={editAddress}
+            onChange={setEditAddress}
+          />
+          <Input
+            label="Country"
+            value={editCountry}
+            onChange={setEditCountry}
+          />
+        </div>
+
+        <div className="mt-4">
+          <label className="text-sm font-semibold text-slate-700">
+            Internal notes
+          </label>
+          <textarea
+            value={editNotes}
+            onChange={(event) => setEditNotes(event.target.value)}
+            rows={3}
+            className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-900 outline-none transition focus:border-[var(--admin-cyan)] focus:ring-2 focus:ring-cyan-100"
+          />
+        </div>
+
+        <div className="mt-4 grid gap-4 text-sm md:grid-cols-3">
+          <InfoRow label="Customer ID" value={customer.id} />
+          <InfoRow label="Contact email" value={customer.email || "Not set"} />
+          <InfoRow
+            label="Organisation number"
+            value={customer.organisation_number || "Not set"}
+          />
+        </div>
+
+        <button
+          onClick={saveCustomerDetails}
+          disabled={saving}
+          className="admin-button-primary mt-4 disabled:opacity-50"
+        >
+          {saving ? "Saving..." : "Save customer details"}
+        </button>
       </div>
 
       {/* ==============================
@@ -516,6 +637,32 @@ function InfoRow({ label, value }: { label: string; value: string }) {
       <p className="mt-1 break-all text-sm font-semibold text-slate-900">
         {value}
       </p>
+    </div>
+  );
+}
+
+function Input({
+  label,
+  value,
+  onChange,
+  required = false,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  required?: boolean;
+}) {
+  return (
+    <div>
+      <label className="text-sm font-semibold text-slate-700">
+        {label}
+        {required ? " *" : ""}
+      </label>
+      <input
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-slate-900 outline-none transition focus:border-[var(--admin-cyan)] focus:ring-2 focus:ring-cyan-100"
+      />
     </div>
   );
 }

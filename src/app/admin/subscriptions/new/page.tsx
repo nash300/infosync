@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
+import { showAdminNotification } from "@/lib/admin/notifications";
 
 type Customer = {
   id: string;
@@ -28,7 +29,6 @@ export default function NewSubscriptionPage() {
   const [plans, setPlans] = useState<PricingPlan[]>([]);
   const [selectedPlanCode, setSelectedPlanCode] = useState("");
   const [legalAccepted, setLegalAccepted] = useState(false);
-  const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -58,20 +58,18 @@ export default function NewSubscriptionPage() {
   }, [customerId]);
 
   const startCheckout = async () => {
-    setMessage("");
-
     if (!customer?.email) {
-      setMessage("Customer email is missing.");
+      showAdminNotification("warning", "Customer email is missing.");
       return;
     }
 
     if (!selectedPlanCode) {
-      setMessage("Select a pricing plan.");
+      showAdminNotification("warning", "Select a pricing plan.");
       return;
     }
 
     if (!legalAccepted) {
-      setMessage("You must accept the legal terms before checkout.");
+      showAdminNotification("warning", "Accept the legal terms before checkout.");
       return;
     }
 
@@ -93,11 +91,12 @@ export default function NewSubscriptionPage() {
     const data = await response.json();
 
     if (!response.ok) {
-      setMessage(data.error || "Could not start checkout.");
+      showAdminNotification("error", data.error || "Could not start checkout.");
       setLoading(false);
       return;
     }
 
+    showAdminNotification("success", "Checkout session created.");
     window.location.href = data.url;
   };
 
@@ -151,8 +150,6 @@ export default function NewSubscriptionPage() {
             return right.
           </span>
         </label>
-
-        {message && <p className="mt-4 text-red-600">{message}</p>}
 
         <button
           type="button"
