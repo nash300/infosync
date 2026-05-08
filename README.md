@@ -30,7 +30,8 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
 Use a verified Resend domain for `RESEND_FROM_EMAIL` before sending to real
-customers.
+customers. Restart the Next.js development server after changing `.env.local`;
+environment variables are loaded when the server starts.
 
 ## Audit And Consent Tables
 

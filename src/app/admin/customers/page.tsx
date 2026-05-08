@@ -226,7 +226,12 @@ function CustomersPageContent() {
       },
       body: JSON.stringify({ customerId: customer.id }),
     });
-    const data = await response.json();
+    const data: {
+      error?: string;
+      emailSent?: boolean;
+      sentTo?: string;
+      warning?: string;
+    } = await response.json();
 
     if (!response.ok) {
       console.error("Send onboarding email error:", data);
@@ -239,10 +244,17 @@ function CustomersPageContent() {
     }
 
     await loadCustomers();
-    showAdminNotification(
-      "success",
-      `Onboarding email sent to ${data.sentTo || customer.email}.`,
-    );
+    if (data.emailSent) {
+      showAdminNotification(
+        "success",
+        `Onboarding email sent to ${data.sentTo || customer.email}.`,
+      );
+    } else {
+      showAdminNotification(
+        "warning",
+        data.warning || "Onboarding link generated, but no email was sent.",
+      );
+    }
 
     setSaving(false);
   };

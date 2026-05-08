@@ -395,8 +395,8 @@ export default function CustomerDetailPage({
       );
     } else {
       showAdminNotification(
-        "success",
-        data.warning || "Onboarding link generated.",
+        "warning",
+        data.warning || "Onboarding link generated, but no email was sent.",
       );
     }
 
