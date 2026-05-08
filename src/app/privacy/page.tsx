@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { normalizeCustomerLanguage, type CustomerLanguage } from "@/lib/customer-language";
 import "../landing.css";
 
 const copy = {
   sv: {
     title: "Integritetspolicy",
+    home: "Till startsidan",
     intro: "Denna policy beskriver hur InfoSync behandlar personuppgifter och företagsuppgifter i samband med start av tjänsten, betalning, support och leverans.",
     sections: [
       ["Uppgifter vi samlar in", "Vi samlar in kontaktuppgifter, företagsuppgifter, samtycken, betalningsstatus och information som behövs för att hantera skärmar och innehåll."],
@@ -17,6 +19,7 @@ const copy = {
   },
   en: {
     title: "Privacy Policy",
+    home: "Go to homepage",
     intro: "This policy describes how InfoSync processes personal and company data for service setup, payment, support, and delivery.",
     sections: [
       ["Data we collect", "We collect contact details, company details, consents, payment status, and information needed to manage screens and content."],
@@ -47,6 +50,9 @@ export default function PrivacyPage() {
             <p>{text}</p>
           </section>
         ))}
+        <Link href={`/?lang=${language}`} className="landing-button landing-button-primary">
+          {t.home}
+        </Link>
       </main>
     </div>
   );

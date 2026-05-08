@@ -18,6 +18,9 @@ export const metadata = {
   icons: {
     icon: "/brand/infosync-icon.png",
   },
+  other: {
+    google: "notranslate",
+  },
 };
 
 export default function RootLayout({
@@ -28,7 +31,8 @@ export default function RootLayout({
   return (
     <html
       lang="sv"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      translate="no"
+      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased notranslate`}
     >
       <body className="min-h-full flex flex-col">{children}</body>
     </html>

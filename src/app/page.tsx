@@ -231,6 +231,19 @@ const heroImages = [
   "https://images.pexels.com/photos/2482119/pexels-photo-2482119.jpeg?auto=compress&cs=tinysrgb&w=1600",
   "https://images.pexels.com/photos/11344549/pexels-photo-11344549.jpeg?auto=compress&cs=tinysrgb&w=1600",
 ];
+const visualCopy = {
+  sv: [
+    ["Planera innehåll", "Meny, kampanj och logotyp samlas på ett ställe."],
+    ["Trygg betalning", "Villkor, uppgifter och betalning sker i samma tydliga flöde."],
+    ["Färdig visning", "Enheten kopplas in och visar materialet utan krånglig installation."],
+  ],
+  en: [
+    ["Plan content", "Menu, campaign, and logo are collected in one place."],
+    ["Secure payment", "Terms, details, and payment stay in the same clear flow."],
+    ["Ready display", "The device plugs in and shows the material without complicated setup."],
+  ],
+} as const;
+
 const serviceMarks = [
   { label: "Stripe", className: "stripe" },
   { label: "Visa", className: "visa" },
@@ -266,6 +279,14 @@ export default function Home() {
     );
     setLanguage(nextLanguage);
     window.localStorage.setItem("infosync-language", nextLanguage);
+  }, []);
+
+  useEffect(() => {
+    const slideTimer = window.setInterval(() => {
+      setActiveSlide((current) => (current + 1) % heroImages.length);
+    }, 5200);
+
+    return () => window.clearInterval(slideTimer);
   }, []);
 
   const switchLanguage = (nextLanguage: CustomerLanguage) => {
@@ -422,6 +443,11 @@ export default function Home() {
           <div className="landing-feature-grid">
             {t.features.map(([title, text]) => (
               <Feature key={title} title={title} text={text} />
+            ))}
+          </div>
+          <div className="landing-illustration-grid">
+            {visualCopy[language].map(([title, text], index) => (
+              <Illustration key={title} title={title} text={text} index={index} />
             ))}
           </div>
         </LandingSection>
@@ -680,6 +706,30 @@ function FormField({
         placeholder={placeholder}
       />
     </label>
+  );
+}
+
+function Illustration({
+  title,
+  text,
+  index,
+}: {
+  title: string;
+  text: string;
+  index: number;
+}) {
+  return (
+    <article className={`landing-illustration landing-illustration-${index + 1}`}>
+      <div className="landing-illustration-art" aria-hidden="true">
+        <span />
+        <span />
+        <span />
+      </div>
+      <div>
+        <h3>{title}</h3>
+        <p>{text}</p>
+      </div>
+    </article>
   );
 }
 

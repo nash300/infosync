@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { normalizeCustomerLanguage, type CustomerLanguage } from "@/lib/customer-language";
 import "../landing.css";
 
 const copy = {
   sv: {
     title: "Villkor",
+    home: "Till startsidan",
     intro: "Dessa villkor gäller för användning av InfoSyncs tjänst för digital skyltning och skärmhantering.",
     sections: [
       ["Tjänsten", "InfoSync tillhandahåller en plattform för att hantera och visa digitalt innehåll på anslutna skärmar och enheter."],
@@ -17,6 +19,7 @@ const copy = {
   },
   en: {
     title: "Terms",
+    home: "Go to homepage",
     intro: "These terms apply to the use of InfoSync's digital signage and screen management service.",
     sections: [
       ["Service", "InfoSync provides a platform for managing and displaying digital content on connected screens and devices."],
@@ -47,6 +50,9 @@ export default function TermsPage() {
             <p>{text}</p>
           </section>
         ))}
+        <Link href={`/?lang=${language}`} className="landing-button landing-button-primary">
+          {t.home}
+        </Link>
       </main>
     </div>
   );
