@@ -25,13 +25,19 @@ to `.env.local` and to your production environment:
 
 ```bash
 RESEND_API_KEY=your_resend_api_key
-RESEND_FROM_EMAIL=InfoSync <onboarding@your-domain.com>
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
+Without `RESEND_FROM_EMAIL`, local development uses Resend's starter sender:
+
+```bash
+RESEND_FROM_EMAIL=InfoSync <onboarding@resend.dev>
+```
+
 Use a verified Resend domain for `RESEND_FROM_EMAIL` before sending to real
-customers. Restart the Next.js development server after changing `.env.local`;
-environment variables are loaded when the server starts.
+customers outside Resend's test limits. Restart the Next.js development server
+after changing `.env.local`; environment variables are loaded when the server
+starts.
 
 ## Audit And Consent Tables
 

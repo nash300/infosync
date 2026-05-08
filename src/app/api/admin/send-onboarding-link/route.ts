@@ -17,6 +17,32 @@ const escapeHtml = (value: string) => {
     .replace(/"/g, "&quot;");
 };
 
+const getResendErrorMessage = async (response: Response) => {
+  const text = await response.text();
+
+  if (!text.trim()) {
+    return `Resend returned ${response.status}.`;
+  }
+
+  try {
+    const data: unknown = JSON.parse(text);
+    if (data && typeof data === "object") {
+      const message =
+        "message" in data && typeof data.message === "string"
+          ? data.message
+          : null;
+      const error =
+        "error" in data && typeof data.error === "string" ? data.error : null;
+
+      return message || error || `Resend returned ${response.status}.`;
+    }
+  } catch {
+    return text.trim();
+  }
+
+  return `Resend returned ${response.status}.`;
+};
+
 const createAuthenticatedClient = async () => {
   const cookieStore = await cookies();
 
@@ -57,10 +83,11 @@ export async function POST(request: Request) {
     );
   }
 
-  const resendApiKey = process.env.RESEND_API_KEY;
-  const resendFromEmail = process.env.RESEND_FROM_EMAIL;
+  const resendApiKey = process.env.RESEND_API_KEY?.trim();
+  const resendFromEmail =
+    process.env.RESEND_FROM_EMAIL?.trim() || "InfoSync <onboarding@resend.dev>";
 
-  const canSendEmail = Boolean(resendApiKey && resendFromEmail);
+  const canSendEmail = Boolean(resendApiKey);
 
   const { data: customer, error: customerError } = await supabaseAdmin
     .from("customers")
@@ -127,7 +154,7 @@ export async function POST(request: Request) {
       emailSent: false,
       onboardingUrl,
       warning:
-        "Onboarding link created. Email sending is not configured. Add RESEND_API_KEY and RESEND_FROM_EMAIL to send emails.",
+        "Onboarding link created. Email sending is not configured. Add RESEND_API_KEY to send emails.",
     });
   }
 
@@ -168,11 +195,11 @@ InfoSync`,
   });
 
   if (!emailResponse.ok) {
-    const errorText = await emailResponse.text();
-    console.error("Resend email error:", errorText);
+    const errorMessage = await getResendErrorMessage(emailResponse);
+    console.error("Resend email error:", errorMessage);
 
     return NextResponse.json(
-      { error: "Could not send onboarding email." },
+      { error: `Could not send onboarding email: ${errorMessage}` },
       { status: 502 },
     );
   }
