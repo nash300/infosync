@@ -221,6 +221,16 @@ export default function CustomerDetailPage({
     setLoading(false);
   };
 
+  const getPreferredLanguage = () => {
+    const match = customer?.notes?.match(/Preferred language:\s*(en|sv)/i);
+    return match?.[1]?.toUpperCase() || "SV";
+  };
+
+  const getStartGuideSentAt = () => {
+    const match = customer?.notes?.match(/Start guide email sent:\s*(.+)/i);
+    return match?.[1] || "Not sent yet";
+  };
+
   const saveCustomerDetails = async () => {
     if (!customer) return;
 
@@ -658,6 +668,8 @@ export default function CustomerDetailPage({
             label="Token expires"
             value={customer.onboarding_token_expires_at || "Not generated yet"}
           />
+          <InfoRow label="Preferred language" value={getPreferredLanguage()} />
+          <InfoRow label="Start guide email sent" value={getStartGuideSentAt()} />
           <InfoRow
             label="Terms accepted"
             value={customer.terms_accepted_at ? "Yes" : "No"}
@@ -701,6 +713,14 @@ export default function CustomerDetailPage({
         </div>
 
         <div className="mt-6">
+          {customer.onboarding_token && !customer.terms_accepted_at && (
+            <p className="mb-4 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-800">
+              The setup link has been sent, but the customer has not completed
+              the form yet. Confirm the email address, preferred language, sent
+              timestamp, and expiry above before following up.
+            </p>
+          )}
+
           {customer.status === "active" ? (
             <>
               <p className="rounded-2xl bg-green-50 p-4 text-sm font-medium text-green-700">

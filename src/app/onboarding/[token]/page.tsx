@@ -1,7 +1,14 @@
 "use client";
 
-import { use, useEffect, useState } from "react";
+import { use, useEffect, useState, type ReactNode } from "react";
+import Link from "next/link";
+import {
+  getCustomerLanguageFromNotes,
+  normalizeCustomerLanguage,
+  type CustomerLanguage,
+} from "@/lib/customer-language";
 import { supabase } from "@/lib/supabase/client";
+import "../../landing.css";
 
 type Customer = {
   id: string;
@@ -12,6 +19,112 @@ type Customer = {
   onboarding_token_expires_at: string | null;
 };
 
+const copy = {
+  sv: {
+    loading: "Laddar din startlänk...",
+    invalid: "Ogiltig startlänk.",
+    expired: "Den här startlänken har gått ut.",
+    activeTitle: "Kontot är aktivt",
+    activeText: "Ditt InfoSync-konto är aktivt.",
+    readyTitle: "Nästan klart",
+    readyText:
+      "Dina uppgifter och ditt material är inskickade. Nästa steg är att slutföra betalningen.",
+    paymentTitle: "Betalning",
+    paymentText: "Du skickas vidare till en säker betalningssida.",
+    paymentButton: "Fortsätt till betalning",
+    paymentLoading: "Startar betalning...",
+    title: "Välkommen till InfoSync",
+    intro:
+      "Kontrollera uppgifterna, lägg till material för skärmen och gå vidare till betalning.",
+    company: "Företag",
+    email: "E-post",
+    detailsTitle: "Fyll i dina uppgifter",
+    fields: [
+      "Kontaktperson *",
+      "Telefon",
+      "Organisationsnummer",
+      "Ort",
+      "Adress",
+      "Land",
+    ],
+    materialTitle: "Material till din skärm",
+    materialText:
+      "Ladda gärna upp meny, prislista, logotyp eller bilder som hjälper oss att skapa layouten. PDF, JPG, PNG, WEBP och HEIC stöds.",
+    materialPlaceholder:
+      "Exempel: använd menybilden, visa luncherbjudande och öppettider.",
+    terms: "Jag godkänner villkoren och förstår att de gäller för InfoSync-abonnemanget. *",
+    privacy:
+      "Jag godkänner integritetspolicyn och förstår att InfoSync behandlar företagets och kontaktpersonens uppgifter för start, fakturering, support och leverans av tjänsten. *",
+    marketing: "Jag vill få relevanta nyheter och erbjudanden från InfoSync",
+    save: "Spara och fortsätt",
+    saving: "Sparar...",
+    requiredContact: "Kontaktperson måste anges.",
+    requiredTerms: "Du måste godkänna villkoren.",
+    requiredPrivacy: "Du måste godkänna integritetspolicyn.",
+    fileSize: "Filerna får tillsammans vara högst 20 MB.",
+    saved: "Uppgifterna har sparats.",
+    saveError: "Det gick inte att spara uppgifterna.",
+    planMissing:
+      "Inget prispaket är kopplat till din startlänk. Kontakta InfoSync.",
+    paymentError: "Det gick inte att starta betalningen.",
+    termsBefore: "Jag godkänner ",
+    termsLink: "villkoren",
+    termsAfter:
+      " och förstår att de gäller för InfoSync-abonnemanget. *",
+    privacyBefore: "Jag godkänner ",
+    privacyLink: "integritetspolicyn",
+    privacyAfter:
+      " och förstår att InfoSync behandlar företagets och kontaktpersonens uppgifter för start, fakturering, support och leverans av tjänsten. *",
+  },
+  en: {
+    loading: "Loading your setup link...",
+    invalid: "Invalid setup link.",
+    expired: "This setup link has expired.",
+    activeTitle: "Account active",
+    activeText: "Your InfoSync account is active.",
+    readyTitle: "Almost ready",
+    readyText:
+      "Your details and material have been submitted. The next step is to complete payment.",
+    paymentTitle: "Payment",
+    paymentText: "You will continue to a secure payment page.",
+    paymentButton: "Continue to payment",
+    paymentLoading: "Starting payment...",
+    title: "Welcome to InfoSync",
+    intro:
+      "Check your details, add screen material, and continue to payment.",
+    company: "Company",
+    email: "Email",
+    detailsTitle: "Complete your details",
+    fields: ["Contact person *", "Phone", "Organisation number", "City", "Address", "Country"],
+    materialTitle: "Material for your screen",
+    materialText:
+      "Upload a menu, price list, logo, or images that help us create the layout. PDF, JPG, PNG, WEBP, and HEIC are supported.",
+    materialPlaceholder:
+      "Example: use the menu image, show lunch offer and opening hours.",
+    terms: "I accept the terms and understand they apply to the InfoSync subscription. *",
+    privacy:
+      "I accept the privacy policy and understand that InfoSync processes company and contact-person details for setup, billing, support, and service delivery. *",
+    marketing: "I want to receive relevant news and offers from InfoSync",
+    save: "Save and continue",
+    saving: "Saving...",
+    requiredContact: "Contact person is required.",
+    requiredTerms: "You must accept the terms.",
+    requiredPrivacy: "You must accept the privacy policy.",
+    fileSize: "Files can be at most 20 MB in total.",
+    saved: "Your details have been saved.",
+    saveError: "We could not save your details.",
+    planMissing: "No package is connected to your setup link. Contact InfoSync.",
+    paymentError: "We could not start payment.",
+    termsBefore: "I accept the ",
+    termsLink: "terms",
+    termsAfter: " and understand they apply to the InfoSync subscription. *",
+    privacyBefore: "I accept the ",
+    privacyLink: "privacy policy",
+    privacyAfter:
+      " and understand that InfoSync processes company and contact-person details for setup, billing, support, and service delivery. *",
+  },
+} as const;
+
 export default function OnboardingPage({
   params,
 }: {
@@ -19,9 +132,9 @@ export default function OnboardingPage({
 }) {
   const { token } = use(params);
 
+  const [language, setLanguage] = useState<CustomerLanguage>("sv");
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [loading, setLoading] = useState(true);
-
   const [contactPerson, setContactPerson] = useState("");
   const [phone, setPhone] = useState("");
   const [organisationNumber, setOrganisationNumber] = useState("");
@@ -30,13 +143,18 @@ export default function OnboardingPage({
   const [country, setCountry] = useState("Sverige");
   const [displayNotes, setDisplayNotes] = useState("");
   const [displayFiles, setDisplayFiles] = useState<File[]>([]);
-
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
-
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [acceptedPrivacy, setAcceptedPrivacy] = useState(false);
   const [marketingConsent, setMarketingConsent] = useState(false);
+
+  const t = copy[language];
+
+  const switchLanguage = (nextLanguage: CustomerLanguage) => {
+    setLanguage(nextLanguage);
+    window.localStorage.setItem("infosync-language", nextLanguage);
+  };
 
   const fileToPayload = (file: File) => {
     return new Promise<{
@@ -58,71 +176,14 @@ export default function OnboardingPage({
     });
   };
 
-  const saveProfile = async () => {
-    if (!customer) return;
-
-    if (!contactPerson.trim()) {
-      setMessage("Kontaktperson måste anges.");
-      return;
-    }
-    if (!acceptedTerms) {
-      setMessage("Du måste godkänna villkoren.");
-      return;
-    }
-
-    if (!acceptedPrivacy) {
-      setMessage("Du måste godkänna integritetspolicyn.");
-      return;
-    }
-
-    const totalFileSize = displayFiles.reduce((sum, file) => sum + file.size, 0);
-    if (totalFileSize > 20 * 1024 * 1024) {
-      setMessage("Filerna får tillsammans vara högst 20 MB.");
-      return;
-    }
-
-    setSaving(true);
-    const displayFilePayloads = await Promise.all(displayFiles.map(fileToPayload));
-
-    const response = await fetch("/api/onboarding/complete-profile", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        token,
-        contactPerson,
-        phone,
-        organisationNumber,
-        address,
-        city,
-        country,
-        acceptedTerms,
-        acceptedPrivacy,
-        marketingConsent,
-        displayNotes,
-        displayFiles: displayFilePayloads,
-      }),
-    });
-    const data = await response.json();
-
-    if (!response.ok) {
-      setMessage(data.error || "Det gick inte att spara uppgifterna.");
-      setSaving(false);
-      return;
-    }
-
-    setCustomer({
-      ...customer,
-      status: "accepted_terms",
-    });
-
-    setMessage("Uppgifterna har sparats.");
-    setDisplayFiles([]);
-    setSaving(false);
-  };
-
   useEffect(() => {
+    const urlLanguage = new URLSearchParams(window.location.search).get("lang");
+    setLanguage(
+      normalizeCustomerLanguage(
+        urlLanguage || window.localStorage.getItem("infosync-language"),
+      ),
+    );
+
     const loadCustomer = async () => {
       const { data, error } = await supabase
         .from("customers")
@@ -136,12 +197,73 @@ export default function OnboardingPage({
         return;
       }
 
-      setCustomer(data as Customer);
+      const loadedCustomer = data as Customer;
+      const noteLanguage = getCustomerLanguageFromNotes(loadedCustomer.notes);
+      setLanguage(normalizeCustomerLanguage(urlLanguage || noteLanguage));
+      setCustomer(loadedCustomer);
       setLoading(false);
     };
 
     loadCustomer();
   }, [token]);
+
+  const saveProfile = async () => {
+    if (!customer) return;
+
+    if (!contactPerson.trim()) {
+      setMessage(t.requiredContact);
+      return;
+    }
+    if (!acceptedTerms) {
+      setMessage(t.requiredTerms);
+      return;
+    }
+    if (!acceptedPrivacy) {
+      setMessage(t.requiredPrivacy);
+      return;
+    }
+
+    const totalFileSize = displayFiles.reduce((sum, file) => sum + file.size, 0);
+    if (totalFileSize > 20 * 1024 * 1024) {
+      setMessage(t.fileSize);
+      return;
+    }
+
+    setSaving(true);
+    const displayFilePayloads = await Promise.all(displayFiles.map(fileToPayload));
+
+    const response = await fetch("/api/onboarding/complete-profile", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        token,
+        contactPerson,
+        phone,
+        organisationNumber,
+        address,
+        city,
+        country,
+        acceptedTerms,
+        acceptedPrivacy,
+        marketingConsent,
+        displayNotes,
+        displayFiles: displayFilePayloads,
+        language,
+      }),
+    });
+    const data = await response.json();
+
+    if (!response.ok) {
+      setMessage(data.error || t.saveError);
+      setSaving(false);
+      return;
+    }
+
+    setCustomer({ ...customer, status: "accepted_terms" });
+    setMessage(t.saved);
+    setDisplayFiles([]);
+    setSaving(false);
+  };
 
   const startPayment = async () => {
     if (!customer) return;
@@ -150,31 +272,26 @@ export default function OnboardingPage({
       customer.notes?.match(/\((standard_fhd|premium_4k)\)/)?.[1] || "";
 
     if (!pricingPlanCode) {
-      setMessage(
-        "Inget prispaket är kopplat till din startlänk. Kontakta InfoSync.",
-      );
+      setMessage(t.planMissing);
       return;
     }
 
     setSaving(true);
-
     const response = await fetch("/api/stripe/checkout", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         customerId: customer.id,
         email: customer.email,
         pricingPlanCode,
         legalAccepted: true,
+        language,
       }),
     });
-
     const data = await response.json();
 
     if (!response.ok || !data.url) {
-      setMessage(data.error || "Det gick inte att starta betalningen.");
+      setMessage(data.error || t.paymentError);
       setSaving(false);
       return;
     }
@@ -182,209 +299,165 @@ export default function OnboardingPage({
     window.location.href = data.url;
   };
 
-  if (loading) {
-    return <div className="p-8">Laddar din startlänk...</div>;
-  }
-
-  if (!customer) {
-    return <div className="p-8">Ogiltig startlänk.</div>;
-  }
+  if (loading) return <FlowShell language={language} onLanguage={switchLanguage}>{t.loading}</FlowShell>;
+  if (!customer) return <FlowShell language={language} onLanguage={switchLanguage}>{t.invalid}</FlowShell>;
 
   const isExpired =
     customer.onboarding_token_expires_at &&
     new Date(customer.onboarding_token_expires_at) < new Date();
 
-  if (isExpired) {
-    return <div className="p-8">Den här startlänken har gått ut.</div>;
-  }
-  if (customer.status === "accepted_terms") {
-    return (
-      <div className="mx-auto max-w-2xl p-8">
-        <h1 className="text-3xl font-bold">Nästan klart</h1>
-        <p className="mt-3 text-gray-600">
-          Dina uppgifter och ditt material är inskickade. Nästa steg är att
-          slutföra betalningen.
-        </p>
-
-        <div className="mt-6 rounded-xl bg-white p-6 shadow">
-          <h2 className="text-lg font-semibold">Betalning</h2>
-          <p className="mt-2 text-gray-600">
-            Du skickas vidare till en säker betalningssida.
-          </p>
-
-          <button
-            onClick={startPayment}
-            disabled={saving}
-            className="mt-4 rounded-lg bg-black px-4 py-2 text-white disabled:opacity-50"
-          >
-            {saving ? "Startar betalning..." : "Fortsätt till betalning"}
-          </button>
-        </div>
-      </div>
-    );
-  }
+  if (isExpired) return <FlowShell language={language} onLanguage={switchLanguage}>{t.expired}</FlowShell>;
 
   if (customer.status === "active") {
     return (
-      <div className="mx-auto max-w-2xl p-8">
-        <h1 className="text-3xl font-bold">Kontot är aktivt</h1>
-        <p className="mt-3 text-gray-600">Ditt InfoSync-konto är aktivt.</p>
-      </div>
+      <FlowShell language={language} onLanguage={switchLanguage}>
+        <h1>{t.activeTitle}</h1>
+        <p>{t.activeText}</p>
+      </FlowShell>
     );
   }
+
+  if (customer.status === "accepted_terms") {
+    return (
+      <FlowShell language={language} onLanguage={switchLanguage}>
+        <h1>{t.readyTitle}</h1>
+        <p>{t.readyText}</p>
+        <section className="flow-card">
+          <h2>{t.paymentTitle}</h2>
+          <p>{t.paymentText}</p>
+          {message && <p className="flow-message">{message}</p>}
+          <button onClick={startPayment} disabled={saving} className="landing-button landing-button-primary">
+            {saving ? t.paymentLoading : t.paymentButton}
+          </button>
+        </section>
+      </FlowShell>
+    );
+  }
+
   return (
-    <div className="mx-auto max-w-2xl p-8">
-      <h1 className="text-3xl font-bold">Välkommen till InfoSync</h1>
+    <FlowShell language={language} onLanguage={switchLanguage}>
+      <h1>{t.title}</h1>
+      <p>{t.intro}</p>
 
-      <p className="mt-3 text-gray-600">
-        Kontrollera uppgifterna, lägg till material för skärmen och gå vidare
-        till betalning.
-      </p>
+      <section className="flow-card flow-summary">
+        <div>
+          <span>{t.company}</span>
+          <strong>{customer.name}</strong>
+        </div>
+        <div>
+          <span>{t.email}</span>
+          <strong>{customer.email}</strong>
+        </div>
+      </section>
 
-      <div className="mt-6 rounded-xl bg-white p-6 shadow">
-        <p className="text-sm text-gray-500">Företag</p>
-        <p className="font-semibold">{customer.name}</p>
-
-        <p className="mt-4 text-sm text-gray-500">E-post</p>
-        <p className="font-semibold">{customer.email}</p>
-      </div>
-
-      <div className="mt-6 rounded-xl bg-white p-6 shadow">
-        <h2 className="text-lg font-semibold">Fyll i dina uppgifter</h2>
-
-        <div className="mt-4 grid gap-4 md:grid-cols-2">
-          <input
-            placeholder="Kontaktperson *"
-            value={contactPerson}
-            onChange={(e) => setContactPerson(e.target.value)}
-            className="rounded-lg border px-3 py-2"
-          />
-
-          <input
-            placeholder="Telefon"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            className="rounded-lg border px-3 py-2"
-          />
-
-          <input
-            placeholder="Organisationsnummer"
-            value={organisationNumber}
-            onChange={(e) => setOrganisationNumber(e.target.value)}
-            className="rounded-lg border px-3 py-2"
-          />
-
-          <input
-            placeholder="Ort"
-            value={city}
-            onChange={(e) => setCity(e.target.value)}
-            className="rounded-lg border px-3 py-2"
-          />
-
-          <input
-            placeholder="Adress"
-            value={address}
-            onChange={(e) => setAddress(e.target.value)}
-            className="rounded-lg border px-3 py-2"
-          />
-
-          <input
-            placeholder="Land"
-            value={country}
-            onChange={(e) => setCountry(e.target.value)}
-            className="rounded-lg border px-3 py-2"
-          />
+      <section className="flow-card">
+        <h2>{t.detailsTitle}</h2>
+        <div className="flow-form-grid">
+          <FlowInput placeholder={t.fields[0]} value={contactPerson} onChange={setContactPerson} />
+          <FlowInput placeholder={t.fields[1]} value={phone} onChange={setPhone} />
+          <FlowInput placeholder={t.fields[2]} value={organisationNumber} onChange={setOrganisationNumber} />
+          <FlowInput placeholder={t.fields[3]} value={city} onChange={setCity} />
+          <FlowInput placeholder={t.fields[4]} value={address} onChange={setAddress} />
+          <FlowInput placeholder={t.fields[5]} value={country} onChange={setCountry} />
         </div>
 
-        <div className="mt-6 rounded-xl border border-gray-200 bg-gray-50 p-4">
-          <h3 className="font-semibold">Material till din skärm</h3>
-          <p className="mt-1 text-sm text-gray-600">
-            Ladda gärna upp meny, prislista, logotyp eller bilder som hjälper
-            oss att skapa layouten. PDF, JPG, PNG, WEBP och HEIC stöds.
-          </p>
-
-          <textarea
-            value={displayNotes}
-            onChange={(e) => setDisplayNotes(e.target.value)}
-            rows={3}
-            placeholder="Exempel: använd menybilden, visa luncherbjudande och öppettider."
-            className="mt-4 w-full rounded-lg border px-3 py-2"
-          />
-
-          <input
-            type="file"
-            multiple
-            accept="image/jpeg,image/png,image/webp,image/heic,application/pdf"
-            onChange={(e) => setDisplayFiles(Array.from(e.target.files || []))}
-            className="mt-3 block w-full rounded-lg border bg-white px-3 py-2 text-sm"
-          />
-
+        <div className="flow-material">
+          <h3>{t.materialTitle}</h3>
+          <p>{t.materialText}</p>
+          <textarea value={displayNotes} onChange={(event) => setDisplayNotes(event.target.value)} rows={3} placeholder={t.materialPlaceholder} />
+          <input type="file" multiple accept="image/jpeg,image/png,image/webp,image/heic,application/pdf" onChange={(event) => setDisplayFiles(Array.from(event.target.files || []))} />
           {displayFiles.length > 0 && (
-            <ul className="mt-3 space-y-1 text-sm text-gray-600">
-              {displayFiles.map((file) => (
-                <li key={`${file.name}-${file.size}`}>
-                  {file.name} ({Math.ceil(file.size / 1024)} KB)
-                </li>
-              ))}
-            </ul>
+            <ul>{displayFiles.map((file) => <li key={`${file.name}-${file.size}`}>{file.name} ({Math.ceil(file.size / 1024)} KB)</li>)}</ul>
           )}
         </div>
 
-        {message && (
-          <p className="mt-4 rounded-lg bg-gray-100 p-3 text-sm text-gray-700">
-            {message}
-          </p>
-        )}
-        <div className="mt-4 space-y-3 text-sm">
-          <label className="flex gap-2">
-            <input
-              type="checkbox"
-              checked={acceptedTerms}
-              onChange={(e) => setAcceptedTerms(e.target.checked)}
-            />
-            <span>
-              Jag godkänner{" "}
-              <a href="/terms" target="_blank" className="underline">
-                villkoren
-              </a>{" "}
-              och förstår att de gäller för InfoSync-abonnemanget. *
-            </span>
-          </label>
+        {message && <p className="flow-message">{message}</p>}
 
-          <label className="flex gap-2">
-            <input
-              type="checkbox"
-              checked={acceptedPrivacy}
-              onChange={(e) => setAcceptedPrivacy(e.target.checked)}
-            />
-            <span>
-              Jag godkänner{" "}
-              <a href="/privacy" target="_blank" className="underline">
-                integritetspolicyn
-              </a>{" "}
-              och förstår att InfoSync behandlar företagets och
-              kontaktpersonens uppgifter för start, fakturering, support
-              och leverans av tjänsten. *
-            </span>
-          </label>
-
-          <label className="flex gap-2">
-            <input
-              type="checkbox"
-              checked={marketingConsent}
-              onChange={(e) => setMarketingConsent(e.target.checked)}
-            />
-            <span>Jag vill få relevanta nyheter och erbjudanden från InfoSync</span>
-          </label>
+        <div className="flow-checks">
+          <FlowCheck checked={acceptedTerms} onChange={setAcceptedTerms}>
+            {t.termsBefore}
+            <a href={`/terms?lang=${language}`} target="_blank">{t.termsLink}</a>
+            {t.termsAfter}
+          </FlowCheck>
+          <FlowCheck checked={acceptedPrivacy} onChange={setAcceptedPrivacy}>
+            {t.privacyBefore}
+            <a href={`/privacy?lang=${language}`} target="_blank">{t.privacyLink}</a>
+            {t.privacyAfter}
+          </FlowCheck>
+          <FlowCheck checked={marketingConsent} onChange={setMarketingConsent}>
+            {t.marketing}
+          </FlowCheck>
         </div>
-        <button
-          onClick={saveProfile}
-          disabled={saving}
-          className="mt-4 rounded-lg bg-black px-4 py-2 text-white disabled:opacity-50"
-        >
-          {saving ? "Sparar..." : "Spara och fortsätt"}
+
+        <button onClick={saveProfile} disabled={saving} className="landing-button landing-button-primary">
+          {saving ? t.saving : t.save}
         </button>
-      </div>
+      </section>
+    </FlowShell>
+  );
+}
+
+function FlowShell({
+  language,
+  onLanguage,
+  children,
+}: {
+  language: CustomerLanguage;
+  onLanguage: (language: CustomerLanguage) => void;
+  children: ReactNode;
+}) {
+  return (
+    <div className="landing-page flow-page">
+      <header className="flow-nav">
+        <Link className="landing-brand" href="/">
+          <img src="/brand/infosync-logo1.png" alt="" />
+          <span>InfoSync</span>
+        </Link>
+        <div className="landing-language-switch">
+          <button className={language === "sv" ? "active" : ""} onClick={() => onLanguage("sv")}>🇸🇪</button>
+          <button className={language === "en" ? "active" : ""} onClick={() => onLanguage("en")}>🇬🇧</button>
+        </div>
+      </header>
+      <main className="flow-shell">{children}</main>
     </div>
+  );
+}
+
+function FlowInput({
+  placeholder,
+  value,
+  onChange,
+}: {
+  placeholder: string;
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <input
+      placeholder={placeholder}
+      value={value}
+      onChange={(event) => onChange(event.target.value)}
+    />
+  );
+}
+
+function FlowCheck({
+  checked,
+  onChange,
+  children,
+}: {
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+  children: ReactNode;
+}) {
+  return (
+    <label>
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(event) => onChange(event.target.checked)}
+      />
+      <span>{children}</span>
+    </label>
   );
 }

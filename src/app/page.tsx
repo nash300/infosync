@@ -1,15 +1,161 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent, type ReactNode } from "react";
+import {
+  defaultCustomerLanguage,
+  normalizeCustomerLanguage,
+  type CustomerLanguage,
+} from "@/lib/customer-language";
 import "./landing.css";
 
-const navLinks = [
-  { href: "#platform", label: "Tjänsten" },
-  { href: "#workflow", label: "Så fungerar det" },
-  { href: "#pricing", label: "Priser" },
-  { href: "#faq", label: "FAQ" },
-  { href: "#contact", label: "Kontakt" },
-];
+const copy = {
+  sv: {
+    nav: ["Tjänsten", "Så fungerar det", "Priser", "FAQ", "Kontakt"],
+    demo: "Boka demo",
+    eyebrow: "Digital skyltning för företag",
+    hero:
+      "Professionellt skärminnehåll, hanterat från en tydlig plattform.",
+    lede:
+      "InfoSync hjälper salonger, butiker och serviceföretag att visa kampanjer, prislistor och information på skärm. Du väljer paket, skickar in dina uppgifter och får hjälp att komma igång utan tekniskt krångel.",
+    pricingCta: "Se paket",
+    workflowCta: "Så fungerar det",
+    stats: [
+      ["24/7", "kontinuerlig skärmvisning"],
+      ["14 dagar", "provperiod på abonnemang"],
+      ["0", "månaders bindningstid"],
+    ],
+    slides: [
+      ["Menyer och prislistor", "Visa erbjudanden där kunden redan tittar."],
+      ["Butik och service", "Gör lokalen tydligare med levande information."],
+      ["Redo för kunder", "En enkel start från skärm till färdig visning."],
+    ],
+    platformTitle: "En enklare väg till professionell skärmvisning",
+    platformText:
+      "Du behöver inte bygga ett eget system eller hantera tekniska inställningar. InfoSync hjälper dig från första förfrågan till en skärm som visar rätt innehåll i din verksamhet.",
+    features: [
+      ["Smidig start", "Du väljer paket och får en personlig startguide där allt fortsätter på ett tydligt sätt."],
+      ["Tydlig kostnad", "Du ser startavgift, månadskostnad, provperiod och bindningstid innan du går vidare."],
+      ["Hjälp med skärmen", "Vi gör layouten utifrån ditt material och skickar enheten med instruktioner."],
+      ["Innehåll som syns", "Du kan visa erbjudanden, prislistor, nyheter eller annan information som passar din lokal."],
+    ],
+    workflowTitle: "Från paketval till fungerande skärm",
+    workflowText:
+      "Startguiden är den säkra sidan där du bekräftar uppgifter, skickar material och går vidare till betalning. Resten håller vi enkelt.",
+    steps: [
+      ["01", "Välj paket", "Välj Standard eller Premium och skicka en kort förfrågan med företagets uppgifter.", "Det är inte en beställning ännu. Vi använder uppgifterna för att skapa din personliga startguide."],
+      ["02", "Färdigställ uppgifter och betala", "I startguiden bekräftar du uppgifter, godkänner villkor, laddar upp material och går vidare till betalning.", "Meny, prislista, logotyp, bilder eller enkla instruktioner räcker fint."],
+      ["03", "Vi bygger layouten", "Efter betalning skapar vi skärmlayouten utifrån materialet och skickar USB-enheten inom 4 arbetsdagar.", "Under tiden kan du montera eller placera din Smart TV i lokalen."],
+      ["04", "Koppla in och starta", "När enheten kommer kopplar du den till HDMI, ansluter till Wi-Fi och följer instruktionerna vi skickar med.", "Sedan är skärmen redo att visa ditt innehåll."],
+    ],
+    process: [["Förfrågan", "Paket valt"], ["Material", "Meny, bilder, logotyp"], ["Produktion", "Layout + USB-enhet"], ["Start", "HDMI + Wi-Fi"]],
+    pricingTitle: "Tydliga paket för hanterade skärmar",
+    pricingText:
+      "Startavgiften betalas en gång. Månadsabonnemanget har 14 dagars provperiod och ingen bindningstid.",
+    recommended: "Rekommenderas",
+    setupFee: "Startavgift",
+    monthly: "Per månad",
+    choose: "Välj",
+    trustTitle: "Betalning och uppgifter hanteras säkert",
+    trustText:
+      "Betalningen sker via en säker betalningssida. Vi visar bara betalningssätt som är aktiverade för din betalning.",
+    faqTitle: "Svar innan du väljer paket",
+    faqs: [
+      ["Vad händer efter att jag valt paket?", "Du får en personlig startguide där du kontrollerar företagsuppgifter, skickar material till skärmen, godkänner villkor och går vidare till betalning."],
+      ["Vilket material behöver jag skicka?", "Du kan ladda upp meny, prislista, logotyp, bilder eller PDF-filer. Det går också bra att skriva kort vad skärmen ska visa."],
+      ["Hur snabbt kan jag komma igång?", "När betalningen är klar skapar vi layouten och postar USB-enheten inom 4 arbetsdagar. Leveranstiden beror sedan på posten."],
+      ["Behöver jag köpa en särskild TV?", "Du behöver en Smart TV eller skärm med HDMI-ingång och tillgång till Wi-Fi."],
+    ],
+    companyTitle: "Företagsinformation kommer snart",
+    companyText:
+      "Här kommer vi att lägga in organisationsnummer, registrerad företagsadress, kontaktuppgifter och övrig bolagsinformation när registreringen är klar.",
+    contactEyebrow: "Redo att komma igång?",
+    contactTitle: "Starta din nästa skärm med ett enklare arbetsflöde.",
+    contactText:
+      "Berätta hur många skärmar du vill hantera och vilket innehåll du vill visa. Vi hjälper dig att välja rätt paket.",
+    contactButton: "Kontakta InfoSync",
+    modalEyebrow: "Skicka förfrågan",
+    modalTitle: "Starta med",
+    modalText:
+      "Skicka företagets uppgifter så kontaktar InfoSync dig med en personlig startguide för uppgifter, villkor och betalning.",
+    close: "Stäng",
+    fields: ["Företagsnamn *", "E-post *", "Kontaktperson", "Telefon", "Meddelande"],
+    placeholders: ["Exempel: Salon Bella", "namn@foretag.se", "Ditt namn", "+46...", "Antal skärmar, plats eller annat vi bör känna till."],
+    sending: "Skickar förfrågan...",
+    submit: "Skicka förfrågan",
+    success:
+      "Tack. Din förfrågan är mottagen och InfoSync återkommer med en personlig startguide.",
+    error: "Det gick inte att skicka din förfrågan.",
+    legal: ["Villkor", "Integritet", "Alla rättigheter förbehållna."],
+  },
+  en: {
+    nav: ["Service", "How it works", "Pricing", "FAQ", "Contact"],
+    demo: "Book a demo",
+    eyebrow: "Digital signage for businesses",
+    hero: "Professional screen content, managed from one clear platform.",
+    lede:
+      "InfoSync helps salons, shops, and service businesses show campaigns, price lists, and information on screens. Choose a package, send your details, and get help launching without technical hassle.",
+    pricingCta: "See packages",
+    workflowCta: "How it works",
+    stats: [["24/7", "continuous screen playback"], ["14 days", "subscription trial"], ["0", "months commitment"]],
+    slides: [["Menus and price lists", "Show offers where customers already look."], ["Retail and service", "Make your space clearer with live information."], ["Customer ready", "A simple path from screen to finished display."]],
+    platformTitle: "A simpler path to professional screen display",
+    platformText:
+      "You do not need to build your own system or manage technical settings. InfoSync helps you from the first request to a screen that shows the right content in your business.",
+    features: [
+      ["Smooth start", "Choose a package and receive a personal setup guide where everything continues clearly."],
+      ["Clear costs", "See setup fee, monthly price, trial period, and commitment before you continue."],
+      ["Screen support", "We build the layout from your material and send the device with instructions."],
+      ["Visible content", "Show offers, price lists, news, or information that fits your space."],
+    ],
+    workflowTitle: "From package choice to working screen",
+    workflowText:
+      "The setup guide is the secure page where you confirm details, send material, and continue to payment. We keep the rest simple.",
+    steps: [
+      ["01", "Choose package", "Choose Standard or Premium and send a short request with your company details.", "This is not an order yet. We use the details to create your personal setup guide."],
+      ["02", "Complete details and pay", "In the setup guide, confirm details, accept terms, upload material, and continue to payment.", "Menu, price list, logo, images, or short instructions are enough."],
+      ["03", "We build the layout", "After payment, we create the screen layout from your material and send the USB device within 4 working days.", "Meanwhile, you can mount or place your Smart TV."],
+      ["04", "Plug in and start", "When the device arrives, connect it to HDMI, join Wi-Fi, and follow the included instructions.", "Then the screen is ready to show your content."],
+    ],
+    process: [["Request", "Package selected"], ["Material", "Menu, images, logo"], ["Production", "Layout + USB device"], ["Start", "HDMI + Wi-Fi"]],
+    pricingTitle: "Clear packages for managed screens",
+    pricingText:
+      "The setup fee is paid once. The monthly subscription has a 14-day trial and no commitment.",
+    recommended: "Recommended",
+    setupFee: "Setup fee",
+    monthly: "Per month",
+    choose: "Choose",
+    trustTitle: "Payment and details are handled securely",
+    trustText:
+      "Payment happens through a secure checkout page. We only show payment methods enabled for your payment.",
+    faqTitle: "Answers before you choose a package",
+    faqs: [
+      ["What happens after I choose a package?", "You receive a personal setup guide where you check company details, send screen material, accept terms, and continue to payment."],
+      ["What material do I need to send?", "You can upload a menu, price list, logo, images, or PDFs. You can also briefly describe what the screen should show."],
+      ["How quickly can I start?", "After payment, we build the layout and post the USB device within 4 working days. Delivery time depends on the postal service."],
+      ["Do I need a special TV?", "You need a Smart TV or screen with HDMI and access to Wi-Fi."],
+    ],
+    companyTitle: "Company information coming soon",
+    companyText:
+      "We will add organisation number, registered business address, contact details, and other company information once registration is complete.",
+    contactEyebrow: "Ready to get started?",
+    contactTitle: "Launch your next screen with a simpler workflow.",
+    contactText:
+      "Tell us how many screens you want to manage and what content you want to show. We help you choose the right package.",
+    contactButton: "Contact InfoSync",
+    modalEyebrow: "Send request",
+    modalTitle: "Start with",
+    modalText:
+      "Send your company details and InfoSync will contact you with a personal setup guide for details, terms, and payment.",
+    close: "Close",
+    fields: ["Company name *", "Email *", "Contact person", "Phone", "Message"],
+    placeholders: ["Example: Salon Bella", "name@company.com", "Your name", "+46...", "Number of screens, location, or anything we should know."],
+    sending: "Sending request...",
+    submit: "Send request",
+    success: "Thanks. Your request has been received and InfoSync will send your personal setup guide.",
+    error: "We could not send your request.",
+    legal: ["Terms", "Privacy", "All rights reserved."],
+  },
+} as const;
 
 const plans = [
   {
@@ -18,14 +164,7 @@ const plans = [
     resolution: "FHD",
     setupFee: "1 998 kr",
     monthlyFee: "219 kr",
-    description: "För en skärm som visar kampanjer, erbjudanden och information i Full HD.",
-    features: [
-      "Uppspelning i Full HD",
-      "Säker startguide för uppgifter och betalning",
-      "Vi hjälper dig att få skärmen redo",
-      "14 dagars provperiod på månadsabonnemang",
-      "Ingen bindningstid",
-    ],
+    featured: false,
   },
   {
     code: "premium_4k",
@@ -33,105 +172,65 @@ const plans = [
     resolution: "4K",
     setupFee: "2 398 kr",
     monthlyFee: "269 kr",
-    description: "För verksamheter som vill visa extra skarpt innehåll i 4K.",
-    features: [
-      "Uppspelning för 4K-innehåll",
-      "Säker startguide för uppgifter och betalning",
-      "Vi hjälper dig att få skärmen redo",
-      "14 dagars provperiod på månadsabonnemang",
-      "Ingen bindningstid",
-    ],
     featured: true,
   },
-];
+] as const;
 
-const stats = [
-  { value: "24/7", label: "kontinuerlig skärmvisning" },
-  { value: "14 dagar", label: "provperiod på abonnemang" },
-  { value: "0", label: "månaders bindningstid" },
-];
+const planCopy = {
+  sv: {
+    standard_fhd: {
+      description:
+        "För en skärm som visar kampanjer, erbjudanden och information i Full HD.",
+      features: [
+        "Uppspelning i Full HD",
+        "Säker startguide för uppgifter och betalning",
+        "Vi hjälper dig att få skärmen redo",
+        "14 dagars provperiod på månadsabonnemang",
+        "Ingen bindningstid",
+      ],
+    },
+    premium_4k: {
+      description: "För verksamheter som vill visa extra skarpt innehåll i 4K.",
+      features: [
+        "Uppspelning för 4K-innehåll",
+        "Säker startguide för uppgifter och betalning",
+        "Vi hjälper dig att få skärmen redo",
+        "14 dagars provperiod på månadsabonnemang",
+        "Ingen bindningstid",
+      ],
+    },
+  },
+  en: {
+    standard_fhd: {
+      description:
+        "For one screen showing campaigns, offers, and information in Full HD.",
+      features: [
+        "Full HD playback",
+        "Secure setup guide for details and payment",
+        "We help you get the screen ready",
+        "14-day trial on the monthly subscription",
+        "No commitment",
+      ],
+    },
+    premium_4k: {
+      description: "For businesses that want extra sharp 4K content.",
+      features: [
+        "Playback for 4K content",
+        "Secure setup guide for details and payment",
+        "We help you get the screen ready",
+        "14-day trial on the monthly subscription",
+        "No commitment",
+      ],
+    },
+  },
+} as const;
 
-const heroSlides = [
-  {
-    image:
-      "https://images.pexels.com/photos/10660199/pexels-photo-10660199.jpeg?auto=compress&cs=tinysrgb&w=1600",
-    kicker: "Menyer och prislistor",
-    title: "Visa erbjudanden där kunden redan tittar.",
-  },
-  {
-    image:
-      "https://images.pexels.com/photos/2482119/pexels-photo-2482119.jpeg?auto=compress&cs=tinysrgb&w=1600",
-    kicker: "Butik och service",
-    title: "Gör lokalen tydligare med levande information.",
-  },
-  {
-    image:
-      "https://images.pexels.com/photos/11344549/pexels-photo-11344549.jpeg?auto=compress&cs=tinysrgb&w=1600",
-    kicker: "Redo för kunder",
-    title: "En enkel start från skärm till färdig visning.",
-  },
+const navIds = ["#platform", "#workflow", "#pricing", "#faq", "#contact"];
+const heroImages = [
+  "https://images.pexels.com/photos/10660199/pexels-photo-10660199.jpeg?auto=compress&cs=tinysrgb&w=1600",
+  "https://images.pexels.com/photos/2482119/pexels-photo-2482119.jpeg?auto=compress&cs=tinysrgb&w=1600",
+  "https://images.pexels.com/photos/11344549/pexels-photo-11344549.jpeg?auto=compress&cs=tinysrgb&w=1600",
 ];
-
-const processSteps = [
-  {
-    number: "01",
-    title: "Välj paket",
-    text: "Välj Standard eller Premium och skicka en kort förfrågan med företagets uppgifter.",
-    detail: "Det är inte en beställning ännu. Vi använder uppgifterna för att skapa din personliga startguide.",
-  },
-  {
-    number: "02",
-    title: "Färdigställ uppgifter och betala",
-    text: "I startguiden bekräftar du uppgifter, godkänner villkor, laddar upp material och går vidare till betalning.",
-    detail: "Meny, prislista, logotyp, bilder eller enkla instruktioner räcker fint.",
-  },
-  {
-    number: "03",
-    title: "Vi bygger layouten",
-    text: "Efter betalning skapar vi skärmlayouten utifrån materialet och skickar USB-enheten inom 4 arbetsdagar.",
-    detail: "Under tiden kan du montera eller placera din Smart TV i lokalen.",
-  },
-  {
-    number: "04",
-    title: "Koppla in och starta",
-    text: "När enheten kommer kopplar du den till HDMI, ansluter till Wi-Fi och följer instruktionerna vi skickar med.",
-    detail: "Sedan är skärmen redo att visa ditt innehåll.",
-  },
-];
-
-const faqs = [
-  {
-    question: "Vad händer efter att jag valt paket?",
-    answer:
-      "Du får en personlig startguide där du kontrollerar företagsuppgifter, skickar material till skärmen, godkänner villkor och går vidare till betalning.",
-  },
-  {
-    question: "Vilket material behöver jag skicka?",
-    answer:
-      "Du kan ladda upp meny, prislista, logotyp, bilder eller PDF-filer. Det går också bra att skriva kort vad skärmen ska visa.",
-  },
-  {
-    question: "Hur snabbt kan jag komma igång?",
-    answer:
-      "När betalningen är klar skapar vi layouten och postar USB-enheten inom 4 arbetsdagar. Leveranstiden beror sedan på posten.",
-  },
-  {
-    question: "Behöver jag köpa en särskild TV?",
-    answer:
-      "Du behöver en Smart TV eller skärm med HDMI-ingång och tillgång till Wi-Fi. Du kan förbereda placering och montering medan vi gör layouten.",
-  },
-  {
-    question: "Kan jag ändra innehållet senare?",
-    answer:
-      "Ja. InfoSync är byggt för löpande skärminnehåll. Kontakta oss när du vill byta kampanj, prislista eller annat material.",
-  },
-  {
-    question: "Vad gäller kring ångerrätt och villkor?",
-    answer:
-      "Du får tydliga villkor, integritetsinformation och betalningsuppgifter innan du betalar. Vid distansköp gäller normalt 14 dagars ångerrätt enligt svensk konsumenträtt, med de undantag som framgår av villkoren.",
-  },
-];
-
 const serviceMarks = [
   { label: "Stripe", className: "stripe" },
   { label: "Visa", className: "visa" },
@@ -140,6 +239,9 @@ const serviceMarks = [
 ];
 
 export default function Home() {
+  const [language, setLanguage] = useState<CustomerLanguage>(
+    defaultCustomerLanguage,
+  );
   const [menuOpen, setMenuOpen] = useState(false);
   const [activeSlide, setActiveSlide] = useState(0);
   const [selectedPlan, setSelectedPlan] = useState<(typeof plans)[number] | null>(
@@ -154,6 +256,22 @@ export default function Home() {
     "idle" | "saving" | "success" | "error"
   >("idle");
   const [requestMessage, setRequestMessage] = useState("");
+
+  const t = copy[language];
+
+  useEffect(() => {
+    const fromUrl = new URLSearchParams(window.location.search).get("lang");
+    const nextLanguage = normalizeCustomerLanguage(
+      fromUrl || window.localStorage.getItem("infosync-language"),
+    );
+    setLanguage(nextLanguage);
+    window.localStorage.setItem("infosync-language", nextLanguage);
+  }, []);
+
+  const switchLanguage = (nextLanguage: CustomerLanguage) => {
+    setLanguage(nextLanguage);
+    window.localStorage.setItem("infosync-language", nextLanguage);
+  };
 
   const openPlanRequest = (plan: (typeof plans)[number]) => {
     setSelectedPlan(plan);
@@ -175,9 +293,7 @@ export default function Home() {
 
     const response = await fetch("/api/onboarding-requests", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         planCode: selectedPlan.code,
         companyName,
@@ -185,14 +301,14 @@ export default function Home() {
         contactPerson,
         phone,
         message,
+        language,
       }),
     });
-
     const data = await response.json();
 
     if (!response.ok) {
       setRequestStatus("error");
-      setRequestMessage(data.error || "Det gick inte att skicka din förfrågan.");
+      setRequestMessage(data.error || t.error);
       return;
     }
 
@@ -202,50 +318,39 @@ export default function Home() {
     setPhone("");
     setMessage("");
     setRequestStatus("success");
-    setRequestMessage(
-      "Tack. Din förfrågan är mottagen och InfoSync återkommer med en personlig startguide.",
-    );
+    setRequestMessage(t.success);
   };
 
   return (
     <div className="landing-page">
       <header className="landing-nav">
-        <a
-          className="landing-brand"
-          href="#top"
-          onClick={() => setMenuOpen(false)}
-        >
+        <a className="landing-brand" href="#top" onClick={() => setMenuOpen(false)}>
           <img src="/brand/infosync-logo1.png" alt="" />
           <span>InfoSync</span>
         </a>
 
-        <button
-          className="landing-menu-button"
-          type="button"
-          aria-label="Öppna meny"
-          onClick={() => setMenuOpen((current) => !current)}
-        >
-          <span />
-          <span />
-          <span />
-        </button>
+        <div className="landing-header-controls">
+          <LanguageSwitch language={language} onLanguage={switchLanguage} />
+          <button
+            className="landing-menu-button"
+            type="button"
+            aria-label="Open menu"
+            onClick={() => setMenuOpen((current) => !current)}
+          >
+            <span />
+            <span />
+            <span />
+          </button>
+        </div>
 
         <nav className={menuOpen ? "landing-links open" : "landing-links"}>
-          {navLinks.map((link) => (
-            <a
-              key={link.href}
-              href={link.href}
-              onClick={() => setMenuOpen(false)}
-            >
-              {link.label}
+          {navIds.map((href, index) => (
+            <a key={href} href={href} onClick={() => setMenuOpen(false)}>
+              {t.nav[index]}
             </a>
           ))}
-          <a
-            className="landing-nav-cta"
-            href="#contact"
-            onClick={() => setMenuOpen(false)}
-          >
-            Boka demo
+          <a className="landing-nav-cta" href="#contact" onClick={() => setMenuOpen(false)}>
+            {t.demo}
           </a>
         </nav>
       </header>
@@ -253,267 +358,173 @@ export default function Home() {
       <main id="top">
         <section className="landing-hero">
           <div className="landing-hero-copy">
-            <p className="landing-eyebrow">Digital skyltning för företag</p>
-            <div className="landing-hero-trust" aria-label="Trygga betalningsalternativ">
+            <p className="landing-eyebrow">{t.eyebrow}</p>
+            <div className="landing-hero-trust" aria-label="Payment options">
               {serviceMarks.map((service) => (
                 <span
                   key={service.label}
                   className={`landing-service-mark landing-service-${service.className}`}
                 >
-                  {service.label}
+                  {language === "en" && service.label === "Säker betalning"
+                    ? "Secure payment"
+                    : service.label}
                 </span>
               ))}
             </div>
-            <h1>Professionellt skärminnehåll, hanterat från en tydlig plattform.</h1>
-            <p className="landing-lede">
-              InfoSync hjälper salonger, butiker och serviceföretag att visa
-              kampanjer, prislistor och information på skärm. Du väljer paket,
-              skickar in dina uppgifter och får hjälp att komma igång utan
-              tekniskt krångel.
-            </p>
-
+            <h1>{t.hero}</h1>
+            <p className="landing-lede">{t.lede}</p>
             <div className="landing-actions">
               <a href="#pricing" className="landing-button landing-button-primary">
-                Se paket
+                {t.pricingCta}
               </a>
               <a href="#workflow" className="landing-button landing-button-secondary">
-                Så fungerar det
+                {t.workflowCta}
               </a>
             </div>
-
             <div className="landing-stats">
-              {stats.map((stat) => (
-                <div key={stat.label}>
-                  <strong>{stat.value}</strong>
-                  <span>{stat.label}</span>
+              {t.stats.map(([value, label]) => (
+                <div key={label}>
+                  <strong>{value}</strong>
+                  <span>{label}</span>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="landing-hero-media" aria-label="Bildspel för InfoSync">
-            {heroSlides.map((slide, index) => (
+          <div className="landing-hero-media" aria-label="InfoSync slideshow">
+            {heroImages.map((image, index) => (
               <img
-                key={slide.image}
-                src={slide.image}
-                alt={slide.title}
+                key={image}
+                src={image}
+                alt={t.slides[index][1]}
                 className={index === activeSlide ? "active" : ""}
               />
             ))}
             <div className="landing-slide-caption">
-              <span>{heroSlides[activeSlide].kicker}</span>
-              <strong>{heroSlides[activeSlide].title}</strong>
+              <span>{t.slides[activeSlide][0]}</span>
+              <strong>{t.slides[activeSlide][1]}</strong>
             </div>
-            <div className="landing-slide-controls" aria-label="Byt bild">
-              {heroSlides.map((slide, index) => (
+            <div className="landing-slide-controls" aria-label="Change image">
+              {heroImages.map((image, index) => (
                 <button
-                  key={slide.image}
+                  key={image}
                   type="button"
                   onClick={() => setActiveSlide(index)}
                   className={index === activeSlide ? "active" : ""}
-                  aria-label={`Visa bild ${index + 1}`}
+                  aria-label={`Slide ${index + 1}`}
                 />
               ))}
             </div>
           </div>
         </section>
 
-        <section id="platform" className="landing-section landing-platform">
-          <div className="landing-section-heading">
-            <p className="landing-eyebrow">Tjänsten</p>
-            <h2>En enklare väg till professionell skärmvisning</h2>
-            <p>
-              Du behöver inte bygga ett eget system eller hantera tekniska
-              inställningar. InfoSync hjälper dig från första förfrågan till
-              en skärm som visar rätt innehåll i din verksamhet.
-            </p>
-          </div>
-
+        <LandingSection id="platform" eyebrow={t.nav[0]} title={t.platformTitle} text={t.platformText}>
           <div className="landing-feature-grid">
-            <Feature
-              title="Smidig start"
-              text="Du väljer paket och får en personlig startguide där allt fortsätter på ett tydligt sätt."
-            />
-            <Feature
-              title="Tydlig kostnad"
-              text="Du ser startavgift, månadskostnad, provperiod och bindningstid innan du går vidare."
-            />
-            <Feature
-              title="Hjälp med skärmen"
-              text="Vi gör layouten utifrån ditt material och skickar enheten med instruktioner."
-            />
-            <Feature
-              title="Innehåll som syns"
-              text="Du kan visa erbjudanden, prislistor, nyheter eller annan information som passar din lokal."
-            />
+            {t.features.map(([title, text]) => (
+              <Feature key={title} title={title} text={text} />
+            ))}
           </div>
-        </section>
+        </LandingSection>
 
         <section id="workflow" className="landing-section landing-workflow">
-          <div className="landing-section-heading">
-            <p className="landing-eyebrow">Så fungerar det</p>
-            <h2>Från paketval till fungerande skärm</h2>
-            <p>
-              Startguiden är den säkra sidan där du bekräftar uppgifter, skickar
-              material och går vidare till betalning. Resten håller vi enkelt.
-            </p>
-          </div>
-
+          <SectionHeading eyebrow={t.nav[1]} title={t.workflowTitle} text={t.workflowText} />
           <div className="landing-timeline">
-            {processSteps.map((step) => (
-              <Step
-                key={step.number}
-                number={step.number}
-                title={step.title}
-                text={step.text}
-                detail={step.detail}
-              />
+            {t.steps.map(([number, title, text, detail]) => (
+              <Step key={number} number={number} title={title} text={text} detail={detail} />
             ))}
           </div>
-
-          <div className="landing-process-visual" aria-label="Översikt av processen">
-            <div>
-              <span>Förfrågan</span>
-              <strong>Paket valt</strong>
-            </div>
-            <div>
-              <span>Material</span>
-              <strong>Meny, bilder, logotyp</strong>
-            </div>
-            <div>
-              <span>Produktion</span>
-              <strong>Layout + USB-enhet</strong>
-            </div>
-            <div>
-              <span>Start</span>
-              <strong>HDMI + Wi-Fi</strong>
-            </div>
+          <div className="landing-process-visual" aria-label="Process overview">
+            {t.process.map(([label, value]) => (
+              <div key={label}>
+                <span>{label}</span>
+                <strong>{value}</strong>
+              </div>
+            ))}
           </div>
         </section>
 
-        <section id="pricing" className="landing-section landing-pricing">
-          <div className="landing-section-heading">
-            <p className="landing-eyebrow">Priser</p>
-            <h2>Tydliga paket för hanterade skärmar</h2>
-            <p>
-              Startavgiften betalas en gång. Månadsabonnemanget har 14 dagars
-              provperiod och ingen bindningstid.
-            </p>
-          </div>
-
+        <LandingSection id="pricing" eyebrow={t.nav[2]} title={t.pricingTitle} text={t.pricingText}>
           <div className="landing-price-grid">
-            {plans.map((plan) => (
-              <article
-                key={plan.name}
-                className={
-                  plan.featured
-                    ? "landing-price-card featured"
-                    : "landing-price-card"
-                }
-              >
-                {plan.featured && <span className="landing-plan-badge">Rekommenderas</span>}
-                <div className="landing-plan-heading">
-                  <div>
-                    <h3>{plan.name}</h3>
-                    <p>{plan.resolution}</p>
-                  </div>
-                  <span>{plan.resolution}</span>
-                </div>
-                <p className="landing-plan-description">{plan.description}</p>
-
-                <div className="landing-price-row">
-                  <span>Startavgift</span>
-                  <strong>{plan.setupFee}</strong>
-                </div>
-                <div className="landing-price-row">
-                  <span>Per månad</span>
-                  <strong>{plan.monthlyFee}</strong>
-                </div>
-
-                <ul>
-                  {plan.features.map((feature) => (
-                    <li key={feature}>{feature}</li>
-                  ))}
-                </ul>
-
-                <button
-                  type="button"
-                  onClick={() => openPlanRequest(plan)}
-                  className="landing-button landing-button-primary"
+            {plans.map((plan) => {
+              const planText = planCopy[language][plan.code];
+              return (
+                <article
+                  key={plan.name}
+                  className={plan.featured ? "landing-price-card featured" : "landing-price-card"}
                 >
-                  Välj {plan.name}
-                </button>
-              </article>
-            ))}
+                  {plan.featured && <span className="landing-plan-badge">{t.recommended}</span>}
+                  <div className="landing-plan-heading">
+                    <div>
+                      <h3>{plan.name}</h3>
+                      <p>{plan.resolution}</p>
+                    </div>
+                    <span>{plan.resolution}</span>
+                  </div>
+                  <p className="landing-plan-description">{planText.description}</p>
+                  <PriceRow label={t.setupFee} value={plan.setupFee} />
+                  <PriceRow label={t.monthly} value={plan.monthlyFee} />
+                  <ul>{planText.features.map((feature) => <li key={feature}>{feature}</li>)}</ul>
+                  <button
+                    type="button"
+                    onClick={() => openPlanRequest(plan)}
+                    className="landing-button landing-button-primary"
+                  >
+                    {t.choose} {plan.name}
+                  </button>
+                </article>
+              );
+            })}
           </div>
-        </section>
+        </LandingSection>
 
         <section className="landing-section landing-trust">
-          <div className="landing-section-heading">
-            <p className="landing-eyebrow">Trygg betalning</p>
-            <h2>Betalning och uppgifter hanteras säkert</h2>
-            <p>
-              Betalningen sker via en säker betalningssida. Vi visar bara
-              betalningssätt som är aktiverade för din betalning.
-            </p>
-          </div>
-
-          <div className="landing-service-grid" aria-label="Betalning och tjänster">
+          <SectionHeading eyebrow={language === "sv" ? "Trygg betalning" : "Secure payment"} title={t.trustTitle} text={t.trustText} />
+          <div className="landing-service-grid" aria-label="Payment services">
             {serviceMarks.map((service) => (
               <span
                 key={service.label}
                 className={`landing-service-mark landing-service-${service.className}`}
               >
-                {service.label}
+                {language === "en" && service.label === "Säker betalning"
+                  ? "Secure payment"
+                  : service.label}
               </span>
             ))}
           </div>
         </section>
 
-        <section id="faq" className="landing-section landing-faq">
-          <div className="landing-section-heading">
-            <p className="landing-eyebrow">Vanliga frågor</p>
-            <h2>Svar innan du väljer paket</h2>
-          </div>
-
+        <LandingSection id="faq" eyebrow={t.nav[3]} title={t.faqTitle}>
           <div className="landing-faq-grid">
-            {faqs.map((item) => (
-              <details key={item.question} className="landing-faq-item">
-                <summary>{item.question}</summary>
-                <p>{item.answer}</p>
+            {t.faqs.map(([question, answer]) => (
+              <details key={question} className="landing-faq-item">
+                <summary>{question}</summary>
+                <p>{answer}</p>
               </details>
             ))}
           </div>
-        </section>
+        </LandingSection>
 
         <section className="landing-section landing-company">
           <div>
-            <p className="landing-eyebrow">Om InfoSync</p>
-            <h2>Företagsinformation kommer snart</h2>
-            <p>
-              Här kommer vi att lägga in organisationsnummer, registrerad
-              företagsadress, kontaktuppgifter och övrig bolagsinformation när
-              registreringen är klar.
-            </p>
+            <p className="landing-eyebrow">InfoSync</p>
+            <h2>{t.companyTitle}</h2>
+            <p>{t.companyText}</p>
           </div>
           <div className="landing-company-card">
             <span>InfoSync</span>
-            <strong>Digital skyltning för lokala företag</strong>
-            <p>Plats för uppdaterad företagsinformation.</p>
+            <strong>{language === "sv" ? "Digital skyltning för lokala företag" : "Digital signage for local businesses"}</strong>
+            <p>{language === "sv" ? "Plats för uppdaterad företagsinformation." : "Space for updated company information."}</p>
           </div>
         </section>
 
         <section id="contact" className="landing-contact">
           <div>
-            <p className="landing-eyebrow">Redo att komma igång?</p>
-            <h2>Starta din nästa skärm med ett enklare arbetsflöde.</h2>
-            <p>
-              Berätta hur många skärmar du vill hantera och vilket innehåll
-              du vill visa. Vi hjälper dig att välja rätt paket.
-            </p>
+            <p className="landing-eyebrow">{t.contactEyebrow}</p>
+            <h2>{t.contactTitle}</h2>
+            <p>{t.contactText}</p>
           </div>
           <a href="mailto:hello@infosync.se" className="landing-button landing-button-primary">
-            Kontakta InfoSync
+            {t.contactButton}
           </a>
         </section>
       </main>
@@ -521,110 +532,154 @@ export default function Home() {
       <footer className="landing-footer">
         <span>InfoSync</span>
         <nav>
-          <a href="/terms">Villkor</a>
-          <a href="/privacy">Integritet</a>
+          <a href={`/terms?lang=${language}`}>{t.legal[0]}</a>
+          <a href={`/privacy?lang=${language}`}>{t.legal[1]}</a>
         </nav>
-        <p>{new Date().getFullYear()} InfoSync. Alla rättigheter förbehållna.</p>
+        <p>{new Date().getFullYear()} InfoSync. {t.legal[2]}</p>
       </footer>
 
       {selectedPlan && (
         <div className="landing-modal-backdrop" role="presentation">
-          <section
-            className="landing-modal"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="landing-request-title"
-          >
-            <button
-              type="button"
-              onClick={closePlanRequest}
-              className="landing-modal-close"
-              aria-label="Stäng formulär"
-            >
-              Stäng
+          <section className="landing-modal" role="dialog" aria-modal="true" aria-labelledby="landing-request-title">
+            <button type="button" onClick={closePlanRequest} className="landing-modal-close" aria-label={t.close}>
+              {t.close}
             </button>
-
-            <p className="landing-eyebrow">Skicka förfrågan</p>
+            <p className="landing-eyebrow">{t.modalEyebrow}</p>
             <h2 id="landing-request-title">
-              Starta med {selectedPlan.name} {selectedPlan.resolution}
+              {t.modalTitle} {selectedPlan.name} {selectedPlan.resolution}
             </h2>
-            <p>
-              Skicka företagets uppgifter så kontaktar InfoSync dig med en
-              personlig startguide för uppgifter, villkor och betalning.
-            </p>
+            <p>{t.modalText}</p>
 
             <form onSubmit={submitPlanRequest} className="landing-request-form">
-              <label>
-                <span>Företagsnamn *</span>
-                <input
-                  value={companyName}
-                  onChange={(event) => setCompanyName(event.target.value)}
-                  required
-                  placeholder="Exempel: Salon Bella"
-                />
-              </label>
-
-              <label>
-                <span>E-post *</span>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  required
-                  placeholder="namn@foretag.se"
-                />
-              </label>
-
-              <label>
-                <span>Kontaktperson</span>
-                <input
-                  value={contactPerson}
-                  onChange={(event) => setContactPerson(event.target.value)}
-                  placeholder="Ditt namn"
-                />
-              </label>
-
-              <label>
-                <span>Telefon</span>
-                <input
-                  value={phone}
-                  onChange={(event) => setPhone(event.target.value)}
-                  placeholder="+46..."
-                />
-              </label>
-
+              <FormField label={t.fields[0]} value={companyName} onChange={setCompanyName} placeholder={t.placeholders[0]} required />
+              <FormField label={t.fields[1]} value={email} onChange={setEmail} placeholder={t.placeholders[1]} type="email" required />
+              <FormField label={t.fields[2]} value={contactPerson} onChange={setContactPerson} placeholder={t.placeholders[2]} />
+              <FormField label={t.fields[3]} value={phone} onChange={setPhone} placeholder={t.placeholders[3]} />
               <label className="landing-request-form-wide">
-                <span>Meddelande</span>
-                <textarea
-                  value={message}
-                  onChange={(event) => setMessage(event.target.value)}
-                  rows={3}
-                  placeholder="Antal skärmar, plats eller annat vi bör känna till."
-                />
+                <span>{t.fields[4]}</span>
+                <textarea value={message} onChange={(event) => setMessage(event.target.value)} rows={3} placeholder={t.placeholders[4]} />
               </label>
 
               {requestMessage && (
-                <p
-                  className={`landing-request-message landing-request-${requestStatus}`}
-                >
+                <p className={`landing-request-message landing-request-${requestStatus}`}>
                   {requestMessage}
                 </p>
               )}
 
-              <button
-                type="submit"
-                disabled={requestStatus === "saving"}
-                className="landing-button landing-button-primary landing-request-submit"
-              >
-                {requestStatus === "saving"
-                  ? "Skickar förfrågan..."
-                  : "Skicka förfrågan"}
+              <button type="submit" disabled={requestStatus === "saving"} className="landing-button landing-button-primary landing-request-submit">
+                {requestStatus === "saving" ? t.sending : t.submit}
               </button>
             </form>
           </section>
         </div>
       )}
     </div>
+  );
+}
+
+function LandingSection({
+  id,
+  eyebrow,
+  title,
+  text,
+  children,
+}: {
+  id: string;
+  eyebrow: string;
+  title: string;
+  text?: string;
+  children: ReactNode;
+}) {
+  return (
+    <section id={id} className={`landing-section landing-${id}`}>
+      <SectionHeading eyebrow={eyebrow} title={title} text={text} />
+      {children}
+    </section>
+  );
+}
+
+function LanguageSwitch({
+  language,
+  onLanguage,
+}: {
+  language: CustomerLanguage;
+  onLanguage: (language: CustomerLanguage) => void;
+}) {
+  return (
+    <div className="landing-language-switch" aria-label="Language">
+      <button
+        type="button"
+        className={language === "sv" ? "active" : ""}
+        onClick={() => onLanguage("sv")}
+        aria-label="Svenska"
+      >
+        🇸🇪
+      </button>
+      <button
+        type="button"
+        className={language === "en" ? "active" : ""}
+        onClick={() => onLanguage("en")}
+        aria-label="English"
+      >
+        🇬🇧
+      </button>
+    </div>
+  );
+}
+
+function SectionHeading({
+  eyebrow,
+  title,
+  text,
+}: {
+  eyebrow: string;
+  title: string;
+  text?: string;
+}) {
+  return (
+    <div className="landing-section-heading">
+      <p className="landing-eyebrow">{eyebrow}</p>
+      <h2>{title}</h2>
+      {text && <p>{text}</p>}
+    </div>
+  );
+}
+
+function PriceRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="landing-price-row">
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
+  );
+}
+
+function FormField({
+  label,
+  value,
+  onChange,
+  placeholder,
+  type = "text",
+  required = false,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  placeholder: string;
+  type?: string;
+  required?: boolean;
+}) {
+  return (
+    <label>
+      <span>{label}</span>
+      <input
+        type={type}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        required={required}
+        placeholder={placeholder}
+      />
+    </label>
   );
 }
 

@@ -3,6 +3,10 @@ import { NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 import { getRequestIp, recordAuditEvent } from "@/lib/server/audit";
+import {
+  appendLanguageToUrl,
+  getCustomerLanguageFromNotes,
+} from "@/lib/customer-language";
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -41,6 +45,31 @@ const getResendErrorMessage = async (response: Response) => {
   }
 
   return `Resend returned ${response.status}.`;
+};
+
+const emailCopy = {
+  sv: {
+    subject: "Din startlänk till InfoSync",
+    intro: "Nu kan du färdigställa dina uppgifter för InfoSync här:",
+    heading: "Dags att komma igång med InfoSync",
+    body:
+      "Bekräfta företagets uppgifter, skicka material till skärmen och gå vidare till betalning via den säkra länken nedan.",
+    cta: "Öppna startguiden",
+    expires: "Länken gäller i 14 dagar.",
+    regards: "Vänliga hälsningar",
+    greeting: "Hej",
+  },
+  en: {
+    subject: "Your InfoSync setup link",
+    intro: "You can now complete your InfoSync details here:",
+    heading: "Time to get started with InfoSync",
+    body:
+      "Confirm your company details, send screen material, and continue to payment using the secure link below.",
+    cta: "Open setup guide",
+    expires: "This link is valid for 14 days.",
+    regards: "Kind regards",
+    greeting: "Hi",
+  },
 };
 
 const createAuthenticatedClient = async () => {
@@ -116,8 +145,13 @@ export async function POST(request: Request) {
   const appUrl =
     process.env.NEXT_PUBLIC_APP_URL ||
     `${new URL(request.url).protocol}//${new URL(request.url).host}`;
-  const onboardingUrl = `${appUrl}/onboarding/${token}`;
+  const language = getCustomerLanguageFromNotes(customer.notes);
+  const onboardingUrl = appendLanguageToUrl(
+    `${appUrl}/onboarding/${token}`,
+    language,
+  );
   const customerName = escapeHtml(customer.name);
+  const copy = emailCopy[language];
 
   const { error: tokenError } = await supabaseAdmin
     .from("customers")
@@ -167,28 +201,28 @@ export async function POST(request: Request) {
     body: JSON.stringify({
       from: resendFromEmail,
       to: customer.email,
-      subject: "Din startlänk till InfoSync",
-      text: `Hej ${customer.name},
+      subject: copy.subject,
+      text: `${copy.greeting} ${customer.name},
 
-Nu kan du färdigställa dina uppgifter för InfoSync här:
+${copy.intro}
 ${onboardingUrl}
 
-Länken gäller i 14 dagar.
+${copy.expires}
 
-Vänliga hälsningar,
+${copy.regards},
 InfoSync`,
       html: `
         <div style="font-family: Arial, sans-serif; color: #102033; line-height: 1.6;">
-          <h1 style="color: #09244a;">Dags att komma igång med InfoSync</h1>
-          <p>Hej ${customerName},</p>
-          <p>Bekräfta företagets uppgifter, skicka material till skärmen och gå vidare till betalning via den säkra länken nedan.</p>
+          <h1 style="color: #09244a;">${copy.heading}</h1>
+          <p>${copy.greeting} ${customerName},</p>
+          <p>${copy.body}</p>
           <p>
             <a href="${onboardingUrl}" style="display: inline-block; background: #145da0; color: #ffffff; padding: 12px 18px; border-radius: 8px; text-decoration: none; font-weight: 700;">
-              Öppna startguiden
+              ${copy.cta}
             </a>
           </p>
-          <p style="color: #5f7187;">Länken gäller i 14 dagar.</p>
-          <p>Vänliga hälsningar,<br />InfoSync</p>
+          <p style="color: #5f7187;">${copy.expires}</p>
+          <p>${copy.regards},<br />InfoSync</p>
         </div>
       `,
     }),
@@ -205,7 +239,7 @@ InfoSync`,
   }
 
   const existingNotes = customer.notes?.trim();
-  const sentNote = `Onboarding email sent: ${new Date().toISOString()}`;
+  const sentNote = `Start guide email sent: ${new Date().toISOString()}`;
 
   const { error: updateError } = await supabaseAdmin
     .from("customers")
@@ -231,6 +265,7 @@ InfoSync`,
     metadata: {
       sentTo: customer.email,
       expiresAt: expiresAt.toISOString(),
+      language,
     },
     ipAddress,
     userAgent,

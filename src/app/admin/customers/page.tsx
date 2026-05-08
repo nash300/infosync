@@ -13,6 +13,9 @@ type Customer = {
   contact_person: string | null;
   notes: string | null;
   status: string | null;
+  onboarding_token: string | null;
+  onboarding_token_expires_at: string | null;
+  terms_accepted_at: string | null;
   payment_status: string | null;
   devices: {
     id: string;
@@ -22,6 +25,7 @@ type Customer = {
 
 const statusFilters = [
   { value: "new_request", label: "New requests" },
+  { value: "invited_pending", label: "Link sent, incomplete" },
   { value: "paid_setup", label: "Payment complete" },
   { value: "needs_device", label: "Needs device" },
   { value: "needs_playlist", label: "Needs playlist" },
@@ -80,6 +84,9 @@ function CustomersPageContent() {
         contact_person,
         notes,
         status,
+        onboarding_token,
+        onboarding_token_expires_at,
+        terms_accepted_at,
         payment_status,
         devices(
           id,
@@ -186,6 +193,15 @@ function CustomersPageContent() {
       return customer.payment_status === "paid" && deviceCount === 0;
     }
 
+    if (filter === "invited_pending") {
+      return Boolean(
+        customer.onboarding_token &&
+          !customer.terms_accepted_at &&
+          customer.status !== "active" &&
+          customer.status !== "suspended",
+      );
+    }
+
     if (filter === "needs_playlist") {
       return customer.status === "active" && hasDeviceWithoutPlaylist(customer);
     }
@@ -209,6 +225,16 @@ function CustomersPageContent() {
 
   const getRequestedPlan = (customer: Customer) => {
     const match = customer.notes?.match(/Requested plan:\s*(.+)/i);
+    return match?.[1] || null;
+  };
+
+  const getPreferredLanguage = (customer: Customer) => {
+    const match = customer.notes?.match(/Preferred language:\s*(en|sv)/i);
+    return match?.[1]?.toUpperCase() || "SV";
+  };
+
+  const getStartGuideSentAt = (customer: Customer) => {
+    const match = customer.notes?.match(/Start guide email sent:\s*(.+)/i);
     return match?.[1] || null;
   };
 
@@ -337,6 +363,7 @@ function CustomersPageContent() {
               const isActive = hasSelectedFilter && statusFilter === status.value;
               const shouldFlag =
                 (status.value === "new_request" ||
+                  status.value === "invited_pending" ||
                   status.value === "paid_setup" ||
                   status.value === "needs_device" ||
                   status.value === "needs_playlist") &&
@@ -458,6 +485,18 @@ function CustomersPageContent() {
                     {customer.payment_status && (
                       <span>Payment: {customer.payment_status}</span>
                     )}
+                    {customer.onboarding_token && !customer.terms_accepted_at && (
+                      <span className="text-blue-700">
+                        Link sent, form incomplete
+                      </span>
+                    )}
+                    {getStartGuideSentAt(customer) && (
+                      <span>Sent: {getStartGuideSentAt(customer)}</span>
+                    )}
+                    {customer.onboarding_token_expires_at && (
+                      <span>Expires: {customer.onboarding_token_expires_at}</span>
+                    )}
+                    <span>Language: {getPreferredLanguage(customer)}</span>
                     {setupStatus && <span>Setup: {setupStatus}</span>}
                     {customer.payment_status === "paid" && deviceCount === 0 && (
                       <span className="text-blue-700">

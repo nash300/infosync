@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { PRICING_PLANS } from "@/lib/pricing/plans";
 import { getRequestIp, recordAuditEvent } from "@/lib/server/audit";
+import { normalizeCustomerLanguage } from "@/lib/customer-language";
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -23,6 +24,7 @@ export async function POST(request: Request) {
     const contactPerson = String(body.contactPerson || "").trim();
     const phone = String(body.phone || "").trim();
     const message = String(body.message || "").trim();
+    const preferredLanguage = normalizeCustomerLanguage(body.language);
     const ipAddress = getRequestIp(request);
     const userAgent = request.headers.get("user-agent");
 
@@ -51,6 +53,7 @@ export async function POST(request: Request) {
     const requestedAt = new Date().toISOString();
     const notes = [
       "Landing purchase request",
+      `Preferred language: ${preferredLanguage}`,
       `Requested plan: ${selectedPlan?.name} ${selectedPlan?.resolution} (${planCode})`,
       `Submitted at: ${requestedAt}`,
       message ? `Message: ${message}` : "",
@@ -89,6 +92,7 @@ export async function POST(request: Request) {
         planCode,
         planName: selectedPlan?.name,
         planResolution: selectedPlan?.resolution,
+        preferredLanguage,
       },
       ipAddress,
       userAgent,

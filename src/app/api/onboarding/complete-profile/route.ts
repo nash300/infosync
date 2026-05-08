@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { getRequestIp, recordAuditEvent, recordConsent } from "@/lib/server/audit";
+import { normalizeCustomerLanguage } from "@/lib/customer-language";
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -40,6 +41,7 @@ function decodeBase64File(file: DisplayFileInput) {
 
 export async function POST(request: Request) {
   const body = await request.json();
+  const language = normalizeCustomerLanguage(body.language);
   const token = String(body.token || "").trim();
   const contactPerson = String(body.contactPerson || "").trim();
   const phone = String(body.phone || "").trim();
@@ -103,11 +105,14 @@ export async function POST(request: Request) {
 
   const acceptedAt = new Date().toISOString();
   const currentNotes = String(customer.notes || "").trim();
-  const nextNotes = displayNotes
-    ? [currentNotes, `Display material notes: ${displayNotes}`]
-        .filter(Boolean)
-        .join("\n")
-    : currentNotes || null;
+  const nextNotes =
+    [
+      currentNotes,
+      `Preferred language: ${language}`,
+      displayNotes ? `Display material notes: ${displayNotes}` : "",
+    ]
+      .filter(Boolean)
+      .join("\n") || null;
 
   const { error: updateError } = await supabaseAdmin
     .from("customers")

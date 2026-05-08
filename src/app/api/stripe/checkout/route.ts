@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
 import { getRequestIp, recordAuditEvent } from "@/lib/server/audit";
+import { normalizeCustomerLanguage } from "@/lib/customer-language";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
@@ -12,8 +13,9 @@ const supabaseAdmin = createClient(
 
 export async function POST(request: Request) {
   try {
-    const { customerId, email, pricingPlanCode, legalAccepted } =
-      await request.json();
+    const body = await request.json();
+    const { customerId, email, pricingPlanCode, legalAccepted } = body;
+    const language = normalizeCustomerLanguage(body.language);
     const ipAddress = getRequestIp(request);
     const userAgent = request.headers.get("user-agent");
 
@@ -82,8 +84,8 @@ export async function POST(request: Request) {
           pricing_plan_code: plan.code,
         },
       },
-      success_url: `${appUrl}/onboarding/payment-success?customer_id=${customerId}`,
-      cancel_url: `${appUrl}/onboarding/payment-cancelled`,
+      success_url: `${appUrl}/onboarding/payment-success?customer_id=${customerId}&lang=${language}`,
+      cancel_url: `${appUrl}/onboarding/payment-cancelled?lang=${language}`,
       metadata: {
         customer_id: customerId,
         pricing_plan_id: plan.id,
@@ -109,6 +111,7 @@ export async function POST(request: Request) {
         pricingPlanCode: plan.code,
         pricingPlanId: plan.id,
         stripeCheckoutSessionId: session.id,
+        language,
       },
       ipAddress,
       userAgent,
