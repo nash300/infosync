@@ -19,6 +19,13 @@ const ALLOWED_DISPLAY_FILE_TYPES = new Set([
   "image/heic",
   "application/pdf",
 ]);
+const ALLOWED_COURIERS = new Set([
+  "PostNord",
+  "DHL",
+  "Bring",
+  "DB Schenker",
+  "Instabox",
+]);
 
 type DisplayFileInput = {
   name?: string;
@@ -52,6 +59,7 @@ export async function POST(request: Request) {
   const acceptedTerms = Boolean(body.acceptedTerms);
   const acceptedPrivacy = Boolean(body.acceptedPrivacy);
   const marketingConsent = Boolean(body.marketingConsent);
+  const preferredCourier = String(body.preferredCourier || "").trim();
   const displayNotes = String(body.displayNotes || "").trim();
   const displayFiles = Array.isArray(body.displayFiles)
     ? (body.displayFiles as DisplayFileInput[])
@@ -76,6 +84,13 @@ export async function POST(request: Request) {
   if (!acceptedTerms || !acceptedPrivacy) {
     return NextResponse.json(
       { error: "Villkor och integritetspolicy måste godkännas." },
+      { status: 400 },
+    );
+  }
+
+  if (!ALLOWED_COURIERS.has(preferredCourier)) {
+    return NextResponse.json(
+      { error: "VÃ¤lj transportÃ¶r." },
       { status: 400 },
     );
   }
@@ -109,6 +124,7 @@ export async function POST(request: Request) {
     [
       currentNotes,
       `Preferred language: ${language}`,
+      `Preferred courier: ${preferredCourier}`,
       displayNotes ? `Display material notes: ${displayNotes}` : "",
     ]
       .filter(Boolean)
@@ -244,6 +260,7 @@ export async function POST(request: Request) {
         privacyVersion: PRIVACY_VERSION,
         displayNotesProvided: Boolean(displayNotes),
         displayFiles: storedFiles,
+        preferredCourier,
       },
       ipAddress,
       userAgent,

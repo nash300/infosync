@@ -1,6 +1,7 @@
 import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css"; import "bootstrap/dist/css/bootstrap.min.css";
-
+import type { Metadata } from "next";
+import "./globals.css";
+import "bootstrap/dist/css/bootstrap.min.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -12,11 +13,71 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata = {
-  title: "InfoSync",
-  description: "Digital skyltning och skärmhantering för företag",
+const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://infosync.se";
+
+export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: "InfoSync | Digital skyltning för företag i Sverige",
+    template: "%s | InfoSync",
+  },
+  description:
+    "InfoSync hjälper salonger, butiker, restauranger och serviceföretag i Sverige med digital skyltning, skärmreklam, menyer, prislistor och kampanjer på TV-skärm.",
+  applicationName: "InfoSync",
+  keywords: [
+    "digital skyltning",
+    "digital signage Sverige",
+    "skärmreklam",
+    "menyskärm",
+    "informationsskärm",
+    "TV skyltning företag",
+    "digital skyltning salong",
+    "digital skyltning butik",
+    "digital skyltning restaurang",
+  ],
+  alternates: {
+    canonical: "/",
+    languages: {
+      sv: "/?lang=sv",
+      en: "/?lang=en",
+    },
+  },
+  openGraph: {
+    title: "InfoSync | Digital skyltning för företag i Sverige",
+    description:
+      "Professionellt skärminnehåll för lokala företag. Visa menyer, prislistor, erbjudanden och information på TV-skärm.",
+    url: "/",
+    siteName: "InfoSync",
+    locale: "sv_SE",
+    type: "website",
+    images: [
+      {
+        url: "/brand/infosync-logo1.png",
+        width: 512,
+        height: 512,
+        alt: "InfoSync",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary",
+    title: "InfoSync | Digital skyltning för företag i Sverige",
+    description:
+      "Digital signage, skärmreklam och hanterat skärminnehåll för företag i Sverige.",
+    images: ["/brand/infosync-logo1.png"],
+  },
   icons: {
     icon: "/brand/infosync-icon.png",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
   },
   other: {
     google: "notranslate",

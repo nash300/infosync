@@ -52,6 +52,9 @@ const copy = {
       "Ladda gärna upp meny, prislista, logotyp eller bilder som hjälper oss att skapa layouten. PDF, JPG, PNG, WEBP och HEIC stöds.",
     materialPlaceholder:
       "Exempel: använd menybilden, visa luncherbjudande och öppettider.",
+    courierTitle: "Välj transportör",
+    courierText:
+      "Välj den transportör du helst vill använda. Vi bekräftar slutligt alternativ utifrån din adress och paketets storlek.",
     terms: "Jag godkänner villkoren och förstår att de gäller för InfoSync-abonnemanget. *",
     privacy:
       "Jag godkänner integritetspolicyn och förstår att InfoSync behandlar företagets och kontaktpersonens uppgifter för start, fakturering, support och leverans av tjänsten. *",
@@ -61,6 +64,7 @@ const copy = {
     requiredContact: "Kontaktperson måste anges.",
     requiredTerms: "Du måste godkänna villkoren.",
     requiredPrivacy: "Du måste godkänna integritetspolicyn.",
+    requiredCourier: "Välj transportör.",
     fileSize: "Filerna får tillsammans vara högst 20 MB.",
     saved: "Uppgifterna har sparats.",
     saveError: "Det gick inte att spara uppgifterna.",
@@ -101,6 +105,9 @@ const copy = {
       "Upload a menu, price list, logo, or images that help us create the layout. PDF, JPG, PNG, WEBP, and HEIC are supported.",
     materialPlaceholder:
       "Example: use the menu image, show lunch offer and opening hours.",
+    courierTitle: "Choose delivery service",
+    courierText:
+      "Choose the carrier you prefer. We confirm the final option based on your address and parcel size.",
     terms: "I accept the terms and understand they apply to the InfoSync subscription. *",
     privacy:
       "I accept the privacy policy and understand that InfoSync processes company and contact-person details for setup, billing, support, and service delivery. *",
@@ -110,6 +117,7 @@ const copy = {
     requiredContact: "Contact person is required.",
     requiredTerms: "You must accept the terms.",
     requiredPrivacy: "You must accept the privacy policy.",
+    requiredCourier: "Choose a delivery service.",
     fileSize: "Files can be at most 20 MB in total.",
     saved: "Your details have been saved.",
     saveError: "We could not save your details.",
@@ -124,6 +132,8 @@ const copy = {
       " and understand that InfoSync processes company and contact-person details for setup, billing, support, and service delivery. *",
   },
 } as const;
+
+const courierOptions = ["PostNord", "DHL", "Bring", "DB Schenker", "Instabox"] as const;
 
 export default function OnboardingPage({
   params,
@@ -143,6 +153,7 @@ export default function OnboardingPage({
   const [country, setCountry] = useState("Sverige");
   const [displayNotes, setDisplayNotes] = useState("");
   const [displayFiles, setDisplayFiles] = useState<File[]>([]);
+  const [preferredCourier, setPreferredCourier] = useState("");
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [acceptedTerms, setAcceptedTerms] = useState(false);
@@ -222,6 +233,10 @@ export default function OnboardingPage({
       setMessage(t.requiredPrivacy);
       return;
     }
+    if (!preferredCourier) {
+      setMessage(t.requiredCourier);
+      return;
+    }
 
     const totalFileSize = displayFiles.reduce((sum, file) => sum + file.size, 0);
     if (totalFileSize > 20 * 1024 * 1024) {
@@ -248,6 +263,7 @@ export default function OnboardingPage({
         marketingConsent,
         displayNotes,
         displayFiles: displayFilePayloads,
+        preferredCourier,
         language,
       }),
     });
@@ -369,6 +385,25 @@ export default function OnboardingPage({
           {displayFiles.length > 0 && (
             <ul>{displayFiles.map((file) => <li key={`${file.name}-${file.size}`}>{file.name} ({Math.ceil(file.size / 1024)} KB)</li>)}</ul>
           )}
+        </div>
+
+        <div className="flow-material flow-courier">
+          <h3>{t.courierTitle}</h3>
+          <p>{t.courierText}</p>
+          <div className="flow-courier-options">
+            {courierOptions.map((courier) => (
+              <label key={courier} className={preferredCourier === courier ? "active" : ""}>
+                <input
+                  type="radio"
+                  name="preferredCourier"
+                  value={courier}
+                  checked={preferredCourier === courier}
+                  onChange={(event) => setPreferredCourier(event.target.value)}
+                />
+                <span>{courier}</span>
+              </label>
+            ))}
+          </div>
         </div>
 
         {message && <p className="flow-message">{message}</p>}

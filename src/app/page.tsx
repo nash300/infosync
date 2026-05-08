@@ -11,7 +11,7 @@ import "./landing.css";
 const copy = {
   sv: {
     nav: ["Tjänsten", "Så fungerar det", "Priser", "FAQ", "Kontakt"],
-    demo: "Boka demo",
+    demo: "Kontakta oss",
     eyebrow: "Digital skyltning för företag",
     hero:
       "Professionellt skärminnehåll, hanterat från en tydlig plattform.",
@@ -57,13 +57,20 @@ const copy = {
     choose: "Välj",
     trustTitle: "Betalning och uppgifter hanteras säkert",
     trustText:
-      "Betalningen sker via en säker betalningssida. Vi visar bara betalningssätt som är aktiverade för din betalning.",
+      "Betalningen sker via en säker betalningssida med kort, Klarna och andra betalningssätt som är aktiverade för din betalning.",
+    deliveryTitle: "Leveransalternativ i Sverige",
+    deliveryText:
+      "Vi kan skicka skärmenheten med etablerade transportörer i Sverige och väljer alternativ efter adress, paketstorlek och ledtid.",
     faqTitle: "Svar innan du väljer paket",
     faqs: [
       ["Vad händer efter att jag valt paket?", "Du får en personlig startguide där du kontrollerar företagsuppgifter, skickar material till skärmen, godkänner villkor och går vidare till betalning."],
       ["Vilket material behöver jag skicka?", "Du kan ladda upp meny, prislista, logotyp, bilder eller PDF-filer. Det går också bra att skriva kort vad skärmen ska visa."],
       ["Hur snabbt kan jag komma igång?", "När betalningen är klar skapar vi layouten och postar USB-enheten inom 4 arbetsdagar. Leveranstiden beror sedan på posten."],
       ["Behöver jag köpa en särskild TV?", "Du behöver en Smart TV eller skärm med HDMI-ingång och tillgång till Wi-Fi."],
+      ["Kan jag visa kampanjer och priser samtidigt?", "Ja. Vi kan bygga en layout med prislista, erbjudanden, öppettider, QR-kod och bildmaterial i samma visning."],
+      ["Kan jag ändra innehållet senare?", "Ja. Skicka nytt material eller nya priser till InfoSync så hjälper vi dig att uppdatera skärmen."],
+      ["Vilken leverans kan jag välja?", "I startguiden väljer kunden en tillgänglig transportör, exempelvis PostNord, DHL, Bring, DB Schenker eller Instabox."],
+      ["Vad ingår i startavgiften?", "Startavgiften täcker personlig startguide, layoutarbete, förberedelse av skärminnehåll och utskick av enheten."],
     ],
     companyTitle: "Företagsinformation kommer snart",
     companyText:
@@ -73,6 +80,8 @@ const copy = {
     contactText:
       "Berätta hur många skärmar du vill hantera och vilket innehåll du vill visa. Vi hjälper dig att välja rätt paket.",
     contactButton: "Kontakta InfoSync",
+    seoIntro:
+      "InfoSync erbjuder digital skyltning i Sverige för salonger, butiker, restauranger och lokala serviceföretag som vill visa menyer, prislistor, kampanjer och kundinformation på TV-skärm.",
     modalEyebrow: "Skicka förfrågan",
     modalTitle: "Starta med",
     modalText:
@@ -89,7 +98,7 @@ const copy = {
   },
   en: {
     nav: ["Service", "How it works", "Pricing", "FAQ", "Contact"],
-    demo: "Book a demo",
+    demo: "Contact us",
     eyebrow: "Digital signage for businesses",
     hero: "Professional screen content, managed from one clear platform.",
     lede:
@@ -126,13 +135,20 @@ const copy = {
     choose: "Choose",
     trustTitle: "Payment and details are handled securely",
     trustText:
-      "Payment happens through a secure checkout page. We only show payment methods enabled for your payment.",
+      "Payment happens through a secure checkout page with cards, Klarna, and other payment methods enabled for your payment.",
+    deliveryTitle: "Delivery options in Sweden",
+    deliveryText:
+      "We can ship the screen device with established carriers in Sweden and choose the option by address, parcel size, and lead time.",
     faqTitle: "Answers before you choose a package",
     faqs: [
       ["What happens after I choose a package?", "You receive a personal setup guide where you check company details, send screen material, accept terms, and continue to payment."],
       ["What material do I need to send?", "You can upload a menu, price list, logo, images, or PDFs. You can also briefly describe what the screen should show."],
       ["How quickly can I start?", "After payment, we build the layout and post the USB device within 4 working days. Delivery time depends on the postal service."],
       ["Do I need a special TV?", "You need a Smart TV or screen with HDMI and access to Wi-Fi."],
+      ["Can I show campaigns and prices together?", "Yes. We can build a layout with price lists, offers, opening hours, QR codes, and imagery in one screen flow."],
+      ["Can I change the content later?", "Yes. Send new material or updated prices to InfoSync and we help update the screen."],
+      ["Which delivery service can I choose?", "In the setup guide, the customer selects an available carrier such as PostNord, DHL, Bring, DB Schenker, or Instabox."],
+      ["What is included in the setup fee?", "The setup fee covers the personal setup guide, layout work, screen content preparation, and device dispatch."],
     ],
     companyTitle: "Company information coming soon",
     companyText:
@@ -142,6 +158,8 @@ const copy = {
     contactText:
       "Tell us how many screens you want to manage and what content you want to show. We help you choose the right package.",
     contactButton: "Contact InfoSync",
+    seoIntro:
+      "InfoSync provides digital signage in Sweden for salons, shops, restaurants, and local service businesses that want to show menus, price lists, campaigns, and customer information on TV screens.",
     modalEyebrow: "Send request",
     modalTitle: "Start with",
     modalText:
@@ -226,11 +244,6 @@ const planCopy = {
 } as const;
 
 const navIds = ["#platform", "#workflow", "#pricing", "#faq", "#contact"];
-const heroImages = [
-  "https://images.pexels.com/photos/10660199/pexels-photo-10660199.jpeg?auto=compress&cs=tinysrgb&w=1600",
-  "https://images.pexels.com/photos/2482119/pexels-photo-2482119.jpeg?auto=compress&cs=tinysrgb&w=1600",
-  "https://images.pexels.com/photos/11344549/pexels-photo-11344549.jpeg?auto=compress&cs=tinysrgb&w=1600",
-];
 const visualCopy = {
   sv: [
     ["Planera innehåll", "Meny, kampanj och logotyp samlas på ett ställe."],
@@ -244,19 +257,44 @@ const visualCopy = {
   ],
 } as const;
 
-const serviceMarks = [
-  { label: "Stripe", className: "stripe" },
-  { label: "Visa", className: "visa" },
-  { label: "Mastercard", className: "mastercard" },
-  { label: "Säker betalning", className: "secure" },
+const partnerLogos = [
+  { label: "Stripe", src: "/brand/services/stripe.svg" },
+  { label: "Klarna", src: "/brand/services/klarna.svg" },
+  { label: "Visa", src: "/brand/services/visa.svg" },
+  { label: "Mastercard", src: "/brand/services/mastercard.svg" },
+  { label: "PostNord", src: "/brand/services/postnord.png" },
+  { label: "DHL", src: "/brand/services/dhl.svg" },
+  { label: "Bring", src: "/brand/services/bring.svg" },
+  { label: "DB Schenker", src: "/brand/services/db-schenker.svg" },
+  { label: "Instabox", src: "/brand/services/instabox-logo.png" },
 ];
+
+const stepImages = ["/salon1.jpg", "/salon2.jpg", "/window_screen2.jpg", "/window_screen1.jpg"] as const;
+
+const comparisonRows = {
+  sv: [
+    ["Upplösning", "Full HD", "4K"],
+    ["Passar bäst för", "En skärm med tydliga menyer och erbjudanden", "Extra skarp visning och mer premiumkänsla"],
+    ["Startavgift", "1 998 kr", "2 398 kr"],
+    ["Månadspris", "219 kr", "269 kr"],
+    ["Provperiod", "14 dagar", "14 dagar"],
+    ["Bindningstid", "Ingen", "Ingen"],
+  ],
+  en: [
+    ["Resolution", "Full HD", "4K"],
+    ["Best for", "One screen with clear menus and offers", "Sharper display and a more premium feel"],
+    ["Setup fee", "1 998 kr", "2 398 kr"],
+    ["Monthly price", "219 kr", "269 kr"],
+    ["Trial", "14 days", "14 days"],
+    ["Commitment", "None", "None"],
+  ],
+} as const;
 
 export default function Home() {
   const [language, setLanguage] = useState<CustomerLanguage>(
     defaultCustomerLanguage,
   );
   const [menuOpen, setMenuOpen] = useState(false);
-  const [activeSlide, setActiveSlide] = useState(0);
   const [selectedPlan, setSelectedPlan] = useState<(typeof plans)[number] | null>(
     null,
   );
@@ -271,6 +309,31 @@ export default function Home() {
   const [requestMessage, setRequestMessage] = useState("");
 
   const t = copy[language];
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    name: "InfoSync",
+    url: "https://infosync.se",
+    image: "https://infosync.se/brand/infosync-logo1.png",
+    email: "hello@infosync.se",
+    areaServed: "Sweden",
+    priceRange: "SEK 219-269 per month",
+    description: t.seoIntro,
+    knowsAbout: [
+      "digital skyltning",
+      "digital signage",
+      "skärmreklam",
+      "menyskärm",
+      "informationsskärm",
+      "TV skyltning",
+    ],
+    makesOffer: plans.map((plan) => ({
+      "@type": "Offer",
+      name: `${plan.name} ${plan.resolution}`,
+      priceCurrency: "SEK",
+      category: "Digital signage service",
+    })),
+  };
 
   useEffect(() => {
     const fromUrl = new URLSearchParams(window.location.search).get("lang");
@@ -279,14 +342,6 @@ export default function Home() {
     );
     setLanguage(nextLanguage);
     window.localStorage.setItem("infosync-language", nextLanguage);
-  }, []);
-
-  useEffect(() => {
-    const slideTimer = window.setInterval(() => {
-      setActiveSlide((current) => (current + 1) % heroImages.length);
-    }, 5200);
-
-    return () => window.clearInterval(slideTimer);
   }, []);
 
   const switchLanguage = (nextLanguage: CustomerLanguage) => {
@@ -380,18 +435,6 @@ export default function Home() {
         <section className="landing-hero">
           <div className="landing-hero-copy">
             <p className="landing-eyebrow">{t.eyebrow}</p>
-            <div className="landing-hero-trust" aria-label="Payment options">
-              {serviceMarks.map((service) => (
-                <span
-                  key={service.label}
-                  className={`landing-service-mark landing-service-${service.className}`}
-                >
-                  {language === "en" && service.label === "Säker betalning"
-                    ? "Secure payment"
-                    : service.label}
-                </span>
-              ))}
-            </div>
             <h1>{t.hero}</h1>
             <p className="landing-lede">{t.lede}</p>
             <div className="landing-actions">
@@ -410,32 +453,14 @@ export default function Home() {
                 </div>
               ))}
             </div>
+            <p className="landing-seo-copy">{t.seoIntro}</p>
           </div>
-
-          <div className="landing-hero-media" aria-label="InfoSync slideshow">
-            {heroImages.map((image, index) => (
-              <img
-                key={image}
-                src={image}
-                alt={t.slides[index][1]}
-                className={index === activeSlide ? "active" : ""}
-              />
+          <div className="landing-logo-rail" aria-label="Payment and delivery services">
+            {partnerLogos.map((logo) => (
+              <span key={logo.label} className="landing-logo-tile">
+                <img src={logo.src} alt={`${logo.label} logo`} />
+              </span>
             ))}
-            <div className="landing-slide-caption">
-              <span>{t.slides[activeSlide][0]}</span>
-              <strong>{t.slides[activeSlide][1]}</strong>
-            </div>
-            <div className="landing-slide-controls" aria-label="Change image">
-              {heroImages.map((image, index) => (
-                <button
-                  key={image}
-                  type="button"
-                  onClick={() => setActiveSlide(index)}
-                  className={index === activeSlide ? "active" : ""}
-                  aria-label={`Slide ${index + 1}`}
-                />
-              ))}
-            </div>
           </div>
         </section>
 
@@ -454,10 +479,19 @@ export default function Home() {
 
         <section id="workflow" className="landing-section landing-workflow">
           <SectionHeading eyebrow={t.nav[1]} title={t.workflowTitle} text={t.workflowText} />
-          <div className="landing-timeline">
-            {t.steps.map(([number, title, text, detail]) => (
-              <Step key={number} number={number} title={title} text={text} detail={detail} />
-            ))}
+          <div className="landing-workflow-layout">
+            <div className="landing-timeline">
+              {t.steps.map(([number, title, text, detail], index) => (
+                <Step key={number} number={number} title={title} text={text} detail={detail} image={stepImages[index]} />
+              ))}
+            </div>
+            <div className="landing-device-visual" aria-hidden="true">
+              <div className="landing-device-screen">
+                <span />
+                <span />
+                <span />
+              </div>
+            </div>
           </div>
           <div className="landing-process-visual" aria-label="Process overview">
             {t.process.map(([label, value]) => (
@@ -487,8 +521,11 @@ export default function Home() {
                     <span>{plan.resolution}</span>
                   </div>
                   <p className="landing-plan-description">{planText.description}</p>
+                  <div className="landing-plan-price">
+                    <strong>{plan.monthlyFee}</strong>
+                    <span>{t.monthly}</span>
+                  </div>
                   <PriceRow label={t.setupFee} value={plan.setupFee} />
-                  <PriceRow label={t.monthly} value={plan.monthlyFee} />
                   <ul>{planText.features.map((feature) => <li key={feature}>{feature}</li>)}</ul>
                   <button
                     type="button"
@@ -501,47 +538,26 @@ export default function Home() {
               );
             })}
           </div>
+          <ComparisonTable language={language} />
         </LandingSection>
-
-        <section className="landing-section landing-trust">
-          <SectionHeading eyebrow={language === "sv" ? "Trygg betalning" : "Secure payment"} title={t.trustTitle} text={t.trustText} />
-          <div className="landing-service-grid" aria-label="Payment services">
-            {serviceMarks.map((service) => (
-              <span
-                key={service.label}
-                className={`landing-service-mark landing-service-${service.className}`}
-              >
-                {language === "en" && service.label === "Säker betalning"
-                  ? "Secure payment"
-                  : service.label}
-              </span>
-            ))}
-          </div>
-        </section>
 
         <LandingSection id="faq" eyebrow={t.nav[3]} title={t.faqTitle}>
-          <div className="landing-faq-grid">
-            {t.faqs.map(([question, answer]) => (
-              <details key={question} className="landing-faq-item">
-                <summary>{question}</summary>
-                <p>{answer}</p>
-              </details>
-            ))}
+          <div className="landing-faq-layout">
+            <div className="landing-faq-grid">
+              {t.faqs.map(([question, answer]) => (
+                <details key={question} className="landing-faq-item">
+                  <summary>{question}</summary>
+                  <p>{answer}</p>
+                </details>
+              ))}
+            </div>
+            <div className="landing-faq-visual" aria-hidden="true">
+              <span />
+              <span />
+              <span />
+            </div>
           </div>
         </LandingSection>
-
-        <section className="landing-section landing-company">
-          <div>
-            <p className="landing-eyebrow">InfoSync</p>
-            <h2>{t.companyTitle}</h2>
-            <p>{t.companyText}</p>
-          </div>
-          <div className="landing-company-card">
-            <span>InfoSync</span>
-            <strong>{language === "sv" ? "Digital skyltning för lokala företag" : "Digital signage for local businesses"}</strong>
-            <p>{language === "sv" ? "Plats för uppdaterad företagsinformation." : "Space for updated company information."}</p>
-          </div>
-        </section>
 
         <section id="contact" className="landing-contact">
           <div>
@@ -556,13 +572,26 @@ export default function Home() {
       </main>
 
       <footer className="landing-footer">
-        <span>InfoSync</span>
-        <nav>
-          <a href={`/terms?lang=${language}`}>{t.legal[0]}</a>
-          <a href={`/privacy?lang=${language}`}>{t.legal[1]}</a>
-        </nav>
-        <p>{new Date().getFullYear()} InfoSync. {t.legal[2]}</p>
+        <div className="landing-footer-company">
+          <p className="landing-eyebrow">InfoSync</p>
+          <h2>{t.companyTitle}</h2>
+          <p>{t.companyText}</p>
+        </div>
+        <div className="landing-footer-card">
+          <span>InfoSync</span>
+          <strong>{language === "sv" ? "Digital skyltning för lokala företag i Sverige" : "Digital signage for local businesses in Sweden"}</strong>
+          <nav>
+            <a href={`/terms?lang=${language}`}>{t.legal[0]}</a>
+            <a href={`/privacy?lang=${language}`}>{t.legal[1]}</a>
+          </nav>
+          <p>{new Date().getFullYear()} InfoSync. {t.legal[2]}</p>
+        </div>
       </footer>
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
 
       {selectedPlan && (
         <div className="landing-modal-backdrop" role="presentation">
@@ -621,6 +650,31 @@ function LandingSection({
       <SectionHeading eyebrow={eyebrow} title={title} text={text} />
       {children}
     </section>
+  );
+}
+
+function ComparisonTable({ language }: { language: CustomerLanguage }) {
+  return (
+    <div className="landing-comparison">
+      <table>
+        <thead>
+          <tr>
+            <th>{language === "sv" ? "Jämförelse" : "Comparison"}</th>
+            <th>Standard</th>
+            <th>Premium</th>
+          </tr>
+        </thead>
+        <tbody>
+          {comparisonRows[language].map(([label, standard, premium]) => (
+            <tr key={label}>
+              <th>{label}</th>
+              <td>{standard}</td>
+              <td>{premium}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
 
@@ -748,14 +802,17 @@ function Step({
   title,
   text,
   detail,
+  image,
 }: {
   number: string;
   title: string;
   text: string;
   detail?: string;
+  image: string;
 }) {
   return (
     <article className="landing-step">
+      <img src={image} alt="" />
       <span>{number}</span>
       <h3>{title}</h3>
       <p>{text}</p>
