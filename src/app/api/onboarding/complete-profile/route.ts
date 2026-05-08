@@ -59,7 +59,7 @@ export async function POST(request: Request) {
 
   if (!token) {
     return NextResponse.json(
-      { error: "Onboardingtoken saknas." },
+      { error: "Startlänk saknas." },
       { status: 400 },
     );
   }
@@ -86,7 +86,7 @@ export async function POST(request: Request) {
 
   if (customerError || !customer) {
     return NextResponse.json(
-      { error: "Ogiltig onboardinglänk." },
+      { error: "Ogiltig startlänk." },
       { status: 404 },
     );
   }
@@ -96,7 +96,7 @@ export async function POST(request: Request) {
     new Date(customer.onboarding_token_expires_at) < new Date()
   ) {
     return NextResponse.json(
-      { error: "Den här onboardinglänken har gått ut." },
+      { error: "Den här startlänken har gått ut." },
       { status: 410 },
     );
   }

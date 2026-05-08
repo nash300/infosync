@@ -167,10 +167,10 @@ export async function POST(request: Request) {
     body: JSON.stringify({
       from: resendFromEmail,
       to: customer.email,
-      subject: "Din onboardinglänk till InfoSync",
+      subject: "Din startlänk till InfoSync",
       text: `Hej ${customer.name},
 
-Slutför din onboarding för InfoSync här:
+Nu kan du färdigställa dina uppgifter för InfoSync här:
 ${onboardingUrl}
 
 Länken gäller i 14 dagar.
@@ -179,12 +179,12 @@ Vänliga hälsningar,
 InfoSync`,
       html: `
         <div style="font-family: Arial, sans-serif; color: #102033; line-height: 1.6;">
-          <h1 style="color: #09244a;">Välkommen till InfoSync</h1>
+          <h1 style="color: #09244a;">Dags att komma igång med InfoSync</h1>
           <p>Hej ${customerName},</p>
-          <p>Slutför din onboarding via den säkra länken nedan.</p>
+          <p>Bekräfta företagets uppgifter, skicka material till skärmen och gå vidare till betalning via den säkra länken nedan.</p>
           <p>
             <a href="${onboardingUrl}" style="display: inline-block; background: #145da0; color: #ffffff; padding: 12px 18px; border-radius: 8px; text-decoration: none; font-weight: 700;">
-              Slutför onboarding
+              Öppna startguiden
             </a>
           </p>
           <p style="color: #5f7187;">Länken gäller i 14 dagar.</p>

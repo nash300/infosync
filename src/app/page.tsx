@@ -21,7 +21,7 @@ const plans = [
     description: "För en skärm som visar kampanjer, erbjudanden och information i Full HD.",
     features: [
       "Uppspelning i Full HD",
-      "Personlig start med säker länk",
+      "Säker startguide för uppgifter och betalning",
       "Vi hjälper dig att få skärmen redo",
       "14 dagars provperiod på månadsabonnemang",
       "Ingen bindningstid",
@@ -36,7 +36,7 @@ const plans = [
     description: "För verksamheter som vill visa extra skarpt innehåll i 4K.",
     features: [
       "Uppspelning för 4K-innehåll",
-      "Personlig start med säker länk",
+      "Säker startguide för uppgifter och betalning",
       "Vi hjälper dig att få skärmen redo",
       "14 dagars provperiod på månadsabonnemang",
       "Ingen bindningstid",
@@ -77,12 +77,12 @@ const processSteps = [
     number: "01",
     title: "Välj paket",
     text: "Välj Standard eller Premium och skicka en kort förfrågan med företagets uppgifter.",
-    detail: "Det är inte en beställning ännu. Vi använder uppgifterna för att skapa din säkra startlänk.",
+    detail: "Det är inte en beställning ännu. Vi använder uppgifterna för att skapa din personliga startguide.",
   },
   {
     number: "02",
-    title: "Skicka material och betala",
-    text: "Via länken bekräftar du uppgifter, godkänner villkor, laddar upp material och går vidare till betalning.",
+    title: "Färdigställ uppgifter och betala",
+    text: "I startguiden bekräftar du uppgifter, godkänner villkor, laddar upp material och går vidare till betalning.",
     detail: "Meny, prislista, logotyp, bilder eller enkla instruktioner räcker fint.",
   },
   {
@@ -101,9 +101,9 @@ const processSteps = [
 
 const faqs = [
   {
-    question: "Vad betyder startlänk?",
+    question: "Vad händer efter att jag valt paket?",
     answer:
-      "Det är en säker länk där du kontrollerar företagsuppgifter, skickar material till skärmen, godkänner villkor och går vidare till betalning.",
+      "Du får en personlig startguide där du kontrollerar företagsuppgifter, skickar material till skärmen, godkänner villkor och går vidare till betalning.",
   },
   {
     question: "Vilket material behöver jag skicka?",
@@ -203,7 +203,7 @@ export default function Home() {
     setMessage("");
     setRequestStatus("success");
     setRequestMessage(
-      "Tack. Din förfrågan är mottagen och InfoSync återkommer med en säker startlänk.",
+      "Tack. Din förfrågan är mottagen och InfoSync återkommer med en personlig startguide.",
     );
   };
 
@@ -332,7 +332,7 @@ export default function Home() {
           <div className="landing-feature-grid">
             <Feature
               title="Smidig start"
-              text="Du väljer paket och får en säker startlänk där allt fortsätter på ett tydligt sätt."
+              text="Du väljer paket och får en personlig startguide där allt fortsätter på ett tydligt sätt."
             />
             <Feature
               title="Tydlig kostnad"
@@ -354,7 +354,7 @@ export default function Home() {
             <p className="landing-eyebrow">Så fungerar det</p>
             <h2>Från paketval till fungerande skärm</h2>
             <p>
-              Startlänken är den säkra sidan där du bekräftar uppgifter, skickar
+              Startguiden är den säkra sidan där du bekräftar uppgifter, skickar
               material och går vidare till betalning. Resten håller vi enkelt.
             </p>
           </div>
@@ -550,7 +550,7 @@ export default function Home() {
             </h2>
             <p>
               Skicka företagets uppgifter så kontaktar InfoSync dig med en
-              säker startlänk för uppgifter, villkor och betalning.
+              personlig startguide för uppgifter, villkor och betalning.
             </p>
 
             <form onSubmit={submitPlanRequest} className="landing-request-form">
