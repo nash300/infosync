@@ -369,7 +369,13 @@ export default function CustomerDetailPage({
       },
       body: JSON.stringify({ customerId: customer.id }),
     });
-    const data = await response.json();
+    const data: {
+      error?: string;
+      emailSent?: boolean;
+      onboardingUrl?: string;
+      sentTo?: string;
+      warning?: string;
+    } = await response.json();
 
     if (!response.ok) {
       console.error("Send onboarding email error:", data);
@@ -382,10 +388,17 @@ export default function CustomerDetailPage({
     }
 
     await loadData();
-    showAdminNotification(
-      "success",
-      `Onboarding email sent to ${data.sentTo || customer.email}.`,
-    );
+    if (data.emailSent) {
+      showAdminNotification(
+        "success",
+        `Onboarding email sent to ${data.sentTo || customer.email}.`,
+      );
+    } else {
+      showAdminNotification(
+        "success",
+        data.warning || "Onboarding link generated.",
+      );
+    }
 
     setSaving(false);
   };

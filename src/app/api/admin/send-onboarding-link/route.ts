@@ -60,15 +60,7 @@ export async function POST(request: Request) {
   const resendApiKey = process.env.RESEND_API_KEY;
   const resendFromEmail = process.env.RESEND_FROM_EMAIL;
 
-  if (!resendApiKey || !resendFromEmail) {
-    return NextResponse.json(
-      {
-        error:
-          "Email sending is not configured. Add RESEND_API_KEY and RESEND_FROM_EMAIL.",
-      },
-      { status: 500 },
-    );
-  }
+  const canSendEmail = Boolean(resendApiKey && resendFromEmail);
 
   const { data: customer, error: customerError } = await supabaseAdmin
     .from("customers")
@@ -83,7 +75,7 @@ export async function POST(request: Request) {
     );
   }
 
-  if (!customer.email) {
+  if (canSendEmail && !customer.email) {
     return NextResponse.json(
       { error: "Customer does not have an email address." },
       { status: 400 },
@@ -128,6 +120,16 @@ export async function POST(request: Request) {
     ipAddress,
     userAgent,
   });
+
+  if (!canSendEmail) {
+    return NextResponse.json({
+      success: true,
+      emailSent: false,
+      onboardingUrl,
+      warning:
+        "Onboarding link created. Email sending is not configured. Add RESEND_API_KEY and RESEND_FROM_EMAIL to send emails.",
+    });
+  }
 
   const emailResponse = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -209,6 +211,7 @@ InfoSync`,
 
   return NextResponse.json({
     success: true,
+    emailSent: true,
     sentTo: customer.email,
     onboardingUrl,
   });
