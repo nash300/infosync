@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
+import { showAdminNotification } from "@/lib/admin/notifications";
 
 type Customer = {
   id: string;
@@ -11,6 +12,22 @@ type Customer = {
 };
 
 export default function NewDevicePage() {
+  return (
+    <Suspense fallback={<NewDeviceFallback />}>
+      <NewDevicePageContent />
+    </Suspense>
+  );
+}
+
+function NewDeviceFallback() {
+  return (
+    <div className="admin-card p-6">
+      <p className="admin-muted">Loading device form...</p>
+    </div>
+  );
+}
+
+function NewDevicePageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const preselectedCustomerId = searchParams.get("customerId") || "";
@@ -48,12 +65,12 @@ export default function NewDevicePage() {
 
   const createDevice = async () => {
     if (!customerId) {
-      alert("Please select a customer.");
+      showAdminNotification("warning", "Please select a customer.");
       return;
     }
 
     if (!name.trim()) {
-      alert("Device name is required.");
+      showAdminNotification("warning", "Device name is required.");
       return;
     }
 
@@ -81,11 +98,12 @@ export default function NewDevicePage() {
 
     if (error) {
       console.error("Create device error:", error);
-      alert(error.message);
+      showAdminNotification("error", error.message || "Could not create device.");
       setSaving(false);
       return;
     }
 
+    showAdminNotification("success", "Device created successfully.");
     router.push(`/admin/devices/${data.device_code}`);
   };
 

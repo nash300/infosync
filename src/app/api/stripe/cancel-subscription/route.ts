@@ -1,4 +1,5 @@
-import { NextResponse } from "next/server";
+import { createServerClient } from "@supabase/ssr";
+import { NextResponse, type NextRequest } from "next/server";
 import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
 
@@ -9,8 +10,33 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!,
 );
 
-export async function POST(request: Request) {
+async function getAuthenticatedUser(request: NextRequest) {
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll: () => request.cookies.getAll(),
+        setAll: () => {},
+      },
+    },
+  );
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  return user;
+}
+
+export async function POST(request: NextRequest) {
   try {
+    const user = await getAuthenticatedUser(request);
+
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { customerId, subscriptionId } = await request.json();
 
     if (!customerId || !subscriptionId) {
@@ -20,19 +46,20 @@ export async function POST(request: Request) {
       );
     }
 
-    let cancelledInStripe = false;
-
     try {
       const subscription = await stripe.subscriptions.retrieve(subscriptionId);
 
       if (subscription.status !== "canceled") {
         await stripe.subscriptions.cancel(subscriptionId);
       }
-
-      cancelledInStripe = true;
-    } catch (err: any) {
+    } catch (err: unknown) {
       // If Stripe says it doesn't exist, we still continue
-      if (err.code === "resource_missing") {
+      if (
+        typeof err === "object" &&
+        err !== null &&
+        "code" in err &&
+        err.code === "resource_missing"
+      ) {
         console.warn("Subscription not found in Stripe, continuing anyway");
       } else {
         throw err;

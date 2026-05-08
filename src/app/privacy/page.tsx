@@ -1,30 +1,37 @@
 export default function PrivacyPage() {
   return (
     <div className="mx-auto max-w-3xl p-8">
-      <h1 className="text-3xl font-bold">Privacy Policy</h1>
+      <h1 className="text-3xl font-bold">Integritetspolicy</h1>
 
       <p className="mt-4 text-gray-600">
-        This policy explains how InfoSync handles personal data.
+        Denna policy beskriver hur InfoSync behandlar personuppgifter och
+        företagsuppgifter i samband med start av tjänsten, betalning, support och
+        leverans av tjänsten.
       </p>
 
-      <h2 className="mt-6 text-xl font-semibold">Data collected</h2>
+      <h2 className="mt-6 text-xl font-semibold">Uppgifter vi samlar in</h2>
       <p className="mt-2 text-gray-600">
-        We collect contact details, company information, and usage data.
+        Vi samlar in kontaktuppgifter, företagsuppgifter, samtycken,
+        betalningsstatus och information som behövs för att hantera skärmar och
+        innehåll.
       </p>
 
-      <h2 className="mt-6 text-xl font-semibold">Usage</h2>
+      <h2 className="mt-6 text-xl font-semibold">Hur uppgifterna används</h2>
       <p className="mt-2 text-gray-600">
-        Data is used to provide and improve the service.
+        Uppgifterna används för att skapa kundkonto, hantera starten,
+        administrera betalningar, ge support och leverera InfoSync-tjänsten.
       </p>
 
-      <h2 className="mt-6 text-xl font-semibold">Third parties</h2>
+      <h2 className="mt-6 text-xl font-semibold">Tredjepartstjänster</h2>
       <p className="mt-2 text-gray-600">
-        Payments are handled by Stripe. We do not store card details.
+        Betalningar hanteras av Stripe. InfoSync lagrar inte kortuppgifter.
+        E-postmeddelanden kan skickas via Resend.
       </p>
 
-      <h2 className="mt-6 text-xl font-semibold">Rights</h2>
+      <h2 className="mt-6 text-xl font-semibold">Dina rättigheter</h2>
       <p className="mt-2 text-gray-600">
-        Users can request access or deletion of their data.
+        Du kan begära information om vilka uppgifter som behandlas och be om
+        rättelse eller radering när det är möjligt enligt lag och avtal.
       </p>
     </div>
   );

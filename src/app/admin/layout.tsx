@@ -1,15 +1,13 @@
 import Link from "next/link";
 import "./admin.css";
 import AdminPageTitle from "@/components/AdminPageTitle";
+import AdminNotifications from "@/components/AdminNotifications";
 
-// ==============================
-// Navigation Items
-// ==============================
 const navItems = [
-  { href: "/admin", label: "Dashboard", icon: "" },
-  { href: "/admin/customers", label: "Customers", icon: "" },
-  { href: "/admin/devices", label: "Device Management", icon: "️" },
-  { href: "/admin/pricing", label: "Pricing", icon: "" },
+  { href: "/admin", label: "Dashboard", icon: "D" },
+  { href: "/admin/customers", label: "Customers", icon: "C" },
+  { href: "/admin/devices", label: "Device Manager", icon: "M" },
+  { href: "/admin/pricing", label: "Pricing", icon: "$" },
 ];
 
 export default function AdminLayout({
@@ -19,10 +17,10 @@ export default function AdminLayout({
 }) {
   return (
     <div className="admin-layout">
-      {/* Sidebar */}
       <aside className="admin-sidebar fixed left-0 top-0 z-40 flex h-screen w-72 flex-col overflow-hidden shadow-2xl">
-        <div className="admin-sidebar-glow admin-sidebar-glow-top" />
-        <div className="admin-sidebar-glow admin-sidebar-glow-bottom" />
+        <div className="admin-window-titlebar">
+          <span className="admin-window-titlebar-text">InfoSync Admin</span>
+        </div>
 
         <div className="relative px-6 py-6">
           <Link href="/admin" className="block no-underline">
@@ -55,17 +53,14 @@ export default function AdminLayout({
         <div className="admin-sidebar-footer">
           <p className="admin-sidebar-kicker">InfoSync</p>
           <p className="admin-sidebar-version">Version 0.1</p>
-
-          <div className="admin-sidebar-progress">
-            <div className="admin-sidebar-progress-fill" />
-          </div>
         </div>
         <AdminPageTitle />
       </aside>
-      {/* Main Content */}
+
       <main className="ml-72 min-h-screen">
         <div className="admin-page">{children}</div>
       </main>
+      <AdminNotifications />
     </div>
   );
 }

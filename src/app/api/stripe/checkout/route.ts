@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
+import { getRequestIp, recordAuditEvent } from "@/lib/server/audit";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
@@ -13,17 +14,19 @@ export async function POST(request: Request) {
   try {
     const { customerId, email, pricingPlanCode, legalAccepted } =
       await request.json();
+    const ipAddress = getRequestIp(request);
+    const userAgent = request.headers.get("user-agent");
 
     if (!customerId || !email || !pricingPlanCode) {
       return NextResponse.json(
-        { error: "Missing customerId, email, or pricingPlanCode" },
+        { error: "Kund, e-post eller prispaket saknas." },
         { status: 400 },
       );
     }
 
     if (!legalAccepted) {
       return NextResponse.json(
-        { error: "Legal terms must be accepted before checkout" },
+        { error: "Villkoren måste godkännas före betalning." },
         { status: 400 },
       );
     }
@@ -32,7 +35,7 @@ export async function POST(request: Request) {
 
     if (!appUrl) {
       return NextResponse.json(
-        { error: "NEXT_PUBLIC_APP_URL is missing" },
+        { error: "Appens URL saknas." },
         { status: 500 },
       );
     }
@@ -46,14 +49,14 @@ export async function POST(request: Request) {
 
     if (planError || !plan) {
       return NextResponse.json(
-        { error: "Pricing plan not found" },
+        { error: "Prispaketet hittades inte." },
         { status: 404 },
       );
     }
 
     if (!plan.stripe_setup_price_id || !plan.stripe_monthly_price_id) {
       return NextResponse.json(
-        { error: "Stripe price IDs are missing for this plan" },
+        { error: "Betalningsinställningar saknas för detta paket." },
         { status: 500 },
       );
     }
@@ -94,6 +97,21 @@ export async function POST(request: Request) {
       status: "checkout_started",
       stripe_checkout_session_id: session.id,
       legal_acceptance_at: new Date().toISOString(),
+      legal_acceptance_ip: ipAddress,
+    });
+
+    await recordAuditEvent(supabaseAdmin, {
+      customerId,
+      actorType: "customer",
+      eventType: "stripe_checkout_started",
+      eventDescription: "Customer started Stripe checkout from onboarding.",
+      metadata: {
+        pricingPlanCode: plan.code,
+        pricingPlanId: plan.id,
+        stripeCheckoutSessionId: session.id,
+      },
+      ipAddress,
+      userAgent,
     });
 
     return NextResponse.json({ url: session.url });
@@ -101,7 +119,7 @@ export async function POST(request: Request) {
     console.error("Stripe checkout error:", error);
 
     return NextResponse.json(
-      { error: "Could not create checkout session" },
+      { error: "Det gick inte att starta betalningen." },
       { status: 500 },
     );
   }

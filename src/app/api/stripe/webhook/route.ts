@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import Stripe from "stripe";
 import { createClient } from "@supabase/supabase-js";
+import { recordAuditEvent } from "@/lib/server/audit";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
@@ -36,7 +37,7 @@ export async function POST(request: Request) {
     const customerId = session.metadata?.customer_id;
 
     if (customerId) {
-      await supabaseAdmin
+      const { error } = await supabaseAdmin
         .from("customers")
         .update({
           status: "active",
@@ -46,6 +47,42 @@ export async function POST(request: Request) {
           activated_at: new Date().toISOString(),
         })
         .eq("id", customerId);
+
+      if (error) {
+        console.error("Checkout completed customer update error:", error);
+      } else {
+        await recordAuditEvent(supabaseAdmin, {
+          customerId,
+          actorType: "stripe",
+          eventType: "payment_completed",
+          eventDescription:
+            "Stripe checkout completed. Customer paid and is ready for screen setup.",
+          metadata: {
+            stripeCustomerId: session.customer,
+            stripeSubscriptionId: session.subscription,
+            stripeCheckoutSessionId: session.id,
+          },
+        });
+      }
+
+      if (session.subscription) {
+        const { error: subscriptionError } = await supabaseAdmin
+          .from("customer_subscriptions")
+          .update({
+            status: "active",
+            stripe_customer_id: session.customer as string,
+            stripe_subscription_id: session.subscription as string,
+            setup_fee_paid: true,
+          })
+          .eq("stripe_checkout_session_id", session.id);
+
+        if (subscriptionError) {
+          console.error(
+            "Checkout completed subscription update error:",
+            subscriptionError,
+          );
+        }
+      }
     }
   }
 
@@ -71,6 +108,22 @@ export async function POST(request: Request) {
 
     if (!data || data.length === 0) {
       console.warn("No customer found for failed payment:", customerId);
+    } else {
+      await Promise.all(
+        data.map((customer) =>
+          recordAuditEvent(supabaseAdmin, {
+            customerId: customer.id,
+            actorType: "stripe",
+            eventType: "payment_failed",
+            eventDescription:
+              "Stripe reported a failed payment. Customer was suspended.",
+            metadata: {
+              stripeCustomerId: customerId,
+              invoiceId: invoice.id,
+            },
+          }),
+        ),
+      );
     }
   }
 
@@ -92,6 +145,27 @@ export async function POST(request: Request) {
 
     if (error) {
       console.error("Subscription deleted error:", error);
+    } else {
+      const { data } = await supabaseAdmin
+        .from("customers")
+        .select("id")
+        .eq("stripe_customer_id", customerId);
+
+      await Promise.all(
+        (data || []).map((customer) =>
+          recordAuditEvent(supabaseAdmin, {
+            customerId: customer.id,
+            actorType: "stripe",
+            eventType: "subscription_cancelled",
+            eventDescription:
+              "Stripe subscription was cancelled. Customer was suspended.",
+            metadata: {
+              stripeCustomerId: customerId,
+              stripeSubscriptionId: subscription.id,
+            },
+          }),
+        ),
+      );
     }
   }
 

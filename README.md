@@ -18,6 +18,31 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
+## Email Sending
+
+Admin onboarding links are sent automatically through Resend. Add these values
+to `.env.local` and to your production environment:
+
+```bash
+RESEND_API_KEY=your_resend_api_key
+RESEND_FROM_EMAIL=InfoSync <onboarding@your-domain.com>
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+```
+
+Use a verified Resend domain for `RESEND_FROM_EMAIL` before sending to real
+customers.
+
+## Audit And Consent Tables
+
+Customer consent and system history need the database tables in:
+
+```text
+supabase/migrations/202605070001_audit_and_consent.sql
+```
+
+Run that SQL in the Supabase SQL editor before relying on consent history or
+system action history in production.
+
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
 ## Learn More

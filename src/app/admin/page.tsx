@@ -1,26 +1,73 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase } from "@/lib/supabase/client";
 import Link from "next/link";
+import { supabase } from "@/lib/supabase/client";
+
+type DashboardCustomer = {
+  id: string;
+  status: string | null;
+  payment_status: string | null;
+  devices?: {
+    id: string;
+    playlists?: { count: number }[];
+  }[];
+};
 
 export default function AdminHomePage() {
   const [customerCount, setCustomerCount] = useState(0);
   const [deviceCount, setDeviceCount] = useState(0);
-  const [customers, setCustomers] = useState<any[]>([]);
+  const [customers, setCustomers] = useState<DashboardCustomer[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const needsDeviceCount = customers.filter((c) => {
-    const deviceCount = c.devices?.length || 0;
-    return c.status === "active" && deviceCount === 0;
+  const paidSetupCount = customers.filter((customer) => {
+    const deviceCount = customer.devices?.length || 0;
+    return customer.payment_status === "paid" && deviceCount === 0;
   }).length;
 
-  const needsPlaylistCount = customers.filter((c) => {
+  const needsPlaylistCount = customers.filter((customer) => {
     return (
-      c.status === "active" &&
-      c.devices?.some((d: any) => (d.playlists?.[0]?.count || 0) === 0)
+      customer.status === "active" &&
+      customer.devices?.some(
+        (device) => (device.playlists?.[0]?.count || 0) === 0,
+      )
     );
   }).length;
+
+  const activeCustomerCount = customers.filter(
+    (customer) => customer.status === "active",
+  ).length;
+  const invitedCustomerCount = customers.filter(
+    (customer) => customer.status === "invited",
+  ).length;
+  const newRequestCount = customers.filter(
+    (customer) => customer.status === "new_request",
+  ).length;
+  const suspendedCustomerCount = customers.filter(
+    (customer) => customer.status === "suspended",
+  ).length;
+  const draftCustomerCount = customers.filter(
+    (customer) => !customer.status || customer.status === "draft",
+  ).length;
+
+  const readyCustomerCount = customers.filter((customer) => {
+    const deviceCount = customer.devices?.length || 0;
+    const hasDeviceWithoutPlaylist = customer.devices?.some(
+      (device) => (device.playlists?.[0]?.count || 0) === 0,
+    );
+
+    return (
+      customer.status === "active" &&
+      deviceCount > 0 &&
+      !hasDeviceWithoutPlaylist
+    );
+  }).length;
+
+  const attentionCount = newRequestCount + paidSetupCount + needsPlaylistCount;
+  const setupCompletion =
+    activeCustomerCount === 0
+      ? 0
+      : Math.round((readyCustomerCount / activeCustomerCount) * 100);
 
   const loadStats = async () => {
     setLoading(true);
@@ -36,6 +83,7 @@ export default function AdminHomePage() {
     const { data } = await supabase.from("customers").select(`
       id,
       status,
+      payment_status,
       devices(
         id,
         playlists(count)
@@ -44,121 +92,240 @@ export default function AdminHomePage() {
 
     setCustomerCount(customers || 0);
     setDeviceCount(devices || 0);
-    setCustomers(data || []);
+    setCustomers((data || []) as DashboardCustomer[]);
     setLoading(false);
   };
 
   useEffect(() => {
     loadStats();
+
+    const refreshInterval = window.setInterval(loadStats, 30000);
+    const refreshOnFocus = () => loadStats();
+
+    window.addEventListener("focus", refreshOnFocus);
+
+    return () => {
+      window.clearInterval(refreshInterval);
+      window.removeEventListener("focus", refreshOnFocus);
+    };
   }, []);
 
   return (
-    <div>
-      {/* ==============================
-          Page Header
-      ============================== */}
-      <div className="admin-page-header flex flex-col justify-between gap-4 md:flex-row md:items-end">
+    <div className="admin-dashboard-page">
+      <div className="admin-page-header admin-dashboard-header">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.25em] text-[var(--admin-cyan)]">
-            {" "}
-            InfoSync Admin
-          </p>
-
-          <h1 className="admin-title mt-3">Dashboard</h1>
-
+          <h1 className="admin-title">Dashboard</h1>
           <p className="admin-subtitle">
-            Overview of customers, screens, and tasks that need attention.
+            Operational overview of customers, devices, and setup status.
           </p>
         </div>
 
-        <button onClick={loadStats} className="admin-button-primary">
-          Refresh
-        </button>
-      </div>
-
-      {/* ==============================
-          Stats Cards
-      ============================== */}
-      <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-        <div className="admin-card p-6">
-          <p className="text-sm font-medium text-slate-500">Total customers</p>
-          <p className="mt-4 text-5xl font-bold tracking-tight text-slate-950">
-            {loading ? "..." : customerCount}
-          </p>
-        </div>
-
-        <div className="admin-card p-6">
-          <p className="text-sm font-medium text-slate-500">Total devices</p>
-          <p className="mt-4 text-5xl font-bold tracking-tight text-slate-950">
-            {loading ? "..." : deviceCount}
-          </p>
-        </div>
-
-        <Link
-          href="/admin/customers?filter=needs_device"
-          className="admin-card block p-6 no-underline transition hover:-translate-y-1 hover:shadow-xl"
-        >
-          <p className="text-sm font-medium text-orange-700">
-            Clients need device
-          </p>
-          <p className="mt-4 text-5xl font-bold tracking-tight text-orange-900">
-            {loading ? "..." : needsDeviceCount}
-          </p>
-        </Link>
-
-        <Link
-          href="/admin/customers?filter=needs_playlist"
-          className="admin-card block p-6 no-underline transition hover:-translate-y-1 hover:shadow-xl"
-        >
-          <p className="text-sm font-medium text-red-700">
-            Devices need playlist
-          </p>
-          <p className="mt-4 text-5xl font-bold tracking-tight text-red-900">
-            {loading ? "..." : needsPlaylistCount}
-          </p>
-        </Link>
-      </div>
-
-      {/* ==============================
-          Today Priorities
-      ============================== */}
-      <div className="admin-card mt-8 p-6">
-        <h2 className="admin-card-title text-xl">Today’s priorities</h2>
-
-        <div className="mt-4 space-y-3">
-          <div className="flex items-center justify-between rounded-2xl bg-orange-50 px-5 py-4">
-            <div>
-              <p className="font-semibold text-orange-900">
-                Create missing devices
-              </p>
-              <p className="text-sm text-orange-700">
-                Active customers without any screen assigned. Go to Customers -
-                Needs Device.
-              </p>
-            </div>
-
-            <span className="rounded-full bg-orange-200 px-3 py-1 text-sm font-bold text-orange-900">
-              {needsDeviceCount}
-            </span>
+        <div className="admin-dashboard-header-actions">
+          <div className="admin-status-chip admin-status-chip-system">
+            <span className="admin-status-dot admin-status-success" />
+            {loading ? "Syncing" : "Live status"}
           </div>
 
-          <div className="flex items-center justify-between rounded-2xl bg-red-50 px-5 py-4">
-            <div>
-              <p className="font-semibold text-red-900">
-                Upload missing playlists
-              </p>
-              <p className="text-sm text-red-700">
-                Devices that exist but have no content. Go to Customers -
-                Missing Playlists.
-              </p>
-            </div>
-
-            <span className="rounded-full bg-red-200 px-3 py-1 text-sm font-bold text-red-900">
-              {needsPlaylistCount}
-            </span>
-          </div>
+          <button onClick={loadStats} className="admin-button-primary">
+            Refresh
+          </button>
         </div>
+      </div>
+
+      <div className="admin-dashboard-kpis">
+        <StatCard
+          label="Total customers"
+          value={customerCount}
+          loading={loading}
+          tone="neutral"
+          meta={`${activeCustomerCount} active`}
+        />
+
+        <StatCard
+          label="Total devices"
+          value={deviceCount}
+          loading={loading}
+          tone="neutral"
+          meta="Registered screens"
+        />
+
+        <StatCard
+          label="Need attention"
+          value={attentionCount}
+          loading={loading}
+          tone={attentionCount > 0 ? "warning" : "success"}
+          meta="Open setup tasks"
+          href="/admin/customers?filter=new_request"
+        />
+
+        <StatCard
+          label="Setup complete"
+          value={`${setupCompletion}%`}
+          loading={loading}
+          tone="success"
+          meta={`${readyCustomerCount} ready customers`}
+        />
+      </div>
+
+      <div className="admin-dashboard-grid">
+        <section className="admin-card admin-dashboard-panel p-6">
+          <h2 className="admin-card-title text-xl">Customer status</h2>
+
+          <div className="admin-status-list">
+            <StatusRow label="Active" value={activeCustomerCount} tone="success" />
+            <StatusRow
+              label="New requests"
+              value={newRequestCount}
+              tone="warning"
+            />
+            <StatusRow label="Invited" value={invitedCustomerCount} tone="info" />
+            <StatusRow label="Draft" value={draftCustomerCount} tone="neutral" />
+            <StatusRow
+              label="Suspended"
+              value={suspendedCustomerCount}
+              tone="danger"
+            />
+          </div>
+        </section>
+
+        <section className="admin-card admin-dashboard-panel p-6">
+          <h2 className="admin-card-title text-xl">Setup health</h2>
+
+          <div className="admin-progress-block">
+            <div className="admin-progress-header">
+              <span>Ready customers</span>
+              <strong>{loading ? "..." : `${setupCompletion}%`}</strong>
+            </div>
+            <div className="admin-progress-track">
+              <div
+                className="admin-progress-value"
+                style={{ width: `${setupCompletion}%` }}
+              />
+            </div>
+          </div>
+
+          <div className="admin-status-list admin-status-list-compact">
+            <StatusRow label="Ready" value={readyCustomerCount} tone="success" />
+            <StatusRow
+              label="Payment complete"
+              value={paidSetupCount}
+              tone="warning"
+            />
+            <StatusRow
+              label="Missing playlists"
+              value={needsPlaylistCount}
+              tone="danger"
+            />
+          </div>
+        </section>
+
+        <section className="admin-card admin-dashboard-panel admin-dashboard-priorities p-6">
+          <h2 className="admin-card-title text-xl">Priority queue</h2>
+
+          <div className="admin-priority-list">
+            <PriorityItem
+              href="/admin/customers?filter=new_request"
+              title="Send onboarding links"
+              description="Landing page package requests waiting for admin action."
+              count={newRequestCount}
+              tone="warning"
+            />
+
+            <PriorityItem
+              href="/admin/customers?filter=paid_setup"
+              title="Prepare paid customer screens"
+              description="Payment is complete. Create devices and prepare screen content."
+              count={paidSetupCount}
+              tone="warning"
+            />
+
+            <PriorityItem
+              href="/admin/customers?filter=needs_playlist"
+              title="Upload missing playlists"
+              description="Devices that exist but have no playable content."
+              count={needsPlaylistCount}
+              tone="danger"
+            />
+          </div>
+        </section>
       </div>
     </div>
+  );
+}
+
+function StatCard({
+  label,
+  value,
+  loading,
+  tone,
+  meta,
+  href,
+}: {
+  label: string;
+  value: number | string;
+  loading: boolean;
+  tone: "neutral" | "success" | "warning";
+  meta: string;
+  href?: string;
+}) {
+  const content = (
+    <>
+      <span className={`admin-stat-icon admin-stat-${tone}`} />
+      <p className="admin-stat-label">{label}</p>
+      <p className="admin-stat-value">{loading ? "..." : value}</p>
+      <p className="admin-stat-meta">{meta}</p>
+    </>
+  );
+
+  if (href) {
+    return (
+      <Link href={href} className="admin-card admin-stat-card">
+        {content}
+      </Link>
+    );
+  }
+
+  return <div className="admin-card admin-stat-card">{content}</div>;
+}
+
+function StatusRow({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: number;
+  tone: "neutral" | "success" | "warning" | "danger" | "info";
+}) {
+  return (
+    <div className="admin-status-row">
+      <span className={`admin-status-dot admin-status-${tone}`} />
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
+  );
+}
+
+function PriorityItem({
+  href,
+  title,
+  description,
+  count,
+  tone,
+}: {
+  href: string;
+  title: string;
+  description: string;
+  count: number;
+  tone: "warning" | "danger";
+}) {
+  return (
+    <Link href={href} className={`admin-priority-item admin-priority-${tone}`}>
+      <div>
+        <p className="admin-priority-title">{title}</p>
+        <p className="admin-priority-description">{description}</p>
+      </div>
+      <span>{count}</span>
+    </Link>
   );
 }
