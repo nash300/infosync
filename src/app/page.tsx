@@ -6,6 +6,7 @@ import Link from "next/link";
 import { LandingNav } from "@/components/LandingNav";
 import { LandingScrollReveal } from "@/components/LandingScrollReveal";
 import ScreeniaLogo from "@/components/ScreeniaLogo";
+import { serializeJsonLd } from "@/lib/seo";
 import {
   copy,
   fallbackHeroBenefits,
@@ -814,7 +815,7 @@ export default function Home() {
 
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(structuredData) }}
       />
 
       {requestOpen && selectedScreenCount > 0 && (

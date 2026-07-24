@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { LandingNav } from "@/components/LandingNav";
 import { LandingScrollReveal } from "@/components/LandingScrollReveal";
+import { serializeJsonLd } from "@/lib/seo";
 import "../public-info.css";
 
 const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://screenia.se";
@@ -269,7 +270,7 @@ export default function AboutPage() {
 
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(structuredData) }}
       />
     </div>
   );

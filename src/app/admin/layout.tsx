@@ -7,6 +7,12 @@ import AdminBreadcrumbs from "@/components/AdminBreadcrumbs";
 import ScreeniaLogo from "@/components/ScreeniaLogo";
 import AdminSidebarNav from "@/components/AdminSidebarNav";
 import AdminSignOutButton from "@/components/AdminSignOutButton";
+import { privatePageMetadata } from "@/lib/seo";
+
+export const metadata = {
+  ...privatePageMetadata,
+  title: "Administration",
+};
 
 export default function AdminLayout({
   children,
