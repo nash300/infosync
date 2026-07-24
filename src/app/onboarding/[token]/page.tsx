@@ -4,6 +4,10 @@ import { use, useEffect, useState, type ReactNode } from "react";
 import Image from "next/image";
 import { supabase } from "@/lib/supabase/client";
 import { isValidSwedishRegistrationNumber } from "@/lib/business/sweden";
+import {
+  getInitialOnboardingStep,
+  type OnboardingStep,
+} from "@/lib/onboarding/initial-step";
 
 type Customer = {
   id: string;
@@ -14,7 +18,7 @@ type Customer = {
   onboarding_token_expires_at: string | null;
 };
 
-type WizardStep = "details" | "payment";
+type WizardStep = OnboardingStep;
 
 const stepLabels: Record<WizardStep, string> = {
   details: "Uppgifter",
@@ -79,9 +83,12 @@ export default function OnboardingPage({
 
       setCustomer(loadedCustomer);
       setHasPayableOrder(Boolean(orderStatus.hasPayableOrder));
-      if (loadedCustomer.status === "accepted_terms" || orderStatus.hasPayableOrder) {
-        setStep("payment");
-      }
+      setStep(
+        getInitialOnboardingStep(
+          loadedCustomer.status,
+          Boolean(orderStatus.hasPayableOrder),
+        ),
+      );
       setLoading(false);
     };
 
