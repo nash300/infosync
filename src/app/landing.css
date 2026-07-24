@@ -5131,6 +5131,8 @@
 }
 
 .landing-contact-panel > div {
+  position: relative;
+  z-index: 1;
   max-width: 760px;
 }
 
