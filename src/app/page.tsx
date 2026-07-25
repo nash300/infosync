@@ -584,8 +584,6 @@ export default function Home() {
                     />
                     <span>{plan.deviceLabel}</span>
                   </div>
-                  <p className="landing-plan-description">{planText.description}</p>
-                  <ul>{planText.features.map((feature) => <li key={feature}>{feature}</li>)}</ul>
                   <div className="landing-plan-price">
                     <strong>{plan.monthlyFee}</strong>
                     <span>per skärm och månad, inkl. moms</span>
@@ -630,6 +628,10 @@ export default function Home() {
                         +
                       </button>
                     </div>
+                  </div>
+                  <div className="landing-plan-details">
+                    <p className="landing-plan-description">{planText.description}</p>
+                    <ul>{planText.features.map((feature) => <li key={feature}>{feature}</li>)}</ul>
                   </div>
                 </article>
               );
