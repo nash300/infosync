@@ -11,7 +11,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
       alternates: { languages: { "sv-SE": siteUrl } },
       images: [
         `${siteUrl}/landing/hero-slides/01/image.png`,
-        `${siteUrl}/brand/screenia-pricing-devices.png`,
       ],
     },
     {
@@ -29,7 +28,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.75,
       alternates: { languages: { "sv-SE": `${siteUrl}/om-oss` } },
       images: [
-        `${siteUrl}/brand/screenia-pricing-devices.png`,
         `${siteUrl}/brand/screenia-helper.png`,
       ],
     },

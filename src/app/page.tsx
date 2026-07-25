@@ -743,32 +743,6 @@ export default function Home() {
           </div>
         </LandingSection>
 
-        <section className="landing-section landing-section-surface landing-service-film" aria-label="Screenia servicefilm">
-          <div className="landing-section-panel landing-service-film-panel">
-            <div className="landing-service-film-copy">
-              <p className="landing-eyebrow">20 sekunder</p>
-              <h2>Från idé till levande skärm, utan tekniskt krångel.</h2>
-              <p>
-                En snabb överblick över hur Screenia hjälper svenska företag att
-                välja paket, skicka material, få hårdvara och hålla skärmen
-                uppdaterad över tid.
-              </p>
-            </div>
-            <div className="landing-film-stage" role="img" aria-label="Animerad film om Screenias arbetsflöde">
-              <div className="landing-film-screen">
-                <Image
-                  src="/brand/screenia-pricing-devices.png"
-                  alt="Screenia digital signage devices"
-                  width={1400}
-                  height={900}
-                  priority={false}
-                />
-              </div>
-              <div className="landing-film-progress" aria-hidden="true" />
-            </div>
-          </div>
-        </section>
-
         <LandingSection id="faq" title={t.faqTitle}>
           <div className="landing-faq-layout">
             <div className="landing-faq-grid">

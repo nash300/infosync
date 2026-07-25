@@ -539,7 +539,7 @@ if (/\.landing-page\s+:is\(\s*h1\s*,\s*h2\s*,\s*h3\s*,\s*h4\s*,\s*h5\s*,\s*h6\s*
 }
 
 const explicitLandingHeadingMatch = landingCss.match(
-  /(^|\n)\.landing-hero-copy h1,\s*\.landing-hero-copy-main h1,\s*\.landing-section-heading h2,\s*\.landing-page \.landing-workflow-heading h2,\s*\.landing-service-film-copy h2,\s*\.landing-contact h2\s*\{([\s\S]*?)\n\}/,
+  /(^|\n)\.landing-hero-copy h1,\s*\.landing-hero-copy-main h1,\s*\.landing-section-heading h2,\s*\.landing-page \.landing-workflow-heading h2,\s*\.landing-contact h2\s*\{([\s\S]*?)\n\}/,
 );
 const explicitLandingHeadingBody = explicitLandingHeadingMatch?.[2] || "";
 
@@ -1194,9 +1194,6 @@ for (const retiredLandingClass of [
   "landing-workflow-banner",
   "landing-workflow-layout",
   "landing-pricing-note",
-  "landing-film-gradient",
-  "landing-film-caption",
-  "landing-film-scene",
   "landing-timeline",
   "landing-checkout-visual",
   "landing-comparison",
@@ -1238,21 +1235,6 @@ for (const selector of [
   if (unscopedFeatureOwner.test(landingCss)) {
     problems.push(
       `src/app/landing.css must scope active feature-card ownership through .landing-platform ${selector}.`,
-    );
-  }
-}
-
-for (const selector of [
-  ".landing-film-stage",
-  ".landing-film-screen",
-  ".landing-film-progress",
-]) {
-  const unscopedFilmOwner = new RegExp(
-    `(^|\\n)${selector.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?:\\s|:|\\{|>)`,
-  );
-  if (unscopedFilmOwner.test(landingCss)) {
-    problems.push(
-      `src/app/landing.css must scope active film ownership through .landing-service-film ${selector}.`,
     );
   }
 }
@@ -1468,7 +1450,6 @@ for (const sectionClass of [
   "landing-platform",
   "landing-workflow",
   "landing-examples",
-  "landing-service-film",
   "landing-faq",
   "landing-contact",
 ]) {
@@ -1499,7 +1480,6 @@ for (const sectionClass of [
 
 for (const requiredSurfaceClass of [
   "landing-section landing-section-surface landing-workflow",
-  "landing-section landing-section-surface landing-service-film",
   "landing-section-surface landing-contact",
   "landing-section landing-section-surface landing-${id}",
 ]) {
