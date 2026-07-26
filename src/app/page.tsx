@@ -390,7 +390,7 @@ export default function Home() {
   };
 
   return (
-    <div className="landing-page landing-reference-theme">
+    <div className="landing-page">
       <LandingScrollReveal />
       <LandingNav currentPath="/" />
 

@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import "./landing.css";
 import "./public-info.css";
-import "../styles/landing-reference-theme.css";
+import "../styles/screenia-theme.css";
 
 const plusJakarta = Plus_Jakarta_Sans({
   variable: "--font-plus-jakarta",
@@ -128,7 +128,7 @@ export default function RootLayout({
       data-scroll-behavior="smooth"
       className={`${plusJakarta.variable} ${geistMono.variable} ${bubblegumSans.variable} ${specialElite.variable} h-full antialiased notranslate`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="screenia-theme min-h-full flex flex-col">{children}</body>
     </html>
   );
 }
