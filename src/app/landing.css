@@ -612,7 +612,6 @@
   box-shadow:
     0 28px 72px rgba(4, 16, 42, 0.26),
     inset 0 1px 0 rgba(255, 255, 255, 0.18);
-  backdrop-filter: blur(20px) saturate(132%);
 }
 
 .landing-hero-copy::before {
@@ -2828,7 +2827,6 @@
     min-height: 0;
     border-radius: 20px;
     padding: clamp(18px, 5vw, 24px);
-    backdrop-filter: blur(16px) saturate(124%);
   }
 
   .landing-hero h1 {
