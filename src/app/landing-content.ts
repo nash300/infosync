@@ -85,7 +85,7 @@ export const copy = {
       "Ange önskat antal Full HD- och 4K-skärmar samt planerat innehåll. Screenia kontrollerar kombinationen innan betalning kan genomföras.",
     contactButton: "Kontakta Screenia",
     seoIntro:
-      "Screenia erbjuder digital skyltning i Sverige för salonger, butiker, restauranger och lokala serviceföretag som vill visa menyer, prislistor, kampanjer och kundinformation på TV-skärm.",
+      "Screenia erbjuder digital skyltning i Sverige för salonger, butiker, restauranger och lokala serviceföretag som vill visa menyer, prislistor, kampanjer och kundinformation. Lösningen kan användas med kundens befintliga utrustning och fungerar med olika typer av skärmar, från vanliga TV-apparater till professionella skärmar för digital skyltning.",
     modalEyebrow: "Skicka förfrågan",
     modalTitle: "Starta med",
     modalText:
