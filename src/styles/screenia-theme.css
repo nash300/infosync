@@ -880,12 +880,13 @@
 
 .screenia-theme .admin-sidebar .admin-nav-link {
   border-radius: 12px;
+  background: rgba(3, 38, 91, 0.78);
   color: rgba(255, 255, 255, 0.86);
 }
 
 .screenia-theme .admin-sidebar .admin-nav-link:hover,
 .screenia-theme .admin-sidebar .admin-nav-link[aria-current="page"] {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.16);
   color: #ffffff;
 }
 
