@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import "./landing.css";
 import "./public-info.css";
+import "../styles/landing-reference-theme.css";
 
 const plusJakarta = Plus_Jakarta_Sans({
   variable: "--font-plus-jakarta",
