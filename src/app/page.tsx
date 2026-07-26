@@ -396,50 +396,52 @@ export default function Home() {
 
       <main id="top">
         <section className="landing-hero landing-hero-background-slide">
-          <div
-            className="landing-hero-video-layer"
-            aria-hidden="true"
-          >
-            {currentHeroMedia && (
-              <Image
-                key={currentHeroMedia.id}
-                src={currentHeroMedia.src}
-                alt=""
-                fill
-                priority
-                sizes="100vw"
-                className={`landing-hero-background-image landing-hero-background-image-${heroSlideDirection}`}
-              />
-            )}
-          </div>
-          <div className="landing-hero-copy">
+          <div className="landing-hero-layout">
             <div
-              key={`hero-copy-${heroSlideMotionKey}`}
-              className={`landing-hero-copy-main ${heroSlideMotionClass}`}
+              className="landing-hero-video-layer"
+              aria-hidden="true"
             >
-              <h1>
-                {renderHighlightedText(currentHeroSlide.title, currentHighlightWords)}
-              </h1>
-              <p className="landing-lede">
-                {currentHeroSlide.text}
-              </p>
-              <div className="landing-actions">
-                <a href="#pricing" className="landing-button landing-button-primary">
-                  {t.pricingCta}
-                </a>
-                <a href="/sa-fungerar-det" className="landing-button landing-button-secondary">
-                  {t.workflowCta}
-                </a>
+              {currentHeroMedia && (
+                <Image
+                  key={currentHeroMedia.id}
+                  src={currentHeroMedia.src}
+                  alt=""
+                  fill
+                  priority
+                  sizes="(max-width: 980px) 100vw, 48vw"
+                  className={`landing-hero-background-image landing-hero-background-image-${heroSlideDirection}`}
+                />
+              )}
+            </div>
+            <div className="landing-hero-copy">
+              <div
+                key={`hero-copy-${heroSlideMotionKey}`}
+                className={`landing-hero-copy-main ${heroSlideMotionClass}`}
+              >
+                <h1>
+                  {renderHighlightedText(currentHeroSlide.title, currentHighlightWords)}
+                </h1>
+                <p className="landing-lede">
+                  {currentHeroSlide.text}
+                </p>
+                <div className="landing-actions">
+                  <a href="#pricing" className="landing-button landing-button-primary">
+                    {t.pricingCta}
+                  </a>
+                  <a href="/sa-fungerar-det" className="landing-button landing-button-secondary">
+                    {t.workflowCta}
+                  </a>
+                </div>
+                <div className="landing-stats">
+                  {t.stats.map(([value, label]) => (
+                    <div key={label}>
+                      <strong>{value}</strong>
+                      <span>{label}</span>
+                    </div>
+                  ))}
+                </div>
+                <p className="landing-seo-copy">{t.seoIntro}</p>
               </div>
-              <div className="landing-stats">
-                {t.stats.map(([value, label]) => (
-                  <div key={label}>
-                    <strong>{value}</strong>
-                    <span>{label}</span>
-                  </div>
-                ))}
-              </div>
-              <p className="landing-seo-copy">{t.seoIntro}</p>
             </div>
           </div>
           <div
