@@ -12,10 +12,10 @@ export const copy = {
     pricingCta: "Se paket",
     workflowCta: "Se fördelarna",
     stats: [
-      ["Nytt för småföretag", "Ett nytt skärmkoncept som Screenia introducerar för svenska småföretagare."],
-      ["Använd egen utrustning", "Du väljer vilka skärmar som används och var de placeras."],
+      ["Lokal annonsering för småföretag", "Nå ut med erbjudanden och information direkt där dina kunder finns."],
+      ["Fungerar med en vanlig TV", "Använd en vanlig TV som reklamskärm – du väljer själv var den ska placeras."],
       ["Ingen bindningstid", "Avsluta abonnemanget när du vill."],
-      ["Enkelt att komma igång", "Inga tekniska förkunskaper krävs."],
+      ["Vi tar hand om tekniken", "Du behöver bara en TV. Screenia hanterar systemet, innehållet och den tekniska driften åt dig."],
     ],
     platformTitle: "En enklare väg till professionell skärmvisning",
     platformText:
