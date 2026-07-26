@@ -107,8 +107,8 @@
   display: grid;
   width: 100%;
   max-width: 1320px;
-  grid-template-columns: minmax(0, 1.04fr) minmax(380px, 0.96fr);
-  gap: clamp(24px, 3.2vw, 52px);
+  grid-template-columns: minmax(0, 1.03fr) minmax(390px, 0.97fr);
+  gap: 0;
   align-items: center;
   margin: 0 auto;
 }
@@ -117,21 +117,42 @@
   position: relative;
   inset: auto;
   width: 100%;
-  height: clamp(480px, 62svh, 680px);
+  height: clamp(560px, 68svh, 720px);
   overflow: hidden;
-  border: 12px solid var(--reference-yellow);
-  border-radius: 30px;
-  background: var(--reference-yellow);
-  box-shadow: 0 34px 80px rgba(1, 21, 61, 0.34);
+  border: 0;
+  border-radius: 0 30px 30px 0;
+  background:
+    radial-gradient(circle at 66% 34%, rgba(255, 211, 42, 0.16), transparent 30%),
+    linear-gradient(145deg, #031c48, #0b4da8);
+  box-shadow: 0 36px 84px rgba(1, 21, 61, 0.38);
+  clip-path: polygon(10% 0, 100% 0, 100% 100%, 0 100%);
 }
 
 .screenia-theme .landing-hero-video-layer::before {
-  background: linear-gradient(180deg, transparent 65%, rgba(1, 20, 54, 0.18));
+  inset: 0;
+  z-index: 2;
+  background:
+    linear-gradient(180deg, transparent 68%, rgba(1, 20, 54, 0.22)),
+    linear-gradient(90deg, rgba(4, 38, 94, 0.12), transparent 32%);
+}
+
+.screenia-theme .landing-hero-video-layer::after {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  background: var(--reference-yellow);
+  clip-path: polygon(9.6% 0, 11.2% 0, 1.6% 100%, 0 100%);
+  content: "";
+  pointer-events: none;
 }
 
 .screenia-theme .landing-hero-video-layer img,
 .screenia-theme .landing-hero-video-layer video {
-  filter: saturate(1.03) contrast(1.03);
+  z-index: 1;
+  object-fit: contain;
+  object-position: center;
+  padding: clamp(14px, 1.5vw, 22px) clamp(14px, 1.5vw, 22px) clamp(14px, 1.5vw, 22px) clamp(44px, 5vw, 74px);
+  filter: saturate(1.04) contrast(1.03);
 }
 
 .screenia-theme .landing-hero-copy {
@@ -599,6 +620,17 @@
     background: transparent;
     opacity: 0.28;
     box-shadow: none;
+    clip-path: none;
+  }
+
+  .screenia-theme .landing-hero-video-layer::after {
+    display: none;
+  }
+
+  .screenia-theme .landing-hero-video-layer img,
+  .screenia-theme .landing-hero-video-layer video {
+    object-fit: cover;
+    padding: 0;
   }
 
   .screenia-theme .landing-hero-copy {
