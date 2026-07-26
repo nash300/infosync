@@ -12,9 +12,10 @@ export const copy = {
     pricingCta: "Se paket",
     workflowCta: "Se fördelarna",
     stats: [
-      ["24/7", "kontinuerlig skärmvisning"],
-      ["3 veckor", "kostnadsfri provperiod"],
-      ["0", "månaders bindningstid"],
+      ["Nytt för småföretag", "Ett nytt skärmkoncept som Screenia introducerar för svenska småföretagare."],
+      ["Använd egen utrustning", "Du väljer vilka skärmar som används och var de placeras."],
+      ["Ingen bindningstid", "Avsluta abonnemanget när du vill."],
+      ["Enkelt att komma igång", "Inga tekniska förkunskaper krävs."],
     ],
     platformTitle: "En enklare väg till professionell skärmvisning",
     platformText:
@@ -115,7 +116,12 @@ export const copy = {
       "Screenia helps salons, shops, and service businesses present campaigns, price lists, and information on screen. Full HD and 4K devices can be combined according to operational needs, with support throughout the setup process.",
     pricingCta: "See packages",
     workflowCta: "How it works",
-    stats: [["24/7", "continuous screen playback"], ["3 weeks", "free subscription trial"], ["0", "months commitment"]],
+    stats: [
+      ["New for small businesses", "A new screen concept for small business owners in Sweden."],
+      ["Use your own equipment", "Choose which screens to use and where to place them."],
+      ["No commitment period", "Cancel the subscription whenever you want."],
+      ["Easy to get started", "No technical knowledge is required."],
+    ],
     platformTitle: "A simpler path to professional screen display",
     platformText:
       "No proprietary technical system or complex configuration is required. Screenia manages the process from the initial request to a screen displaying the appropriate content for the business.",
