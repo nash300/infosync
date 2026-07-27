@@ -25,8 +25,7 @@
       rgba(5, 20, 55, 0.98) 0 41%,
       rgba(21, 94, 232, 0.82) 41% 56%,
       rgba(236, 246, 255, 0.96) 56% 100%
-    ),
-    url("/landing/section-art/platform-workflow.jpg") center / cover fixed;
+    );
 }
 
 .public-info-page .how-hero,
@@ -587,8 +586,7 @@
     padding: 100px 16px 42px;
     background:
       radial-gradient(circle at 14% 8%, rgba(109, 141, 255, 0.28), transparent 30%),
-      linear-gradient(160deg, #061942 0 42%, #1d6ff2 42% 53%, #eaf4ff 53% 100%),
-      url("/landing/section-art/platform-workflow.jpg") center / cover;
+      linear-gradient(160deg, #061942 0 42%, #1d6ff2 42% 53%, #eaf4ff 53% 100%);
   }
 
   .public-info-page .how-hero,

@@ -851,8 +851,7 @@
       rgba(5, 20, 55, 0.96) 0 39%,
       rgba(21, 94, 232, 0.78) 39% 54%,
       rgba(236, 246, 255, 0.96) 54% 100%
-    ),
-    url("/landing/section-art/platform-workflow.jpg") no-repeat fixed center / cover;
+    );
 }
 
 .contact-main::before {
@@ -1241,9 +1240,7 @@
 @media (max-width: 640px) {
   .contact-main {
     padding: 6.7rem 0.75rem 2.5rem;
-    background:
-      linear-gradient(160deg, #061942 0 40%, #1d6ff2 40% 51%, #eaf4ff 51% 100%),
-      url("/landing/section-art/platform-workflow.jpg") center / cover;
+    background: linear-gradient(160deg, #061942 0 40%, #1d6ff2 40% 51%, #eaf4ff 51% 100%);
   }
 
   .contact-intro-copy {
@@ -2226,8 +2223,7 @@
       rgba(5, 20, 55, 0.96) 0 39%,
       rgba(21, 94, 232, 0.78) 39% 54%,
       rgba(236, 246, 255, 0.96) 54% 100%
-    ),
-    url("/landing/section-art/platform-workflow.jpg") no-repeat fixed center / cover;
+    );
   padding: clamp(96px, 10vw, 126px) 24px 24px;
 }
 
@@ -4955,8 +4951,7 @@
       rgba(5, 20, 55, 0.96) 0 39%,
       rgba(21, 94, 232, 0.8) 39% 54%,
       rgba(236, 246, 255, 0.96) 54% 100%
-    ),
-    url("/landing/section-art/platform-workflow.jpg") no-repeat center / cover;
+    );
   padding: clamp(54px, 7vw, 96px) max(22px, calc((100vw - 1260px) / 2));
 }
 
@@ -6104,9 +6099,7 @@
   }
 
   .flow-page {
-    background:
-      linear-gradient(160deg, #061942 0 40%, #1d6ff2 40% 51%, #eaf4ff 51% 100%),
-      url("/landing/section-art/platform-workflow.jpg") center / cover;
+    background: linear-gradient(160deg, #061942 0 40%, #1d6ff2 40% 51%, #eaf4ff 51% 100%);
   }
 }
 
@@ -6157,8 +6150,7 @@
       rgba(5, 20, 55, 0.96) 0 39%,
       rgba(21, 94, 232, 0.78) 39% 54%,
       rgba(236, 246, 255, 0.96) 54% 100%
-    ),
-    url("/landing/section-art/platform-workflow.jpg") no-repeat fixed center / cover;
+    );
 }
 
 @media (max-width: 900px) {
@@ -6167,7 +6159,6 @@
     background:
       radial-gradient(circle at 14% 8%, rgba(109, 141, 255, 0.28), transparent 30%),
       radial-gradient(circle at 92% 76%, rgba(47, 125, 246, 0.18), transparent 34%),
-      linear-gradient(160deg, #061942 0 42%, #1d6ff2 42% 53%, #eaf4ff 53% 100%),
-      url("/landing/section-art/platform-workflow.jpg") center / cover;
+      linear-gradient(160deg, #061942 0 42%, #1d6ff2 42% 53%, #eaf4ff 53% 100%);
   }
 }

@@ -177,8 +177,7 @@ section h1 {
       rgba(3, 14, 38, 0.98) 0 44%,
       rgba(10, 61, 135, 0.94) 44% 58%,
       rgba(229, 240, 252, 0.96) 58% 100%
-    ),
-    url("/landing/section-art/platform-workflow.jpg") center / cover;
+    );
 }
 
 .screenia-auth-shell::before {
@@ -608,9 +607,7 @@ section h1 {
 
 @media (max-width: 768px) {
   .screenia-auth-shell {
-    background:
-      linear-gradient(160deg, #061942 0 38%, #0d4b9f 38% 48%, #edf5ff 48% 100%),
-      url("/landing/section-art/platform-workflow.jpg") center / cover;
+    background: linear-gradient(160deg, #061942 0 38%, #0d4b9f 38% 48%, #edf5ff 48% 100%);
   }
 
   .screenia-auth-card {
