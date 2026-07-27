@@ -4493,6 +4493,51 @@
   }
 }
 
+.admin-landing-content-section-wide {
+  grid-column: 1 / -1;
+}
+
+.admin-landing-video-editor-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
+  gap: 1rem;
+}
+
+.admin-landing-video-editor {
+  align-content: start;
+}
+
+.admin-landing-video-preview {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border: 1px solid rgba(47, 125, 246, 0.2);
+  border-radius: 14px;
+  background: #061942;
+  color: rgba(255, 255, 255, 0.68);
+  object-fit: cover;
+}
+
+.admin-landing-video-preview-portrait {
+  width: min(100%, 230px);
+  aspect-ratio: 9 / 16;
+  justify-self: center;
+}
+
+.admin-landing-video-preview-landscape {
+  aspect-ratio: 16 / 9;
+}
+
+div.admin-landing-video-preview {
+  display: grid;
+  place-items: center;
+  min-height: 180px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
 .admin-device-media-flow,
 .admin-device-remove-flow {
   display: grid;
@@ -6002,11 +6047,7 @@
 
 .admin-landing-content-list {
   display: grid;
-  max-height: min(70vh, 900px);
   gap: 0.7rem;
-  overflow: auto;
-  padding-right: 0.3rem;
-  scrollbar-gutter: stable;
 }
 
 .admin-landing-editor-card {
@@ -6270,7 +6311,7 @@
 
 .admin-sidebar-logo-card {
   display: flex;
-  justify-content: flex-start;
+  justify-content: center;
   margin: 0.45rem 0.25rem 0.8rem;
   border: 1px solid var(--admin-border);
   border-radius: var(--admin-radius-lg);
@@ -6282,7 +6323,8 @@
 .admin-sidebar-logo-card .screenia-logo {
   width: 100%;
   max-width: 100%;
-  transform-origin: left center;
+  justify-content: center;
+  transform-origin: center;
 }
 
 .admin-sidebar-logo-card .screenia-logo-wordmark {
@@ -7587,5 +7629,9 @@ a.admin-button-secondary::after,
   .admin-queue-pagination {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .admin-landing-editor-card {
+    grid-template-columns: 1fr;
   }
 }

@@ -103,6 +103,28 @@ export default function AdminTrainingPage() {
         </article>
         <article className="admin-training-entry">
           <div>
+            <p className="admin-operation-kicker">Premium Plus content</p>
+            <h3>Customer uploads a video for Screenia review</h3>
+          </div>
+          <p>
+            Use when an active Premium Plus customer uploads an MP4 or WEBM
+            video from the customer portal. Standard and Premium customers must
+            not receive video upload access.
+          </p>
+          <p>
+            Click path: customer portal, Material, select Video, upload file,
+            admin customer profile, display material review, preview the
+            short-lived signed link, approve or reject with a reason.
+          </p>
+          <p>
+            Evidence: the file remains private, the asset is marked waiting for
+            review, an audit event and admin notification exist, and rejected
+            material is never published. The current limit is 100 MB per MP4 or
+            WEBM file.
+          </p>
+        </article>
+        <article className="admin-training-entry">
+          <div>
             <p className="admin-operation-kicker">Billing control</p>
             <h3>Test monthly billing with Stripe Test Clock</h3>
           </div>

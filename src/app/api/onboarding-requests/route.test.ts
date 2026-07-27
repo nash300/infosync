@@ -195,6 +195,27 @@ describe("customer creation to audit lifecycle", () => {
     expect(mocks.deletedCustomerIds).toEqual([]);
   });
 
+  it("accepts the Premium Plus video package", async () => {
+    const response = await POST(
+      validRequest({
+        quoteItems: [
+          { pricingPlanCode: "premium_plus_4k", quantity: 1 },
+        ],
+      }),
+    );
+
+    expect(response.status).toBe(200);
+    expect(mocks.insertedCustomer).toMatchObject({
+      requested_screen_quantity: 1,
+      requested_quote_items: [
+        {
+          pricingPlanCode: "premium_plus_4k",
+          quantity: 1,
+        },
+      ],
+    });
+  });
+
   it("rolls customer creation back when the required creation audit cannot be stored", async () => {
     mocks.recordAuditEvent.mockRejectedValueOnce(
       new Error("audit storage unavailable"),

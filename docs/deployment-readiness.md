@@ -9,6 +9,7 @@ live payments.
 - `npm run release:check` passes lint, encoding checks, billing invariants, TypeScript, and the production build.
 - Standard FHD: first payment 2 397 SEK, then 249 SEK/month after 21 days.
 - Premium 4K: first payment 2 797 SEK, then 349 SEK/month after 21 days.
+- Premium Plus 4K: first payment 2 797 SEK, then 399 SEK/month after 21 days. It includes customer MP4/WEBM uploads for Screenia review before publication.
 - These totals include moms. The 1 599 SEK base setup fee includes up to three screens and each screen after the third adds 249 SEK. Shipping is 99 SEK for up to three devices and 29 SEK per additional device.
 - Stripe test mode has one shared 249 SEK additional-screen setup Price. Checkout adds it as a separate invoice line with the exact extra-screen quantity.
 - Supabase stores the base setup amount, included-screen threshold, additional-screen unit price, additional-screen count, and calculated setup total on each prepared order.
@@ -18,7 +19,7 @@ live payments.
 ## Clean baseline
 
 - Confirm operational and test-record counts immediately before each clean test cycle; do not rely on an old fixed count in this document.
-- The two active pricing plans share additional-screen setup and additional-device shipping Prices while retaining package-specific base setup, device, base shipping, and monthly Price references.
+- The three active pricing plans share additional-screen setup and additional-device shipping Prices while retaining package-specific base setup, device, base shipping, and monthly Price references.
 - Future real payment history must not be deleted merely to make dashboards look empty.
 
 ## Billing verification

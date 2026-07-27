@@ -13,6 +13,7 @@ const labels: Record<string, string> = {
   pricing: "Pricing",
   "site-content": "Site content",
   "landing-content": "Hero editor",
+  "example-gallery": "Example gallery",
   "legal-documents": "Document editor",
   subscriptions: "Subscriptions",
   "email-events": "Email delivery",

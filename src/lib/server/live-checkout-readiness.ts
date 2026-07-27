@@ -1788,6 +1788,14 @@ async function displayAssetReviewReady(
     projectFilePath("src/app/api/account/display-assets/route.ts"),
     "utf8",
   );
+  const videoUploadRouteSource = readFileSync(
+    projectFilePath("src/app/api/account/video-upload/route.ts"),
+    "utf8",
+  );
+  const videoEntitlementSource = readFileSync(
+    projectFilePath("src/lib/pricing/plan-entitlements.ts"),
+    "utf8",
+  );
   const adminAssetsRouteSource = readFileSync(
     projectFilePath("src/app/api/admin/customer-assets/route.ts"),
     "utf8",
@@ -1806,8 +1814,28 @@ async function displayAssetReviewReady(
   );
   const sourceIssues = [
     !contentSetupRouteSource.includes("hasCustomerServiceAccess") ||
-    !displayAssetsRouteSource.includes("hasCustomerServiceAccess")
+    !displayAssetsRouteSource.includes("hasCustomerServiceAccess") ||
+    !videoUploadRouteSource.includes("hasCustomerServiceAccess")
       ? "customer display material routes do not verify paid service access"
+      : null,
+    !videoUploadRouteSource.includes("customerCanUploadVideos") ||
+    !videoEntitlementSource.includes(
+      'CUSTOMER_VIDEO_UPLOAD_PLAN_CODE = "premium_plus_4k"',
+    )
+      ? "customer video uploads are not restricted to active Premium Plus service"
+      : null,
+    !videoUploadRouteSource.includes("video/mp4") ||
+    !videoUploadRouteSource.includes("video/webm") ||
+    !videoUploadRouteSource.includes("100 * 1024 * 1024")
+      ? "customer video uploads do not enforce the supported formats and size limit"
+      : null,
+    !videoUploadRouteSource.includes("createSignedUploadUrl") ||
+    !videoUploadRouteSource.includes("customer-display-assets")
+      ? "customer videos do not use signed uploads to private display storage"
+      : null,
+    !videoUploadRouteSource.includes("customer_video_uploaded") ||
+    !videoUploadRouteSource.includes("createAdminNotification")
+      ? "customer video uploads are not audited and surfaced to admins"
       : null,
     !contentSetupRouteSource.includes("validateDisplayAssetRequest") ||
     !displayAssetsRouteSource.includes("validateDisplayAssetRequest")
@@ -1887,7 +1915,8 @@ async function displayAssetReviewReady(
       ? "admin display material review updates do not require a reason with before/after audit evidence"
       : null,
     !accountPageSource.includes("/api/account/content-setup") ||
-    !accountPageSource.includes("/api/account/display-assets")
+    !accountPageSource.includes("/api/account/display-assets") ||
+    !accountPageSource.includes("/api/account/video-upload")
       ? "customer account page does not expose content setup and display material upload"
       : null,
     !adminCustomerPageSource.includes("/api/admin/customer-assets") ||

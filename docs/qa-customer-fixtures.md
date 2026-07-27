@@ -40,8 +40,9 @@ created without email delivery. The first account is
 19. Shipped order with tracking evidence.
 20. Temporary discount with support cases in multiple states.
 
-Each group alternates Standard FHD and Premium 4K. Variations cover one to four
-matching devices and a mixed two-device order containing one of each package.
+Each group rotates through Standard FHD, Premium 4K, and Premium Plus 4K.
+Variations cover one to four matching devices and a mixed three-device order
+containing one of each package.
 Stored first-payment totals follow Screenia's inclusive-moms model: one setup
 fee plus each device and each shipping charge, less any device discount.
 

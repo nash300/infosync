@@ -144,8 +144,8 @@ export default function LandingContentPage() {
       <header className="admin-page-header">
         <div>
           <p className="admin-operation-kicker">Website content</p>
-          <h1 className="admin-title">Landing hero</h1>
-          <p className="admin-subtitle">Maintain the hero slides and the rotating proof cards without changing code. The order here is the order visitors see.</p>
+          <h1 className="admin-title">Landing content</h1>
+          <p className="admin-subtitle">Maintain the hero slides and rotating cards without changing code. The order here is the order visitors see.</p>
         </div>
       </header>
 
@@ -176,6 +176,7 @@ export default function LandingContentPage() {
               {benefits.map((item, index) => <BenefitEditor key={item.id} item={item} working={migrationRequired || workingKey === `benefit-${item.id}`} onChange={updateBenefit} onSave={() => save("benefit", item)} onMoveUp={index > 0 ? () => move("benefit", item.id, "up") : undefined} onMoveDown={index < benefits.length - 1 ? () => move("benefit", item.id, "down") : undefined} onDelete={() => remove("benefit", item.id)} />)}
             </div>
           </section>
+
         </div>
       )}
     </main>

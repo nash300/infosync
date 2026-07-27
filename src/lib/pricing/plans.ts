@@ -25,4 +25,17 @@ export const PRICING_PLANS = [
     trialDays: 21,
     binding: "None",
   },
+  {
+    code: "premium_plus_4k",
+    name: "Premium Plus",
+    resolution: "4K",
+    setupFeeSek: 1599,
+    hardwareFeeSek: 1099,
+    shippingFeeSek: 99,
+    shippingIncludedDevices: 3,
+    additionalShippingFeeSek: 29,
+    monthlyFeeSek: 399,
+    trialDays: 21,
+    binding: "None",
+  },
 ] as const;

@@ -12,6 +12,7 @@ export const DISPLAY_ASSET_CATEGORIES = [
   "image",
   "menu",
   "text",
+  "video",
   "other",
 ] as const;
 

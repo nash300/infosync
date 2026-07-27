@@ -13,6 +13,9 @@ const landingRequestSource = read("src/app/api/onboarding-requests/route.ts");
 const setupFeeSource = read("src/lib/pricing/setup-fee.ts");
 const shippingFeeSource = read("src/lib/pricing/shipping-fee.ts");
 const prepareOnboardingSource = read("src/app/api/admin/prepare-onboarding/route.ts");
+const videoEntitlementSource = read("src/lib/pricing/plan-entitlements.ts");
+const videoUploadRouteSource = read("src/app/api/account/video-upload/route.ts");
+const premiumPlusMigrationSource = read("supabase/migrations/202607270000_premium_plus_video_plan.sql");
 const pricingMigrationSource = read("supabase/migrations/202607210000_setup_fee_quantity_rule.sql");
 const shippingMigrationSource = read("supabase/migrations/202607210100_tiered_shipping_rule.sql");
 
@@ -47,6 +50,15 @@ const expectedPlans = [
     hardwareFeeSek: 1099,
     shippingFeeSek: 99,
     monthlyFeeSek: 349,
+    trialDays: 21,
+    firstPaymentSek: 2797,
+  },
+  {
+    code: "premium_plus_4k",
+    setupFeeSek: 1599,
+    hardwareFeeSek: 1099,
+    shippingFeeSek: 99,
+    monthlyFeeSek: 399,
     trialDays: 21,
     firstPaymentSek: 2797,
   },
@@ -115,6 +127,34 @@ if (calculatedFourScreenFirstPayment !== fourScreenSelection.firstPaymentSek) {
 if (calculatedMixedMonthly !== mixedSelection.monthlyFeeSek) {
   failures.push(
     `mixed selection: monthly price should be ${mixedSelection.monthlyFeeSek} SEK, calculated ${calculatedMixedMonthly} SEK`,
+  );
+}
+
+const threeTierSelection = {
+  standardQuantity: 1,
+  premiumQuantity: 1,
+  premiumPlusQuantity: 1,
+  firstPaymentSek: 4595,
+  monthlyFeeSek: 997,
+};
+const calculatedThreeTierFirstPayment =
+  setupFeeForScreens(3) +
+  699 * threeTierSelection.standardQuantity +
+  1099 * threeTierSelection.premiumQuantity +
+  1099 * threeTierSelection.premiumPlusQuantity +
+  shippingFeeForDevices(3);
+const calculatedThreeTierMonthly =
+  249 * threeTierSelection.standardQuantity +
+  349 * threeTierSelection.premiumQuantity +
+  399 * threeTierSelection.premiumPlusQuantity;
+if (calculatedThreeTierFirstPayment !== threeTierSelection.firstPaymentSek) {
+  failures.push(
+    `three-tier selection: first payment should be ${threeTierSelection.firstPaymentSek} SEK, calculated ${calculatedThreeTierFirstPayment} SEK`,
+  );
+}
+if (calculatedThreeTierMonthly !== threeTierSelection.monthlyFeeSek) {
+  failures.push(
+    `three-tier selection: monthly price should be ${threeTierSelection.monthlyFeeSek} SEK, calculated ${calculatedThreeTierMonthly} SEK`,
   );
 }
 
@@ -197,6 +237,41 @@ requireSource(pricingMigrationSource, "stripe_additional_setup_price_id text", "
 requireSource(pricingMigrationSource, "additional_setup_screen_count integer", "Supabase orders must store the additional-screen count");
 requireSource(shippingMigrationSource, "stripe_additional_shipping_price_id text", "Supabase must store the shared additional-shipping Stripe price reference");
 requireSource(shippingMigrationSource, "additional_shipping_device_count integer", "Supabase orders must store the additional-shipping device count");
+requireSource(
+  videoEntitlementSource,
+  'CUSTOMER_VIDEO_UPLOAD_PLAN_CODE = "premium_plus_4k"',
+  "Premium Plus must be the only plan that grants customer video uploads",
+);
+requireSource(
+  videoUploadRouteSource,
+  "customerCanUploadVideos",
+  "Customer video uploads must verify the Premium Plus entitlement",
+);
+requireSource(
+  videoUploadRouteSource,
+  "createSignedUploadUrl",
+  "Customer videos must upload through a signed private-storage URL",
+);
+requireSource(
+  videoUploadRouteSource,
+  'eventType: "customer_video_uploaded"',
+  "Customer video uploads must create audit evidence",
+);
+requireSource(
+  premiumPlusMigrationSource,
+  "'premium_plus_4k'",
+  "Supabase must define the Premium Plus pricing plan",
+);
+requireSource(
+  premiumPlusMigrationSource,
+  "399",
+  "Supabase must store the 399 SEK Premium Plus monthly price",
+);
+requireSource(
+  premiumPlusMigrationSource,
+  "'video/mp4'",
+  "Customer display storage must accept MP4 video uploads",
+);
 
 if (failures.length) {
   console.error("Billing invariant check failed:\n");
@@ -208,6 +283,7 @@ for (const plan of expectedPlans) {
   console.log(`${plan.code}: first ${plan.firstPaymentSek} SEK, then ${plan.monthlyFeeSek} SEK/month after ${plan.trialDays} days (prices include moms)`);
 }
 console.log(`mixed 1 FHD + 2 4K: first ${mixedSelection.firstPaymentSek} SEK, then ${mixedSelection.monthlyFeeSek} SEK/month (one setup fee)`);
+console.log(`one of every plan: first ${threeTierSelection.firstPaymentSek} SEK, then ${threeTierSelection.monthlyFeeSek} SEK/month (one setup fee)`);
 console.log(`four Standard FHD screens: first ${fourScreenSelection.firstPaymentSek} SEK including ${fourScreenSelection.setupFeeSek} SEK setup`);
 console.log("existing customer add-on after three paid screens: first 1047 SEK including 249 SEK setup");
 console.log("Billing invariant check passed.");

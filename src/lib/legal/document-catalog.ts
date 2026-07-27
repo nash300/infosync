@@ -16,8 +16,8 @@ export const legalDocumentLabels: Record<LegalDocumentType, string> = {
   support_service: "Support- och servicevillkor",
 };
 
-const effectiveAt = "2026-07-24T00:00:00+02:00";
-const draftVersion = "2026-07-24-avtalsutkast";
+const effectiveAt = "2026-07-27T00:00:00+02:00";
+const draftVersion = "2026-07-27-avtalsutkast";
 
 const termsContent = [
   "## 1. Om villkoren",
@@ -26,6 +26,7 @@ const termsContent = [
   "## 2. Kundens uppgifter och ansvar",
   "Kunden ansvarar för att företagsuppgifter, kontaktuppgifter, faktureringsuppgifter och leveransuppgifter är riktiga och fullständiga. Kunden ska utan dröjsmål meddela Screenia om en uppgift förändras.",
   "Kunden ansvarar för att material som lämnas till Screenia får användas för det avsedda ändamålet. Detta gäller bland annat logotyper, bilder, texter, menyer, filmer, musik och kampanjmaterial. Kunden ansvarar även för att innehållet inte strider mot lag eller gör intrång i tredje mans rätt.",
+  "Screenia får avstå från att publicera eller ta bort material som skäligen bedöms vara olagligt, skadligt, tekniskt osäkert, vilseledande eller göra intrång i tredje mans rätt. Kunden ska på begäran komplettera eller ersätta sådant material.",
   "## 3. Beställning och betalning",
   "Före betalning får kunden information om valt paket, antal skärmar, första betalning, kommande månadsavgift och provperiod. Samtliga kundpriser anges inklusive svensk moms.",
   "Den första betalningen omfattar uppstartsavgift, valda skärmenheter och frakt. Månadsavgiften debiteras först efter den kostnadsfria provperioden. Närmare betalningsvillkor finns i Screenias abonnemangs- och betalningsvillkor.",
@@ -35,8 +36,10 @@ const termsContent = [
   "## 5. Leverans och aktivering",
   "Leverans sker till den adress som kunden har angett. Kunden ska kontrollera försändelsen och meddela Screenia så snart som möjligt om en enhet är skadad, saknas eller inte motsvarar beställningen.",
   "Skärmtjänsten aktiveras när nödvändiga kunduppgifter, betalningsuppgifter, enheter och material är i ordning. Beräknade leverans- och aktiveringstider är vägledande om inte annat uttryckligen har avtalats.",
+  "Om tjänsten används med kundens egen TV, professionella skärm eller annan visningsutrustning ansvarar kunden för att utrustningen har fungerande strömförsörjning, kompatibel anslutning och den internetåtkomst som krävs. Screenia ansvarar för sin tjänst och av Screenia levererad utrustning, men inte för fel eller begränsningar i kundens egen skärm, nätverk eller övriga utrustning.",
   "## 6. Abonnemang och tillgång till tjänsten",
   "Kundens rätt att använda skärmtjänsten förutsätter ett giltigt abonnemang. Vid utebliven betalning, betalningstvist, återbetalning, paus, uppsägning eller annan omständighet som innebär att abonnemanget inte längre är giltigt får Screenia begränsa eller stänga av tjänsten.",
+  "Funktioner som endast ingår i ett visst paket, exempelvis kundens egen videouppladdning, får användas så länge kunden har ett aktivt och berättigande abonnemang. De filformat, storleksgränser och övriga tekniska krav som gäller vid uppladdningen visas i kundportalen. Uppladdat material registreras för granskning och publiceras inte automatiskt.",
   "Screenia får även tillfälligt begränsa tjänsten om det behövs för säkerhet, underhåll eller för att förhindra användning som strider mot avtalet eller lag. Kunden ska informeras när det är skäligt och möjligt.",
   "## 7. Paus och uppsägning",
   "Kunden kan begära paus eller uppsägning genom kundportalen eller genom att kontakta Screenia. Uppsägning gäller normalt från utgången av den redan betalda perioden. Kunden har tillgång till tjänsten fram till dess, förutsatt att inga andra skäl för avstängning föreligger.",
@@ -61,7 +64,7 @@ const privacyContent = [
   "Frågor om personuppgifter och begäran om att utöva en rättighet skickas till service@screenia.se.",
   "## 2. Uppgifter som behandlas",
   "Screenia kan behandla namn, kontaktuppgifter, företagsuppgifter, leveransadress, faktureringsuppgifter, meddelanden, beställningsuppgifter, samtycken och uppgifter om kundens abonnemang.",
-  "När kunden lämnar material till sin skärmlösning kan Screenia även behandla filer, bilder, texter och annan information som behövs för uppdraget. Betalkortsuppgifter lämnas direkt till betalningsleverantören och lagras inte av Screenia.",
+  "När kunden lämnar material till sin skärmlösning kan Screenia även behandla filer, bilder, texter, videor, ljud, filmetadata och annan information som behövs för uppdraget. Betalkortsuppgifter lämnas direkt till betalningsleverantören och lagras inte av Screenia.",
   "## 3. Varför uppgifterna används",
   "Uppgifterna används för att besvara förfrågningar, lämna erbjudanden, ingå och fullgöra avtal, ta emot betalning, leverera utrustning, skapa och förvalta skärminnehåll, ge support samt hantera paus, uppsägning och återbetalning.",
   "Uppgifter används också när det är nödvändigt för bokföring, rättsliga krav, säkerhet, förebyggande av missbruk och för att kunna visa vad kunden och Screenia har kommit överens om.",
@@ -75,6 +78,7 @@ const privacyContent = [
   "Vissa leverantörer kan behandla uppgifter utanför EU och EES. När en sådan överföring sker ska Screenia använda en tillåten överföringsmekanism och vid behov kompletterande skyddsåtgärder.",
   "## 7. Lagringstid",
   "Personuppgifter sparas inte längre än vad som behövs för respektive ändamål. Kund- och supportuppgifter gallras eller anonymiseras när de inte längre behövs, om det inte finns ett fortsatt rättsligt eller berättigat behov.",
+  "Kundmaterial, inklusive uppladdade videor, sparas medan det behövs för skärmtjänsten, support, säkerhetskopiering eller uppföljning av uppdraget. När abonnemanget och efterföljande supportbehov har avslutats raderas eller anonymiseras materialet inom skälig tid, om det inte behöver bevaras för ett rättsligt anspråk, en betalningstvist eller annan rättslig skyldighet.",
   "Betalnings-, faktura- och bokföringsuppgifter kan behöva sparas under längre tid enligt lag. Uppgifter kan också bevaras under den tid som krävs för att hantera garanti, betalningstvist, rättsligt anspråk, säkerhetsincident eller misstänkt missbruk.",
   "## 8. Den registrerades rättigheter",
   "Den registrerade kan ha rätt att få tillgång till sina uppgifter, få felaktiga uppgifter rättade, begära radering eller begränsning samt invända mot viss behandling. I vissa fall finns rätt att få uppgifter överförda till en annan personuppgiftsansvarig.",
@@ -107,6 +111,7 @@ const billingContent = [
   "## 2. Första betalningen",
   "Den första betalningen består av uppstartsavgift, pris för valda skärmenheter och frakt. Vilka delar som ingår och vilket belopp som gäller framgår av kundens aktuella erbjudande och visas på nytt innan betalningen genomförs.",
   "Om beställningen omfattar flera skärmar beräknas uppstartsavgift, enheter och frakt utifrån det antal och de paket som kunden har valt. Kunden får alltid möjlighet att kontrollera den fullständiga beräkningen före betalning.",
+  "Om kunden senare lägger till en skärm, byter paket eller beställer annan tilläggsutrustning visas tillkommande engångs- och månadsbelopp innan ändringen bekräftas. En ny provperiod gäller endast om detta uttryckligen framgår av den aktuella beställningen.",
   "## 3. Provperiod och månadsavgift",
   "Månadsavgiften debiteras inte vid den första betalningen. Provperiodens längd och den månadsavgift som därefter gäller framgår av kundens aktuella erbjudande och beställningsunderlag.",
   "Om Screenia ändrar sina allmänna priser påverkar ändringen inte ett redan lämnat erbjudande under dess angivna giltighetstid. Prisändringar för ett pågående abonnemang ska meddelas i skälig tid innan de börjar gälla.",
@@ -132,10 +137,12 @@ const billingContent = [
 const supportContent = [
   "## 1. Supportens omfattning",
   "Screenia ger support för den tjänst och utrustning som omfattas av kundens beställning. Supporten kan avse material, layout, publicering, leverans, skärmdrift, konto, betalning, paus, uppsägning och integritetsfrågor.",
+  "Egen videouppladdning och andra paketspecifika funktioner omfattas endast när kundens aktiva abonnemang innehåller funktionen. Uppladdat material tas emot för teknisk och innehållsmässig granskning innan Screenia beslutar om publicering.",
   "## 2. Kontaktvägar",
   "Kunden kontaktar Screenia genom kundportalen eller via service@screenia.se. För att ett ärende ska kunna hanteras effektivt bör kunden ange företagsnamn, berörd skärm eller order och en tydlig beskrivning av frågan eller felet.",
   "## 3. Kundens medverkan",
   "Kunden ska lämna den information som rimligen behövs för felsökning och följa skäliga instruktioner. Om felet finns i kundens internetanslutning, egen utrustning eller material kan Screenia vägleda kunden men ansvarar inte för den externa tjänsten eller utrustningen.",
+  "När kunden använder en egen TV eller professionell skärm kan Screenia hjälpa till med anslutningen till Screenias enhet och tjänst. Reparation, garanti, bildinställningar eller andra fel i kundens egen skärm eller nätverksutrustning ingår inte, om inte annat uttryckligen har avtalats.",
   "## 4. Fjärrsupport",
   "Fjärrsupport genomförs endast på kundens begäran eller efter kundens godkännande. Åtkomsten ska begränsas till vad som behövs för det aktuella ärendet och avslutas när åtgärden är klar.",
   "## 5. Svar och åtgärd",

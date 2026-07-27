@@ -66,35 +66,59 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <main className="screenia-auth-shell">
-      <div className="screenia-auth-bg" />
-      <div className="screenia-auth-layout screenia-auth-layout-admin">
-        <section className="screenia-auth-hero">
-          <Link href="/" className="screenia-auth-logo-link">
-            <ScreeniaLogo className="screenia-logo-auth-card" />
+    <main className="screenia-auth-shell screenia-admin-login">
+      <div className="screenia-admin-login-frame">
+        <section className="screenia-admin-login-overview">
+          <Link href="/" className="screenia-admin-login-logo">
+            <ScreeniaLogo />
           </Link>
-          <p className="screenia-auth-hero-kicker">
-            Admin
-          </p>
-          <h1 className="screenia-auth-hero-title">
-            Säker åtkomst till driftpanelen.
-          </h1>
-          <p className="screenia-auth-hero-copy">
-            Använd ditt personliga administratörskonto. Kundkonton fungerar
-            inte här.
+
+          <div className="screenia-admin-login-overview-copy">
+            <p className="screenia-admin-login-status">
+              <span aria-hidden="true" />
+              Intern åtkomst
+            </p>
+            <p className="screenia-admin-login-kicker">Screenia administration</p>
+            <h1>Driftpanelen för hela kundresan.</h1>
+            <p>
+              Följ beställningar, betalningar, innehåll och enheter från en
+              samlad och spårbar arbetsyta.
+            </p>
+
+            <ul className="screenia-admin-login-capabilities">
+              <li>
+                <span aria-hidden="true">01</span>
+                <strong>Kund- och orderflöden</strong>
+              </li>
+              <li>
+                <span aria-hidden="true">02</span>
+                <strong>Betalning och leverans</strong>
+              </li>
+              <li>
+                <span aria-hidden="true">03</span>
+                <strong>Innehåll och enheter</strong>
+              </li>
+            </ul>
+          </div>
+
+          <p className="screenia-admin-login-restricted">
+            Endast för behörig Screenia-personal
           </p>
         </section>
 
-        <section className="screenia-auth-card">
-          <p className="screenia-auth-card-kicker screenia-auth-card-kicker-flush">
-            Screenia admin
-          </p>
+        <section className="screenia-admin-login-form-panel">
+          <div className="screenia-admin-login-form-heading">
+            <p>Säker administratörsinloggning</p>
+            <h2>Logga in</h2>
+            <span>
+              Använd ditt personliga administratörskonto. Kundkonton fungerar
+              inte här.
+            </span>
+          </div>
 
-          <div className="screenia-auth-form-stack">
+          <div className="screenia-admin-login-form">
             <label className="screenia-auth-field">
-              <span className="screenia-auth-label">
-                E-post
-              </span>
+              <span className="screenia-auth-label">E-post</span>
               <input
                 type="email"
                 placeholder="admin@screenia.se"
@@ -105,9 +129,7 @@ export default function AdminLoginPage() {
             </label>
 
             <label className="screenia-auth-field">
-              <span className="screenia-auth-label">
-                Lösenord
-              </span>
+              <span className="screenia-auth-label">Lösenord</span>
               <input
                 type="password"
                 placeholder="Ditt lösenord"
@@ -121,24 +143,23 @@ export default function AdminLoginPage() {
                 className="screenia-auth-input"
               />
             </label>
+
+            {message && <p className="screenia-auth-alert">{message}</p>}
+
+            <button
+              type="button"
+              onClick={submit}
+              disabled={loading || !email || !password}
+              className="screenia-auth-button screenia-admin-login-submit"
+            >
+              <span>{loading ? "Kontrollerar..." : "Logga in som admin"}</span>
+              <span className="screenia-admin-login-submit-icon" aria-hidden="true">
+                →
+              </span>
+            </button>
           </div>
 
-          {message && (
-            <p className="screenia-auth-alert">
-              {message}
-            </p>
-          )}
-
-          <button
-            type="button"
-            onClick={submit}
-            disabled={loading || !email || !password}
-            className="screenia-auth-button screenia-auth-button-admin"
-          >
-            {loading ? "Kontrollerar..." : "Logga in som admin"}
-          </button>
-
-          <div className="screenia-auth-link-row screenia-auth-link-row-admin">
+          <div className="screenia-admin-login-links">
             <button
               type="button"
               onClick={sendResetEmail}
@@ -151,6 +172,11 @@ export default function AdminLoginPage() {
               Kundinloggning
             </Link>
           </div>
+
+          <p className="screenia-admin-login-security">
+            <span aria-hidden="true">✓</span>
+            Krypterad anslutning och individuellt administratörskonto
+          </p>
         </section>
       </div>
     </main>

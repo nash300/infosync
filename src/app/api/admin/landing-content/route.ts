@@ -4,8 +4,9 @@ import {
 } from "@/lib/server/admin-api";
 import { NextResponse } from "next/server";
 import { getRequestIp, recordAuditEvent } from "@/lib/server/audit";
+import { fallbackLandingExampleVideos } from "@/lib/landing/example-videos";
 
-type ContentKind = "slide" | "benefit";
+type ContentKind = "slide" | "benefit" | "example";
 type ContentAction = "create" | "update" | "delete" | "move";
 
 const publishedFallback = {
@@ -20,6 +21,7 @@ const publishedFallback = {
     { id: "published-benefit-03", title: "Alla HDMI-skärmar", body: "Smart TV och professionell signage.", sort_order: 3, is_active: true },
     { id: "published-benefit-04", title: "100 % nöjdhetsgaranti", body: "Trygg start med Screenia.", sort_order: 4, is_active: true },
   ],
+  examples: fallbackLandingExampleVideos,
 };
 
 function text(value: unknown, maximum: number) {
@@ -27,7 +29,9 @@ function text(value: unknown, maximum: number) {
 }
 
 function getTable(kind: ContentKind) {
-  return kind === "slide" ? "landing_hero_slides" : "landing_hero_benefits";
+  if (kind === "slide") return "landing_hero_slides";
+  if (kind === "benefit") return "landing_hero_benefits";
+  return "landing_example_videos";
 }
 
 function getHighlightTerms(value: unknown) {
@@ -43,11 +47,12 @@ function getHighlightTerms(value: unknown) {
 }
 
 async function loadContent() {
-  const [slides, benefits] = await Promise.all([
+  const [slides, benefits, examples] = await Promise.all([
     supabaseAdmin.from("landing_hero_slides").select("*").order("sort_order").order("created_at"),
     supabaseAdmin.from("landing_hero_benefits").select("*").order("sort_order").order("created_at"),
+    supabaseAdmin.from("landing_example_videos").select("*").order("sort_order").order("created_at"),
   ]);
-  return { slides, benefits };
+  return { slides, benefits, examples };
 }
 
 async function ensurePublishedFallback() {
@@ -73,9 +78,9 @@ export async function GET() {
   const user = await getAuthenticatedAdmin();
   if (!user) return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
 
-  const { slides, benefits } = await loadContent();
-  if (slides.error || benefits.error) {
-    console.error("Could not load landing content", { slides: slides.error, benefits: benefits.error });
+  const { slides, benefits, examples } = await loadContent();
+  if (slides.error || benefits.error || examples.error) {
+    console.error("Could not load landing content", { slides: slides.error, benefits: benefits.error, examples: examples.error });
     return NextResponse.json({
       ...publishedFallback,
       migrationRequired: true,
@@ -84,11 +89,21 @@ export async function GET() {
   if (!(slides.data || []).length && !(benefits.data || []).length) {
     await ensurePublishedFallback();
     const seeded = await loadContent();
-    if (!seeded.slides.error && !seeded.benefits.error) {
-      return NextResponse.json({ slides: seeded.slides.data || [], benefits: seeded.benefits.data || [], migrationRequired: false });
+    if (!seeded.slides.error && !seeded.benefits.error && !seeded.examples.error) {
+      return NextResponse.json({
+        slides: seeded.slides.data || [],
+        benefits: seeded.benefits.data || [],
+        examples: seeded.examples.data || [],
+        migrationRequired: false,
+      });
     }
   }
-  return NextResponse.json({ slides: slides.data || [], benefits: benefits.data || [], migrationRequired: false });
+  return NextResponse.json({
+    slides: slides.data || [],
+    benefits: benefits.data || [],
+    examples: examples.data || [],
+    migrationRequired: false,
+  });
 }
 
 export async function POST(request: Request) {
@@ -100,7 +115,7 @@ export async function POST(request: Request) {
   const action = body.action as ContentAction;
   const id = text(body.id, 100);
 
-  if (!(["slide", "benefit"] as const).includes(kind) || !(["create", "update", "delete", "move"] as const).includes(action)) {
+  if (!(["slide", "benefit", "example"] as const).includes(kind) || !(["create", "update", "delete", "move"] as const).includes(action)) {
     return NextResponse.json({ error: "Invalid landing content operation." }, { status: 400 });
   }
 
@@ -112,13 +127,20 @@ export async function POST(request: Request) {
   if (id && !current) return NextResponse.json({ error: "Content item was not found." }, { status: 404 });
 
   if (action === "create" || action === "update") {
-    const title = text(body.title, kind === "slide" ? 220 : 120);
-    const contentBody = text(body.body, kind === "slide" ? 1000 : 280);
+    const title = text(body.title, kind === "slide" ? 220 : kind === "example" ? 140 : 120);
+    const contentBody = text(body.body, kind === "slide" ? 1000 : kind === "example" ? 500 : 280);
     const isActive = Boolean(body.isActive);
     const imageUrl = kind === "slide" ? text(body.imageUrl, 2000) : "";
+    const videoUrl = kind === "example" ? text(body.videoUrl, 2000) : "";
+    const storagePath = kind === "example" ? text(body.storagePath, 500) || null : null;
+    const posterUrl = kind === "example" ? text(body.posterUrl, 2000) || null : null;
+    const posterStoragePath = kind === "example" ? text(body.posterStoragePath, 500) || null : null;
+    const orientation = body.orientation === "portrait" ? "portrait" : "landscape";
     const highlightTerms = kind === "slide" ? getHighlightTerms(body.highlightTerms) : [];
-    if (!title || (kind === "slide" && !imageUrl)) {
-      return NextResponse.json({ error: "A title and slide image are required." }, { status: 400 });
+    if (!title || (kind === "slide" && !imageUrl) || (kind === "example" && !videoUrl)) {
+      return NextResponse.json({
+        error: kind === "example" ? "A title and MP4 video are required." : "A title and slide image are required.",
+      }, { status: 400 });
     }
 
     let result;
@@ -131,17 +153,31 @@ export async function POST(request: Request) {
         .maybeSingle();
       const record = kind === "slide"
         ? { title, body: contentBody, image_url: imageUrl, highlight_terms: highlightTerms, is_active: isActive, sort_order: (lastItem?.sort_order || 0) + 1 }
-        : { title, body: contentBody, is_active: isActive, sort_order: (lastItem?.sort_order || 0) + 1 };
+        : kind === "example"
+          ? { title, body: contentBody, video_url: videoUrl, storage_path: storagePath, poster_url: posterUrl, poster_storage_path: posterStoragePath, orientation, is_active: isActive, sort_order: (lastItem?.sort_order || 0) + 1 }
+          : { title, body: contentBody, is_active: isActive, sort_order: (lastItem?.sort_order || 0) + 1 };
       result = await supabaseAdmin.from(table).insert(record).select("*").single();
     } else {
       const record = kind === "slide"
         ? { title, body: contentBody, image_url: imageUrl, highlight_terms: highlightTerms, is_active: isActive }
-        : { title, body: contentBody, is_active: isActive };
+        : kind === "example"
+          ? { title, body: contentBody, video_url: videoUrl, storage_path: storagePath, poster_url: posterUrl, poster_storage_path: posterStoragePath, orientation, is_active: isActive }
+          : { title, body: contentBody, is_active: isActive };
       result = await supabaseAdmin.from(table).update(record).eq("id", id).select("*").single();
     }
     if (result.error || !result.data) {
       console.error("Landing content save error", result.error);
       return NextResponse.json({ error: "Could not save the content item." }, { status: 500 });
+    }
+    if (action === "update" && kind === "example" && current) {
+      const obsoletePaths = [
+        current.storage_path && current.storage_path !== storagePath ? current.storage_path : null,
+        current.poster_storage_path && current.poster_storage_path !== posterStoragePath ? current.poster_storage_path : null,
+      ].filter((path): path is string => Boolean(path));
+      if (obsoletePaths.length) {
+        const { error: cleanupError } = await supabaseAdmin.storage.from("landing-media").remove(obsoletePaths);
+        if (cleanupError) console.error("Could not remove replaced landing gallery media", cleanupError);
+      }
     }
     await recordAuditEvent(supabaseAdmin, {
       actorType: "admin", actorId: user.id,
@@ -156,6 +192,16 @@ export async function POST(request: Request) {
   if (action === "delete") {
     const { error } = await supabaseAdmin.from(table).delete().eq("id", id);
     if (error) return NextResponse.json({ error: "Could not delete the content item." }, { status: 500 });
+    if (kind === "example") {
+      const storagePaths = [current?.storage_path, current?.poster_storage_path]
+        .filter((path): path is string => typeof path === "string" && (path.startsWith("examples/") || path.startsWith("example-posters/")));
+      if (storagePaths.length) {
+        const { error: storageError } = await supabaseAdmin.storage
+          .from("landing-media")
+          .remove(storagePaths);
+        if (storageError) console.error("Could not remove landing example video", storageError);
+      }
+    }
     await recordAuditEvent(supabaseAdmin, {
       actorType: "admin", actorId: user.id, eventType: `landing_${kind}_deleted`,
       eventDescription: `Admin deleted landing ${kind} content.`,

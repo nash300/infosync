@@ -210,11 +210,13 @@ async function loadPlans() {
   const { data, error } = await supabase
     .from("pricing_plans")
     .select("id,code,name,resolution,setup_fee_sek,hardware_fee_sek,shipping_fee_sek,shipping_included_devices,additional_shipping_fee_sek,monthly_fee_sek,trial_days,is_active")
-    .in("code", ["standard_fhd", "premium_4k"])
+    .in("code", ["standard_fhd", "premium_4k", "premium_plus_4k"])
     .eq("is_active", true);
   if (error) throw new Error(`Could not load pricing plans: ${error.message}`);
-  if (!data || data.length !== 2) {
-    throw new Error("Both active Standard FHD and Premium 4K plans are required.");
+  if (!data || data.length !== 3) {
+    throw new Error(
+      "Active Standard FHD, Premium 4K, and Premium Plus 4K plans are required.",
+    );
   }
   return Object.fromEntries(data.map((plan) => [plan.code, plan]));
 }
@@ -249,13 +251,16 @@ function buildFixtures(plans) {
       const sequence = index + 1;
       const standard = plans.standard_fhd;
       const premium = plans.premium_4k;
-      const primaryPlan = variation % 2 === 0 ? standard : premium;
+      const premiumPlus = plans.premium_plus_4k;
+      const planCycle = [standard, premium, premiumPlus];
+      const primaryPlan = planCycle[variation % planCycle.length];
       const mixedPackage = variation === 4;
-      const quantity = mixedPackage ? 2 : variation + 1;
+      const quantity = mixedPackage ? 3 : variation + 1;
       const quoteItems = mixedPackage
         ? [
             { plan: standard, quantity: 1 },
             { plan: premium, quantity: 1 },
+            { plan: premiumPlus, quantity: 1 },
           ]
         : [{ plan: primaryPlan, quantity }];
       const email = `qa.customer.${String(sequence).padStart(3, "0")}@example.test`;
@@ -494,6 +499,10 @@ async function seedFixtures() {
   let deviceSequence = 1;
   for (const fixture of fixtures.filter((item) => item.scenario.devices)) {
     const deviceCount = fixture.scenario.devices === "all" ? fixture.quantity : 1;
+    const inventoryType =
+      fixture.primaryPlan.code === "standard_fhd"
+        ? "standard_fhd"
+        : "premium_4k";
     for (let deviceIndex = 0; deviceIndex < deviceCount; deviceIndex += 1) {
       const id = deterministicUuid(`device-${deviceSequence}`);
       const code = `Q${String(deviceSequence).padStart(5, "0")}`;
@@ -505,7 +514,7 @@ async function seedFixtures() {
         name: `QA display ${deviceIndex + 1}`,
         is_active: !["cancelled", "refunded", "suspended"].includes(fixture.scenario.customer),
         make: "Screenia QA",
-        model: fixture.primaryPlan.code === "premium_4k" ? "QA-4K" : "QA-FHD",
+        model: inventoryType === "premium_4k" ? "QA-4K" : "QA-FHD",
         serial_number: serial,
         purchase_cost: fixture.primaryPlan.hardware_fee_sek,
         purchase_date: isoDaysFromNow(-120).slice(0, 10),
@@ -524,11 +533,11 @@ async function seedFixtures() {
       inventory.push({
         id: deterministicUuid(`inventory-${deviceSequence}`),
         item_code: `QA${String(deviceSequence).padStart(6, "0")}`,
-        item_type: fixture.primaryPlan.code,
+        item_type: inventoryType,
         status: fixture.scenario.inventory || "assigned",
         condition: fixture.scenario.inventory === "returned" ? "used" : "new",
         make: "Screenia QA",
-        model: fixture.primaryPlan.code === "premium_4k" ? "QA-4K" : "QA-FHD",
+        model: inventoryType === "premium_4k" ? "QA-4K" : "QA-FHD",
         serial_number: serial,
         seller: "QA Fixture Supplier",
         purchase_cost: fixture.primaryPlan.hardware_fee_sek,

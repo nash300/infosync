@@ -147,7 +147,9 @@ describe("complete customer lifecycle audit contract", () => {
   it.each(lifecycleAuditContracts)(
     "$stage keeps its required success, failure, and rollback evidence",
     ({ route, events }) => {
-      const routes = Array.isArray(route) ? route : [route];
+      const routes = (
+        typeof route === "string" ? [route] : route
+      ) as readonly string[];
       const source = routes
         .map((file) => readFileSync(resolve(process.cwd(), file), "utf8"))
         .join("\n");

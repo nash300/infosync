@@ -39,9 +39,15 @@ const { data: plans, error } = await supabase
   .eq("is_active", true)
   .order("code");
 if (error) throw error;
-if (plans?.length !== 2) {
-  throw new Error(`Expected 2 active plans, found ${plans?.length || 0}.`);
+if (plans?.length !== 3) {
+  throw new Error(`Expected 3 active plans, found ${plans?.length || 0}.`);
 }
+
+const expectedPlanAmounts = {
+  standard_fhd: { hardwareOre: 69900, monthlyOre: 24900 },
+  premium_4k: { hardwareOre: 109900, monthlyOre: 34900 },
+  premium_plus_4k: { hardwareOre: 109900, monthlyOre: 39900 },
+};
 
 const additionalPriceIds = new Set(
   plans.map((plan) => plan.stripe_additional_setup_price_id).filter(Boolean),
@@ -114,14 +120,14 @@ for (const plan of plans) {
     [
       "hardware",
       plan.stripe_hardware_price_id,
-      plan.code === "premium_4k" ? 109900 : 69900,
+      expectedPlanAmounts[plan.code]?.hardwareOre,
       false,
     ],
     ["shipping", plan.stripe_shipping_price_id, 9900, false],
     [
       "monthly",
       plan.stripe_monthly_price_id,
-      plan.code === "premium_4k" ? 34900 : 24900,
+      expectedPlanAmounts[plan.code]?.monthlyOre,
       true,
     ],
   ];
@@ -142,5 +148,5 @@ for (const plan of plans) {
 }
 
 console.log(
-  `Pricing services verified: 2 plans, shared 249 SEK setup addition ${sharedAdditionalPriceId}, shared 29 SEK shipping addition ${sharedAdditionalShippingPriceId}, inclusive moms, and correct one-time/monthly Stripe behavior.`,
+  `Pricing services verified: 3 plans, shared 249 SEK setup addition ${sharedAdditionalPriceId}, shared 29 SEK shipping addition ${sharedAdditionalShippingPriceId}, inclusive moms, and correct one-time/monthly Stripe behavior.`,
 );

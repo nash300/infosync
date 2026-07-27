@@ -98,6 +98,7 @@ function assetCategoryLabel(value: string) {
   if (value === "image") return "Bild";
   if (value === "menu") return "Meny eller prislista";
   if (value === "text") return "Text";
+  if (value === "video") return "Video";
   return "Annat";
 }
 
@@ -615,9 +616,57 @@ export default function AccountPage() {
   const addMaterialFiles = (files: FileList | File[]) => {
     const nextFiles = Array.from(files).map((file) => ({
       file,
-      category: materialCategory,
+      category: file.type.startsWith("video/") ? "video" : materialCategory,
     }));
     setMaterialFiles((current) => [...current, ...nextFiles].slice(0, 8));
+  };
+
+  const uploadPremiumPlusVideo = async (file: File) => {
+    const createResponse = await fetch("/api/account/video-upload", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "create",
+        fileName: file.name,
+        contentType: file.type,
+        fileSize: file.size,
+      }),
+    });
+    const createResult = await createResponse.json();
+
+    if (!createResponse.ok) {
+      throw new Error(createResult.error || "Videouppladdningen kunde inte startas.");
+    }
+
+    const { error: uploadError } = await supabase.storage
+      .from(createResult.bucket)
+      .uploadToSignedUrl(createResult.storagePath, createResult.token, file, {
+        contentType: file.type,
+      });
+
+    if (uploadError) {
+      throw new Error("Videofilen kunde inte överföras.");
+    }
+
+    const completeResponse = await fetch("/api/account/video-upload", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "complete",
+        fileName: file.name,
+        contentType: file.type,
+        fileSize: file.size,
+        storagePath: createResult.storagePath,
+        description: materialDescription,
+      }),
+    });
+    const completeResult = await completeResponse.json();
+
+    if (!completeResponse.ok) {
+      throw new Error(
+        completeResult.error || "Videofilen kunde inte registreras.",
+      );
+    }
   };
 
   const downloadDataExport = async () => {
@@ -779,30 +828,63 @@ export default function AccountPage() {
 
     setUploadingMaterial(true);
     setNotice("");
-    const files = await Promise.all(
-      materialFiles.map((item) => fileToPayload(item.file, item.category)),
+    const videoFiles = materialFiles.filter((item) =>
+      item.file.type.startsWith("video/"),
     );
-    const response = await fetch("/api/account/display-assets", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        description: materialDescription,
-        files,
-      }),
-    });
-    const result = await response.json();
+    const regularFiles = materialFiles.filter(
+      (item) => !item.file.type.startsWith("video/"),
+    );
 
-    if (!response.ok) {
-      setNotice(result.error || "Kunde inte ladda upp materialet.");
+    if (videoFiles.length > 0 && !data?.videoUploadEnabled) {
+      setNotice("Egen videouppladdning ingår i Premium Plus.");
       setUploadingMaterial(false);
       return;
     }
 
-    setMaterialDescription("");
-    setMaterialFiles([]);
-    setNotice("Materialet har skickats till Screenia.");
-    await loadAccount();
-    setUploadingMaterial(false);
+    try {
+      if (
+        regularFiles.length > 0 ||
+        (videoFiles.length === 0 && materialDescription.trim())
+      ) {
+        const files = await Promise.all(
+          regularFiles.map((item) => fileToPayload(item.file, item.category)),
+        );
+        const response = await fetch("/api/account/display-assets", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            description: materialDescription,
+            files,
+          }),
+        });
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.error || "Kunde inte ladda upp materialet.");
+        }
+      }
+
+      for (const item of videoFiles) {
+        await uploadPremiumPlusVideo(item.file);
+      }
+
+      setMaterialDescription("");
+      setMaterialFiles([]);
+      setNotice(
+        videoFiles.length > 0
+          ? "Materialet har skickats till Screenia för granskning."
+          : "Materialet har skickats till Screenia.",
+      );
+      await loadAccount();
+    } catch (error) {
+      setNotice(
+        error instanceof Error
+          ? error.message
+          : "Kunde inte ladda upp materialet.",
+      );
+    } finally {
+      setUploadingMaterial(false);
+    }
   };
 
   const sendMessage = async () => {
@@ -1515,6 +1597,11 @@ export default function AccountPage() {
           {activeSection === "material" && (
             <div className="account-panel-stack">
               <AccountCard title="Skicka skärmmaterial">
+                <p>
+                  {data.videoUploadEnabled
+                    ? "Premium Plus är aktivt. Du kan även ladda upp egna MP4- och WEBM-videor, högst 100 MB per fil."
+                    : "Bilder, logotyper, menyer och PDF-filer kan skickas här. Egen videouppladdning ingår i Premium Plus."}
+                </p>
                 <div className="account-upload-workspace">
                   <label
                     className="account-dropzone"
@@ -1527,7 +1614,11 @@ export default function AccountPage() {
                     <input
                       type="file"
                       multiple
-                      accept="image/jpeg,image/png,image/webp,image/heic,application/pdf"
+                      accept={
+                        data.videoUploadEnabled
+                          ? "image/jpeg,image/png,image/webp,image/heic,application/pdf,video/mp4,video/webm"
+                          : "image/jpeg,image/png,image/webp,image/heic,application/pdf"
+                      }
                       onChange={(event) => addMaterialFiles(event.target.files || [])}
                     />
                     <span className="account-upload-icon" aria-hidden="true">
@@ -1538,7 +1629,11 @@ export default function AccountPage() {
                     </span>
                     <strong>Bläddra</strong>
                     <em>släpp filer här</em>
-                    <small>Stöds: .png, .jpg, .webp, .heic, .pdf</small>
+                    <small>
+                      {data.videoUploadEnabled
+                        ? "Stöds: .png, .jpg, .webp, .heic, .pdf, .mp4, .webm"
+                        : "Stöds: .png, .jpg, .webp, .heic, .pdf"}
+                    </small>
                   </label>
 
                   <div className="account-upload-side">
@@ -1553,6 +1648,9 @@ export default function AccountPage() {
                           <option value="logo">Logo</option>
                           <option value="image">Bildmaterial</option>
                           <option value="menu">Meny eller prislista</option>
+                          {data.videoUploadEnabled && (
+                            <option value="video">Video</option>
+                          )}
                           <option value="other">Annat material</option>
                         </select>
                       </label>
@@ -1563,7 +1661,9 @@ export default function AccountPage() {
                       {materialFiles.length ? (
                         materialFiles.map((item, index) => (
                           <div key={`${item.file.name}-${item.file.size}-${index}`} className="account-file-row">
-                            <span className="account-file-icon">IMG</span>
+                            <span className="account-file-icon">
+                              {item.category === "video" ? "VID" : "IMG"}
+                            </span>
                             <div>
                               <strong>{item.file.name}</strong>
                               <span>{assetCategoryLabel(item.category)} | {fileSize(item.file.size)}</span>

@@ -1,4 +1,5 @@
 export type AccountData = {
+  videoUploadEnabled: boolean;
   customer: {
     id: string;
     name: string;

@@ -2,6 +2,7 @@ import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { fallbackLandingExampleVideos } from "@/lib/landing/example-videos";
 
 const publicRoot = path.join(process.cwd(), "public");
 const heroSlideDirectory = path.join(publicRoot, "landing", "hero-slides");
@@ -210,7 +211,7 @@ const listHeroSlides = async () => {
 
 const listManagedHeroContent = async () => {
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    return { heroSlides: [], heroBenefits: [] };
+    return { heroSlides: [], heroBenefits: [], exampleVideos: fallbackLandingExampleVideos };
   }
 
   const supabaseAdmin = createClient(
@@ -218,15 +219,22 @@ const listManagedHeroContent = async () => {
     process.env.SUPABASE_SERVICE_ROLE_KEY,
   );
 
-  const [slides, benefits] = await Promise.all([
+  const [slides, benefits, examples] = await Promise.all([
     supabaseAdmin.from("landing_hero_slides").select("id, image_url, title, body, highlight_terms").eq("is_active", true).order("sort_order").order("created_at"),
     supabaseAdmin.from("landing_hero_benefits").select("id, title, body").eq("is_active", true).order("sort_order").order("created_at"),
+    supabaseAdmin.from("landing_example_videos").select("id, title, body, video_url, storage_path, poster_url, poster_storage_path, orientation, sort_order, is_active").eq("is_active", true).order("sort_order").order("created_at"),
   ]);
 
-  if (slides.error || benefits.error) return { heroSlides: [], heroBenefits: [] };
+  const heroUnavailable = Boolean(slides.error || benefits.error);
+  if (heroUnavailable) {
+    console.error("Could not load managed landing hero content", { slides: slides.error, benefits: benefits.error });
+  }
+  if (examples.error) {
+    console.error("Could not load managed landing example videos", examples.error);
+  }
 
   return {
-    heroSlides: (slides.data || []).map((slide) => ({
+    heroSlides: (heroUnavailable ? [] : slides.data || []).map((slide) => ({
       id: slide.id,
       label: slide.title,
       src: slide.image_url,
@@ -235,11 +243,14 @@ const listManagedHeroContent = async () => {
       sv: { eyebrow: "", title: slide.title, text: slide.body || "" },
       en: { eyebrow: "", title: slide.title, text: slide.body || "" },
     })),
-    heroBenefits: (benefits.data || []).map((benefit) => ({
+    heroBenefits: (heroUnavailable ? [] : benefits.data || []).map((benefit) => ({
       id: benefit.id,
       title: benefit.title,
       body: benefit.body || "",
     })),
+    exampleVideos: examples.error || !(examples.data || []).length
+      ? fallbackLandingExampleVideos
+      : (examples.data || []),
   };
 };
 
@@ -254,6 +265,7 @@ export async function GET() {
     {
       heroSlides: managedContent.heroSlides.length ? managedContent.heroSlides : fileHeroSlides,
       heroBenefits: managedContent.heroBenefits,
+      exampleVideos: managedContent.exampleVideos,
       serviceLogos,
     },
     {

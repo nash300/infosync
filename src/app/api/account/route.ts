@@ -5,6 +5,7 @@ import {
   hasCustomerServiceAccess,
   supabaseAdmin,
 } from "@/lib/server/customer-account";
+import { customerCanUploadVideos } from "@/lib/pricing/plan-entitlements";
 
 type CustomerMessageRow = {
   id: string;
@@ -133,6 +134,8 @@ export async function GET() {
   }
 
   const canAccessDisplayAssets = hasCustomerServiceAccess(customer);
+  const videoUploadEnabled =
+    canAccessDisplayAssets && customerCanUploadVideos(subscriptions || []);
 
   const messagesWithFiles = await Promise.all(
     (messages || []).map(async (message) => {
@@ -245,6 +248,7 @@ export async function GET() {
     agreements: agreements || [],
     legalDocuments: legalDocuments || [],
     subscriptionAdjustments: subscriptionAdjustments || [],
+    videoUploadEnabled,
     devicePauses,
     deviceCancellations,
   });

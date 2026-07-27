@@ -11,7 +11,6 @@ import {
   copy,
   fallbackHeroBenefits,
   featureIcons,
-  galleryImages,
   heroHighlightWords,
   planCopy,
   plans,
@@ -36,6 +35,9 @@ import {
   additionalShippingDeviceCount,
   calculateShippingFeeSek,
 } from "@/lib/pricing/shipping-fee";
+import {
+  type LandingExampleVideo,
+} from "@/lib/landing/example-videos";
 
 function renderHighlightedText(text: string, words: string[]) {
   const terms = words.map((word) => word.trim()).filter(Boolean);
@@ -73,12 +75,139 @@ function formatLandingSek(value: number) {
   return `${value.toLocaleString("sv-SE")} kr`;
 }
 
+function LandingVideoPreviewCard({
+  example,
+  orientation,
+  duplicate,
+  onOpen,
+}: {
+  example: LandingExampleVideo;
+  orientation: "portrait" | "landscape";
+  duplicate: boolean;
+  onOpen: (example: LandingExampleVideo) => void;
+}) {
+  const [playing, setPlaying] = useState(false);
+  const isAccessible = !duplicate;
+
+  return (
+    <article
+      className={`landing-video-gallery-card landing-video-gallery-card-${orientation}${playing ? " landing-video-gallery-card-playing" : ""}`}
+      role={isAccessible ? "button" : undefined}
+      tabIndex={isAccessible ? 0 : -1}
+      aria-label={isAccessible ? `Spela förhandsvisning: ${example.title}` : undefined}
+      onMouseEnter={() => setPlaying(true)}
+      onMouseLeave={() => setPlaying(false)}
+      onFocus={() => isAccessible && setPlaying(true)}
+      onBlur={() => setPlaying(false)}
+      onClick={() => {
+        setPlaying(false);
+        onOpen(example);
+      }}
+      onKeyDown={(event) => {
+        if (!isAccessible || (event.key !== "Enter" && event.key !== " ")) return;
+        event.preventDefault();
+        setPlaying(false);
+        onOpen(example);
+      }}
+    >
+      <div className="landing-video-gallery-media">
+        {example.poster_url ? (
+          <Image
+            src={example.poster_url}
+            alt=""
+            fill
+            sizes={orientation === "portrait" ? "210px" : "390px"}
+            unoptimized
+            className="landing-video-gallery-poster"
+          />
+        ) : (
+          <video
+            src={example.video_url}
+            muted
+            playsInline
+            preload="metadata"
+            aria-hidden="true"
+            className="landing-video-gallery-poster"
+          />
+        )}
+        {playing && (
+          <video
+            src={example.video_url}
+            aria-label={isAccessible ? example.title : undefined}
+            aria-hidden={duplicate ? "true" : undefined}
+            autoPlay
+            loop
+            muted
+            playsInline
+            preload="metadata"
+            className="landing-video-gallery-playing-video"
+          />
+        )}
+      </div>
+    </article>
+  );
+}
+
+function LandingVideoRail({
+  items,
+  orientation,
+  direction,
+  onOpen,
+}: {
+  items: LandingExampleVideo[];
+  orientation: "portrait" | "landscape";
+  direction: "left" | "right";
+  onOpen: (example: LandingExampleVideo) => void;
+}) {
+  const itemKey = items.map((item) => item.id).join(",");
+  const [moving, setMoving] = useState(false);
+
+  useEffect(() => {
+    setMoving(false);
+    const timer = window.setTimeout(() => setMoving(true), 900);
+    return () => window.clearTimeout(timer);
+  }, [itemKey, orientation]);
+
+  if (!items.length) return null;
+
+  const renderGroup = (group: number) => (
+    <div
+      key={group}
+      className="landing-video-rail-group"
+      aria-hidden={group > 0 ? "true" : undefined}
+    >
+      {items.map((example) => (
+        <LandingVideoPreviewCard
+          key={`${example.id}-${group}`}
+          example={example}
+          orientation={orientation}
+          duplicate={group > 0}
+          onOpen={onOpen}
+        />
+      ))}
+    </div>
+  );
+
+  return (
+    <div
+      className={`landing-video-rail landing-video-rail-${orientation}`}
+      aria-label={orientation === "portrait" ? "Vertikala skärmexempel" : "Horisontella skärmexempel"}
+    >
+      <div className={`landing-video-rail-track landing-video-rail-track-${direction}${moving ? "" : " landing-video-rail-track-pending"}`}>
+        {[0, 1, 2].map(renderGroup)}
+      </div>
+    </div>
+  );
+}
+
 export default function Home() {
   const [requestOpen, setRequestOpen] = useState(false);
   const [priceBreakdownOpen, setPriceBreakdownOpen] = useState(false);
+  const [expandedExample, setExpandedExample] = useState<LandingExampleVideo | null>(null);
   const [planQuantities, setPlanQuantities] = useState<Record<(typeof plans)[number]["code"], number>>({
     standard_fhd: 0,
     premium_4k: 0,
+    premium_plus_4k: 0,
   });
   const [companyName, setCompanyName] = useState("");
   const [email, setEmail] = useState("");
@@ -97,6 +226,7 @@ export default function Home() {
   const [heroSlideDirection, setHeroSlideDirection] = useState<"next" | "previous">("next");
   const [heroInteractionKey, setHeroInteractionKey] = useState(0);
   const [serviceLogos, setServiceLogos] = useState<LandingAsset[]>([]);
+  const [exampleVideos, setExampleVideos] = useState<LandingExampleVideo[]>([]);
 
   const t = copy.sv;
   const companyEmail = process.env.NEXT_PUBLIC_COMPANY_EMAIL || "service@screenia.se";
@@ -120,7 +250,7 @@ export default function Home() {
         "@type": "Country",
         name: "Sweden",
       },
-      priceRange: "SEK 249-349 per månad",
+      priceRange: "SEK 249-399 per månad",
       description: t.seoIntro,
       knowsAbout: [
         "digital skyltning",
@@ -202,6 +332,7 @@ export default function Home() {
         const data = (await response.json()) as {
           heroSlides: HeroSlideAsset[];
           heroBenefits?: HeroBenefit[];
+          exampleVideos?: LandingExampleVideo[];
           serviceLogos: LandingAsset[];
         };
 
@@ -214,6 +345,10 @@ export default function Home() {
 
         if (data.heroBenefits?.length) {
           setManagedHeroBenefits(data.heroBenefits);
+        }
+
+        if (data.exampleVideos?.length) {
+          setExampleVideos(data.exampleVideos);
         }
 
         setServiceLogos(data.serviceLogos || []);
@@ -352,6 +487,22 @@ export default function Home() {
     };
   }, [heroSlideCount, heroInteractionKey]);
 
+  useEffect(() => {
+    if (!expandedExample) return;
+
+    const previousOverflow = document.body.style.overflow;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setExpandedExample(null);
+    };
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", closeOnEscape);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [expandedExample]);
+
   const submitPlanRequest = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (selectedScreenCount === 0) return;
@@ -395,7 +546,11 @@ export default function Home() {
     setEmail("");
     setContactPerson("");
     setPhone("");
-    setPlanQuantities({ standard_fhd: 0, premium_4k: 0 });
+    setPlanQuantities({
+      standard_fhd: 0,
+      premium_4k: 0,
+      premium_plus_4k: 0,
+    });
     setMessage("");
     setPrivacyAccepted(false);
     setRequestStatus("success");
@@ -565,7 +720,7 @@ export default function Home() {
         <LandingSection
           id="pricing"
           title="Bygg en skärmlösning"
-          text="Full HD- och 4K-enheter kan kombineras i samma förfrågan. Den beräknade kostnaden uppdateras utifrån vald kombination."
+          text="Välj Full HD, Premium 4K eller Premium Plus med egna videor. Paketen kan kombineras i samma förfrågan och kostnaden uppdateras direkt."
         >
           <div className="landing-price-grid">
             {plans.map((plan) => {
@@ -578,11 +733,11 @@ export default function Home() {
                   }`}
                 >
                   <div className="landing-plan-card-top">
-                    {plan.featured ? (
-                      <span className="landing-plan-badge">{t.recommended}</span>
-                    ) : (
-                      <span className="landing-plan-badge-spacer">Startpaket</span>
-                    )}
+                    <span
+                      className={`landing-plan-badge landing-plan-badge-${plan.badgeTone}`}
+                    >
+                      {plan.badge}
+                    </span>
                   </div>
                   <div className="landing-plan-heading">
                     <h3>{plan.name}</h3>
@@ -707,7 +862,7 @@ export default function Home() {
               </>
             ) : (
               <p className="landing-package-empty">
-                Lägg till Full HD, 4K eller en kombination för att beräkna kostnaden.
+                Lägg till Standard, Premium eller Premium Plus för att beräkna kostnaden.
               </p>
             )}
           </section>
@@ -739,23 +894,19 @@ export default function Home() {
         </LandingSection>
 
         <LandingSection id="examples" title={t.galleryTitle} text={t.galleryText}>
-          <div className="landing-gallery-grid">
-            {t.galleryItems.map(([title, text], index) => (
-              <article key={title} className="landing-gallery-card">
-                <div className="landing-gallery-image">
-                  <Image
-                    src={galleryImages[index]}
-                    alt={title}
-                    width={1400}
-                    height={1050}
-                  />
-                </div>
-                <div className="landing-gallery-content">
-                  <h3>{title}</h3>
-                  <p>{text}</p>
-                </div>
-              </article>
-            ))}
+          <div className="landing-video-rails">
+            <LandingVideoRail
+              items={exampleVideos.filter((example) => example.orientation === "portrait")}
+              orientation="portrait"
+              direction="left"
+              onOpen={setExpandedExample}
+            />
+            <LandingVideoRail
+              items={exampleVideos.filter((example) => example.orientation !== "portrait")}
+              orientation="landscape"
+              direction="right"
+              onOpen={setExpandedExample}
+            />
           </div>
         </LandingSection>
 
@@ -787,13 +938,16 @@ export default function Home() {
       </main>
 
       <footer className="landing-footer">
-        <Link href="/" aria-label="Screenia startsida">
-          <ScreeniaLogo className="screenia-logo-footer" />
-        </Link>
-        <p>
-          Digital skyltning, tydligt hanterad.{" "}
+        <div className="landing-footer-brand">
+          <Link href="/" aria-label="Screenia startsida">
+            <ScreeniaLogo className="screenia-logo-footer" />
+          </Link>
+          <p>Digital skyltning, tydligt hanterad.</p>
+        </div>
+        <div className="landing-footer-contact">
+          <span>Kundservice</span>
           <a href={`mailto:${companyEmail}`}>{companyEmail}</a>
-        </p>
+        </div>
         <nav aria-label="Sidfot">
           {footerLinks.map((link) => (
             <Link key={link.href} href={link.href}>
@@ -807,6 +961,44 @@ export default function Home() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: serializeJsonLd(structuredData) }}
       />
+
+      {expandedExample && (
+        <div
+          className="landing-video-lightbox-backdrop"
+          role="presentation"
+          onClick={(event) => {
+            if (event.target === event.currentTarget) setExpandedExample(null);
+          }}
+        >
+          <section
+            className={`landing-video-lightbox landing-video-lightbox-${expandedExample.orientation}`}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Förstorad videoförhandsvisning"
+          >
+            <button
+              type="button"
+              className="landing-video-lightbox-close"
+              onClick={() => setExpandedExample(null)}
+              aria-label="Stäng förhandsvisning"
+              title="Stäng"
+            >
+              <span aria-hidden="true">×</span>
+            </button>
+            <video
+              key={expandedExample.id}
+              src={expandedExample.video_url}
+              poster={expandedExample.poster_url || undefined}
+              aria-label={expandedExample.title}
+              autoPlay
+              loop
+              muted
+              playsInline
+              preload="auto"
+            />
+          </section>
+        </div>
+      )}
 
       {requestOpen && selectedScreenCount > 0 && (
         <div className="landing-modal-backdrop" role="presentation">
@@ -919,7 +1111,15 @@ export default function Home() {
               <div>
                 <dt>
                   Skärmenheter
-                  <small>Samtliga valda Full HD- och 4K-enheter.</small>
+                  <small className="landing-package-hardware-calculation">
+                    {selectedQuoteItems.map(({ plan, quantity }) => (
+                      <span key={plan.code}>
+                        {quantity} × {plan.name} {plan.resolution} à{" "}
+                        {formatLandingSek(plan.hardwareFeeSek)} ={" "}
+                        {formatLandingSek(plan.hardwareFeeSek * quantity)}
+                      </span>
+                    ))}
+                  </small>
                 </dt>
                 <dd>{formatLandingSek(selectedHardwareTotal)}</dd>
               </div>

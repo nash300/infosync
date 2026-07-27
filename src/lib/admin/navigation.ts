@@ -93,6 +93,12 @@ export const siteContentNavItems = [
     description: "Hero slides, background images, yellow highlights, and rotating cards.",
   },
   {
+    href: "/admin/example-gallery",
+    label: "Example gallery",
+    icon: "EG",
+    description: "Portrait and landscape MP4 previews shown in the moving public gallery.",
+  },
+  {
     href: "/admin/legal-documents",
     label: "Document editor",
     icon: "DO",

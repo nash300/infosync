@@ -103,28 +103,51 @@ export default async function PublicLegalDocumentPage({
   const document = await getActiveDocument(documentType);
   const blocks = splitBlocks(document.content);
   const isDraft = /utkast|prelaunch/i.test(document.version);
+  const sections = blocks.flatMap((block, index) =>
+    block.startsWith("## ")
+      ? [{ id: `avsnitt-${index + 1}`, label: block.slice(3) }]
+      : [],
+  );
 
   return (
-    <div className="landing-page flow-page">
+    <div className="landing-page flow-page legal-page">
       <main className="flow-shell legal-shell">
-        <p className="landing-eyebrow">Villkor och policy</p>
-        <h1>{document.title || legalDocumentLabels[documentType]}</h1>
-        {document.summary ? <p>{document.summary}</p> : null}
+        <header className="legal-document-hero">
+          <div className="legal-document-heading">
+            <div className="legal-document-heading-topline">
+              <p className="landing-eyebrow">Villkor och policy</p>
+              <span>{isDraft ? "Avtalsutkast" : "Aktuell version"}</span>
+            </div>
+            <h1>{document.title || legalDocumentLabels[documentType]}</h1>
+            {document.summary ? <p>{document.summary}</p> : null}
+          </div>
 
-        {isDraft ? (
-          <aside className="legal-draft-notice">
-            <strong>Dokumentet är ett avtalsutkast.</strong>
-            <span>
-              Texten används för granskning och test. Slutlig juridisk
-              granskning krävs innan livebetalningar aktiveras.
-            </span>
-          </aside>
-        ) : null}
+          {isDraft ? (
+            <aside className="legal-draft-notice">
+              <span className="legal-draft-notice-icon" aria-hidden="true">
+                !
+              </span>
+              <div>
+                <strong>Dokumentet är ett avtalsutkast.</strong>
+                <span>
+                  Texten används för granskning och test. Slutlig juridisk
+                  granskning krävs innan livebetalningar aktiveras.
+                </span>
+              </div>
+            </aside>
+          ) : null}
 
-        <div className="legal-document-meta">
-          <span>Version: {document.version}</span>
-          <span>Gäller från: {formatDate(document.effective_at)}</span>
-        </div>
+          <dl className="legal-document-meta">
+            <div>
+              <dt>Version</dt>
+              <dd>{document.version}</dd>
+            </div>
+            <div>
+              <dt>Gäller från</dt>
+              <dd>{formatDate(document.effective_at)}</dd>
+            </div>
+          </dl>
+        </header>
 
         <nav className="legal-document-nav" aria-label="Villkor och policyer">
           {relatedDocuments.map((item) => (
@@ -138,21 +161,38 @@ export default async function PublicLegalDocumentPage({
           ))}
         </nav>
 
-        <article className="legal-document-body">
-          {blocks.length ? (
-            blocks.map((block, index) => {
-              if (block.startsWith("### ")) {
-                return <h3 key={`${index}-${block}`}>{block.slice(4)}</h3>;
-              }
-              if (block.startsWith("## ")) {
-                return <h2 key={`${index}-${block}`}>{block.slice(3)}</h2>;
-              }
-              return <p key={`${index}-${block}`}>{block}</p>;
-            })
-          ) : (
-            <p>Ingen dokumenttext har publicerats ännu.</p>
-          )}
-        </article>
+        <div className="legal-document-layout">
+          <aside className="legal-document-toc" aria-label="Dokumentets innehåll">
+            <p>I detta dokument</p>
+            <ol>
+              {sections.map((section) => (
+                <li key={section.id}>
+                  <a href={`#${section.id}`}>{section.label}</a>
+                </li>
+              ))}
+            </ol>
+          </aside>
+
+          <article className="legal-document-body">
+            {blocks.length ? (
+              blocks.map((block, index) => {
+                if (block.startsWith("### ")) {
+                  return <h3 key={`${index}-${block}`}>{block.slice(4)}</h3>;
+                }
+                if (block.startsWith("## ")) {
+                  return (
+                    <h2 id={`avsnitt-${index + 1}`} key={`${index}-${block}`}>
+                      {block.slice(3)}
+                    </h2>
+                  );
+                }
+                return <p key={`${index}-${block}`}>{block}</p>;
+              })
+            ) : (
+              <p>Ingen dokumenttext har publicerats ännu.</p>
+            )}
+          </article>
+        </div>
 
         <LegalDocumentActions pdfUrl={document.pdf_url} />
       </main>

@@ -39,7 +39,7 @@ export const copy = {
     process: [["Förfrågan", "Paket valt"], ["Betalning", "Säker checkout"], ["Innehåll", "Efter betalning"], ["Start", "TV + Wi-Fi"]],
     pricingTitle: "Tydliga paket för hanterade skärmar",
     pricingText:
-      "Kombinera Full HD för mindre skärmar och enklare innehåll med 4K där text, menyer och detaljer ska vara extra skarpa. Startavgiften täcker upp till tre skärmar. Månadsabonnemanget startar efter provperioden.",
+      "Välj Standard Full HD, Premium 4K eller Premium Plus 4K med möjlighet att ladda upp egna videor. Paketen kan kombineras, startavgiften täcker upp till tre skärmar och månadsabonnemanget startar efter provperioden.",
     recommended: "Rekommenderas",
     setupFee: "Startavgift",
     monthly: "Per månad",
@@ -50,15 +50,9 @@ export const copy = {
     deliveryTitle: "Leveransalternativ i Sverige",
     deliveryText:
       "Vi kan skicka skärmenheten med etablerade transportörer i Sverige och väljer alternativ efter adress, paketstorlek och ledtid.",
-    galleryTitle: "Exempel på skärmar och mallar",
+    galleryTitle: "Presentationer i rörelse",
     galleryText:
-      "Några exempel på hur kampanjer, menyer och information kan visas på en kundskärm.",
-    galleryItems: [
-      ["Restaurangmeny", "Kampanjer, menyer och dagens erbjudanden."],
-      ["Skyltfönster", "Synligt innehåll för kunder som passerar lokalen."],
-      ["Salong och service", "Priser, behandlingar och aktuell information."],
-      ["Produktvisning", "Tydliga bilder och budskap för butiksmiljöer."],
-    ],
+      "Se exempel på digitala presentationer som vi har formgivit för tydlig och levande visning på skärm.",
     faqTitle: "Svar inför val av skärmlösning",
     faqs: [
       ["Vad händer efter valet av skärmar?", "En kort förfrågan skickas med önskad kombination. Efter Screenias granskning skickas en personlig startguide för bekräftelse av uppgifter, villkor och betalning."],
@@ -66,8 +60,9 @@ export const copy = {
       ["Hur lång är uppstartstiden?", "Efter betalningen samlas innehållet in. Screenia tar därefter fram den första layouten, förbereder hårdvaran och skickar enheten när arbetet är klart."],
       ["Vilken TV eller skärm krävs?", "En Smart TV eller skärm med HDMI-ingång och tillgång till Wi-Fi krävs."],
       ["När börjar abonnemanget debiteras?", "Månadsabonnemanget börjar först efter den kostnadsfria provperioden. Första betalningen avser uppstart, valda enheter och frakt."],
-      ["Går det att kombinera Full HD och 4K?", "Ja. Full HD- och 4K-enheter kan kombineras i samma förfrågan och Screenia kontrollerar att kombinationen passar innehållet och användningen."],
+      ["Går det att kombinera paketen?", "Ja. Standard Full HD, Premium 4K och Premium Plus 4K kan kombineras i samma förfrågan. Screenia kontrollerar att kombinationen passar innehållet och användningen."],
       ["Vilken upplösning bör väljas?", "Full HD passar enklare innehåll och mindre skärmar. 4K rekommenderas när menyer, små texter, detaljerade bilder eller större skärmar ska vara extra tydliga."],
+      ["Kan jag använda egna videor?", "Ja. Premium Plus inkluderar uppladdning av egna MP4- och WEBM-videor i kundportalen. Screenia granskar materialet före publicering för att säkerställa att det fungerar på skärmen."],
       ["Kan kampanjer och priser visas samtidigt?", "Ja. En layout kan innehålla prislista, erbjudanden, öppettider, QR-kod och bildmaterial i samma visning."],
       ["Kan innehållet ändras senare?", "Ja. Nytt material och uppdaterade priser kan skickas till Screenia för publicering på skärmen."],
       ["Kan flera skärmar visa olika innehåll?", "Ja. Flera skärmar kan planeras med samma eller olika innehåll beroende på placering, målgrupp och vald lösning."],
@@ -83,7 +78,7 @@ export const copy = {
     contactEyebrow: "Redo att komma igång",
     contactTitle: "Ett enklare arbetsflöde för nästa skärmlösning.",
     contactText:
-      "Ange önskat antal Full HD- och 4K-skärmar samt planerat innehåll. Screenia kontrollerar kombinationen innan betalning kan genomföras.",
+      "Ange önskat antal skärmar i Standard, Premium eller Premium Plus samt planerat innehåll. Screenia kontrollerar kombinationen innan betalning kan genomföras.",
     contactButton: "Kontakta Screenia",
     seoIntro:
       "Screenia erbjuder digital skyltning för företag och organisationer i Sverige, oavsett bransch eller verksamhetstyp. Lösningen gör det möjligt att visa information, erbjudanden, menyer, prislistor och annat visuellt innehåll med kundens befintliga utrustning och fungerar med olika typer av skärmar, från vanliga TV-apparater till professionella skärmar för digital skyltning.",
@@ -113,7 +108,7 @@ export const copy = {
     eyebrow: "Digital signage for businesses",
     hero: "Professional screen content, managed from one clear platform.",
     lede:
-      "Screenia helps salons, shops, and service businesses present campaigns, price lists, and information on screen. Full HD and 4K devices can be combined according to operational needs, with support throughout the setup process.",
+      "Screenia helps businesses and organisations present campaigns, price lists, and information on screen, regardless of industry. Standard Full HD, Premium 4K, and Premium Plus 4K devices can be combined according to operational needs, with support throughout the setup process.",
     pricingCta: "See packages",
     workflowCta: "How it works",
     stats: [
@@ -144,7 +139,7 @@ export const copy = {
     process: [["Request", "Package selected"], ["Material", "Menu, images, logo"], ["Production", "Layout + USB device"], ["Start", "HDMI + Wi-Fi"]],
     pricingTitle: "Clear packages for managed screens",
     pricingText:
-      "Choose Full HD for smaller screens and simpler content, or 4K when text, menus, and details need extra sharpness. The base setup fee covers up to three screens; each additional screen adds 249 SEK. The monthly subscription starts after the trial.",
+      "Choose Standard Full HD, Premium 4K, or Premium Plus 4K with customer video uploads. Packages can be combined, the base setup fee covers up to three screens, and the monthly subscription starts after the trial.",
     recommended: "Recommended",
     setupFee: "Setup fee",
     monthly: "Per month",
@@ -155,15 +150,9 @@ export const copy = {
     deliveryTitle: "Delivery options in Sweden",
     deliveryText:
       "We can ship the screen device with established carriers in Sweden and choose the option by address, parcel size, and lead time.",
-    galleryTitle: "Example screen templates",
+    galleryTitle: "Presentations in motion",
     galleryText:
-      "A few examples of how campaigns, menus, and information can appear on a customer display.",
-    galleryItems: [
-      ["Restaurant menu", "Campaigns, menus, and daily offers."],
-      ["Window display", "Visible content for customers passing the location."],
-      ["Salon and service", "Prices, treatments, and current information."],
-      ["Product display", "Clear imagery and messages for retail spaces."],
-    ],
+      "See examples of digital presentations we have designed for clear, engaging display on screen.",
     faqTitle: "Answers before selecting a screen solution",
     faqs: [
       ["What happens after the screens are selected?", "A short request is submitted with the preferred combination. After Screenia reviews it, a personal setup guide is sent for confirmation of details, terms, and payment."],
@@ -171,8 +160,9 @@ export const copy = {
       ["How long does setup take?", "After payment, the content is collected. Screenia then creates the first layout, prepares the hardware, and ships the device when the work is complete."],
       ["What type of TV or screen is required?", "A Smart TV or screen with an HDMI input and Wi-Fi access is required."],
       ["When does subscription billing start?", "The monthly subscription starts only after the free trial period. The first payment covers setup, selected devices, and shipping."],
-      ["Can Full HD and 4K be combined?", "Yes. Full HD and 4K devices can be combined in one request, and Screenia checks that the combination fits the content and use case."],
+      ["Can the packages be combined?", "Yes. Standard Full HD, Premium 4K, and Premium Plus 4K can be combined in one request. Screenia checks that the combination fits the content and use case."],
       ["Which resolution should be selected?", "Full HD suits simpler content and smaller screens. 4K is recommended when menus, small text, detailed images, or larger screens need extra clarity."],
+      ["Can I use my own videos?", "Yes. Premium Plus includes customer uploads of MP4 and WEBM videos through the customer portal. Screenia reviews the material before publishing it to the screen."],
       ["Can campaigns and prices be displayed together?", "Yes. A layout can include price lists, offers, opening hours, QR codes, and imagery in the same presentation."],
       ["Can the content be changed later?", "Yes. New material and updated prices can be submitted to Screenia for publication on the screen."],
       ["Can several screens show different content?", "Yes. Several screens can be planned with the same or different content depending on location, audience, and selected solution."],
@@ -188,7 +178,7 @@ export const copy = {
     contactEyebrow: "Ready to get started",
     contactTitle: "A simpler workflow for the next screen solution.",
     contactText:
-      "Specify the required number of Full HD and 4K screens and the planned content. Screenia checks the combination before payment can be completed.",
+      "Specify the required number of Standard, Premium, or Premium Plus screens and the planned content. Screenia checks the combination before payment can be completed.",
     contactButton: "Contact Screenia",
     seoIntro:
       "Screenia provides digital signage in Sweden for salons, shops, restaurants, and local service businesses that want to show menus, price lists, campaigns, and customer information on TV screens.",
@@ -227,6 +217,8 @@ export const plans = [
     monthlyFeeSek: 249,
     trialDays: 21,
     cardAccent: "blue",
+    badge: "Startpaket",
+    badgeTone: "default",
     deviceLabel: "FHD HDMI Stick",
     deviceImage: "/brand/screenia-standard-device.png",
     featured: false,
@@ -244,9 +236,30 @@ export const plans = [
     monthlyFeeSek: 349,
     trialDays: 21,
     cardAccent: "gold",
+    badge: "Rekommenderas",
+    badgeTone: "recommended",
     deviceLabel: "4K TV Box",
     deviceImage: "/brand/screenia-premium-device.png",
     featured: true,
+  },
+  {
+    code: "premium_plus_4k",
+    name: "Premium Plus",
+    resolution: "4K",
+    setupFee: "1 599 kr",
+    hardwareFee: "1 099 kr",
+    monthlyFee: "399 kr",
+    setupFeeSek: 1599,
+    hardwareFeeSek: 1099,
+    shippingFeeSek: 99,
+    monthlyFeeSek: 399,
+    trialDays: 21,
+    cardAccent: "plus",
+    badge: "Nyhet",
+    badgeTone: "plus",
+    deviceLabel: "4K TV Box",
+    deviceImage: "/brand/screenia-premium-device.png",
+    featured: false,
   },
 ] as const;
 
@@ -270,6 +283,19 @@ export const planCopy = {
         "Uppspelning i äkta 4K (3840×2160)",
         "Rekommenderas för skärmar från 55 tum",
         "Skarpare text, menyer och detaljerade bilder",
+        "Personlig planeringshjälp, layoutdesign och överenskomna ändringar ingår i startavgiften",
+        "3 veckors kostnadsfri provperiod",
+        "Ingen bindningstid",
+      ],
+    },
+    premium_plus_4k: {
+      description:
+        "För verksamheter som vill kombinera extra skarp 4K-visning med egna videoklipp.",
+      features: [
+        "Alla funktioner som ingår i Premium",
+        "Uppspelning i äkta 4K (3840×2160)",
+        "Ladda upp egna MP4- och WEBM-videor via kundportalen",
+        "Screenia granskar materialet före publicering",
         "Personlig planeringshjälp, layoutdesign och överenskomna ändringar ingår i startavgiften",
         "3 veckors kostnadsfri provperiod",
         "Ingen bindningstid",
@@ -300,15 +326,21 @@ export const planCopy = {
         "No commitment",
       ],
     },
+    premium_plus_4k: {
+      description:
+        "For businesses that want sharp 4K content and the ability to provide their own video clips.",
+      features: [
+        "Everything included in Premium",
+        "True 4K playback (3840×2160)",
+        "Upload your own MP4 and WEBM videos through the customer portal",
+        "Screenia reviews the material before publication",
+        "Personal planning support, layout design, and agreed revisions are included in the setup fee",
+        "3-week free trial",
+        "No commitment",
+      ],
+    },
   },
 } as const;
-
-export const galleryImages = [
-  "/landing/section-art/restaurant-menu-screens.jpg",
-  "/landing/section-art/digital-menu-board.jpg",
-  "/landing/section-art/salon-service-window.jpg",
-  "/bbr.jpg",
-] as const;
 
 export const featureIcons = ["spark", "receipt", "screen", "megaphone"] as const;
 
