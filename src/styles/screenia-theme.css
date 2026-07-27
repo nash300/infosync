@@ -82,13 +82,15 @@
 }
 
 .screenia-theme .landing-hero {
+  --hero-padding-block: clamp(72px, 8vw, 112px);
+  --hero-padding-inline: clamp(24px, 5vw, 76px);
   min-height: calc(100svh - 82px);
   background:
     linear-gradient(rgba(255, 255, 255, 0.055) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255, 255, 255, 0.055) 1px, transparent 1px),
     linear-gradient(116deg, var(--reference-blue-dark), var(--reference-blue));
   background-size: 84px 84px, 84px 84px, auto;
-  padding: clamp(72px, 8vw, 112px) clamp(24px, 5vw, 76px);
+  padding: var(--hero-padding-block) var(--hero-padding-inline);
 }
 
 .screenia-theme .landing-hero::before {
@@ -109,19 +111,22 @@
   max-width: 1320px;
   grid-template-columns: minmax(0, 1.03fr) minmax(390px, 0.97fr);
   gap: 0;
-  align-items: stretch;
+  align-items: center;
   margin: 0 auto;
 }
 
 .screenia-theme .landing-hero-video-layer {
-  position: relative;
-  inset: auto;
-  width: 100%;
+  position: absolute;
+  top: calc(-1 * var(--hero-padding-block));
+  right: calc(-1 * var(--hero-padding-inline));
+  bottom: calc(-1 * var(--hero-padding-block));
+  left: 50%;
+  width: auto;
   height: auto;
-  min-height: clamp(560px, 68svh, 720px);
+  min-height: 0;
   overflow: hidden;
   border: 0;
-  border-radius: 0 30px 30px 0;
+  border-radius: 0;
   background:
     radial-gradient(circle at 66% 34%, rgba(255, 211, 42, 0.16), transparent 30%),
     linear-gradient(145deg, #031c48, #0b4da8);
