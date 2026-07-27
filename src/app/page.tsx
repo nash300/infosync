@@ -529,7 +529,6 @@ export default function Home() {
             <div className="landing-workflow-grid">
               {t.steps.map(([number, title, text, note], index) => (
                 <article key={number} className="landing-workflow-step">
-                  {index < t.steps.length - 1 && <span className="landing-workflow-arrow" aria-hidden="true" />}
                   <div className="landing-workflow-image-wrap">
                     <Image
                       src={workflowImages[index]}
