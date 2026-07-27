@@ -535,9 +535,113 @@
   color: var(--reference-ink);
 }
 
-.screenia-theme .landing-package-builder {
-  background: var(--reference-blue-deep);
+.screenia-theme .landing-pricing .landing-package-builder {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(20, 87, 189, 0.18);
+  background: #ffffff;
+  color: var(--reference-ink);
+  padding: clamp(22px, 2.5vw, 32px);
+  box-shadow: 0 28px 72px rgba(9, 41, 95, 0.16);
+}
+
+.screenia-theme .landing-pricing .landing-package-builder::before {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 6px;
+  background: var(--reference-yellow);
+  content: "";
+}
+
+.screenia-theme .landing-pricing .landing-package-builder-heading {
+  align-items: center;
+  border-bottom-color: #dce7fa;
+  padding-bottom: 18px;
+}
+
+.screenia-theme .landing-pricing .landing-package-builder-heading .landing-eyebrow {
+  color: var(--reference-blue);
+  letter-spacing: 0.16em;
+}
+
+.screenia-theme .landing-pricing .landing-package-builder-heading h3 {
+  color: var(--reference-ink);
+  font-size: clamp(1.45rem, 2vw, 1.9rem);
+}
+
+.screenia-theme .landing-pricing .landing-package-builder-heading > span {
+  border: 1px solid #cbdaf1;
+  background: #edf4ff;
+  color: var(--reference-blue-dark);
+  box-shadow: none;
+}
+
+.screenia-theme .landing-pricing .landing-package-lines > div {
+  border: 1px solid #dce7fa;
+  background: linear-gradient(135deg, #f5f8ff, #eaf2ff);
+  box-shadow: none;
+}
+
+.screenia-theme .landing-pricing .landing-package-lines span {
+  color: var(--reference-ink);
+}
+
+.screenia-theme .landing-pricing .landing-package-lines strong {
+  color: var(--reference-blue);
+}
+
+.screenia-theme .landing-pricing .landing-package-lines small {
+  color: var(--reference-muted);
+}
+
+.screenia-theme .landing-pricing .landing-package-total-primary {
+  border: 0;
+  border-left: 6px solid var(--reference-yellow);
+  background: linear-gradient(145deg, var(--reference-blue-deep), var(--reference-blue));
   color: #ffffff;
+  box-shadow: 0 16px 36px rgba(7, 57, 132, 0.2);
+}
+
+.screenia-theme .landing-pricing .landing-package-total-primary span,
+.screenia-theme .landing-pricing .landing-package-total-primary small {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.screenia-theme .landing-pricing .landing-package-total-primary strong {
+  color: var(--reference-yellow);
+}
+
+.screenia-theme .landing-pricing .landing-package-total-secondary {
+  border: 1px solid rgba(255, 211, 42, 0.7);
+  border-left: 6px solid var(--reference-yellow);
+  background: linear-gradient(145deg, #fffdf2, #fff7cc);
+  color: var(--reference-ink);
+  box-shadow: none;
+}
+
+.screenia-theme .landing-pricing .landing-package-total-secondary > span,
+.screenia-theme .landing-pricing .landing-package-total-secondary > small {
+  color: var(--reference-muted);
+}
+
+.screenia-theme .landing-pricing .landing-package-total-secondary > strong {
+  color: var(--reference-blue-dark);
+}
+
+.screenia-theme .landing-pricing .landing-package-breakdown-trigger {
+  color: var(--reference-blue);
+  font-weight: 800;
+  text-underline-offset: 3px;
+}
+
+.screenia-theme .landing-pricing .landing-package-breakdown-trigger:hover {
+  color: var(--reference-blue-dark);
+}
+
+.screenia-theme .landing-pricing .landing-package-continue {
+  width: 100%;
+  margin-top: 18px;
+  color: #17213a;
 }
 
 .screenia-theme .landing-examples {
