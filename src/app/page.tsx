@@ -305,6 +305,19 @@ export default function Home() {
     : ["Professionellt", "tydlig plattform"];
   const heroSlideMotionClass = `landing-hero-slide-motion landing-hero-slide-motion-${heroSlideDirection} landing-hero-slide-motion-${heroSlideDirection}-${currentHeroIndex}`;
   const heroSlideMotionKey = `${heroSlideDirection}-${currentHeroIndex}-${heroInteractionKey}`;
+  const heroTitleLength = currentHeroSlide.title.trim().length;
+  const heroTitleSizeClass =
+    heroTitleLength > 58
+      ? "landing-hero-title-extra-long"
+      : heroTitleLength > 45
+        ? "landing-hero-title-long"
+        : heroTitleLength > 37
+          ? "landing-hero-title-medium"
+          : "landing-hero-title-standard";
+  const heroCopyDensityClass =
+    heroTitleLength + currentHeroSlide.text.trim().length > 155
+      ? "landing-hero-copy-main-dense"
+      : "";
 
   const goToHeroSlide = (index: number) => {
     if (heroSlideCount <= 1) return;
@@ -416,9 +429,9 @@ export default function Home() {
             <div className="landing-hero-copy">
               <div
                 key={`hero-copy-${heroSlideMotionKey}`}
-                className={`landing-hero-copy-main ${heroSlideMotionClass}`}
+                className={`landing-hero-copy-main ${heroCopyDensityClass} ${heroSlideMotionClass}`}
               >
-                <h1>
+                <h1 className={heroTitleSizeClass}>
                   {renderHighlightedText(currentHeroSlide.title, currentHighlightWords)}
                 </h1>
                 <p className="landing-lede">

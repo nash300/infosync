@@ -215,6 +215,40 @@
   text-wrap: balance;
 }
 
+.screenia-theme .landing-hero h1.landing-hero-title-standard {
+  font-size: clamp(3.2rem, 4.8vw, 5.7rem);
+}
+
+.screenia-theme .landing-hero h1.landing-hero-title-medium {
+  font-size: clamp(2.95rem, 4.25vw, 5rem);
+  line-height: 0.98;
+}
+
+.screenia-theme .landing-hero h1.landing-hero-title-long {
+  font-size: clamp(2.65rem, 3.55vw, 4.25rem);
+  line-height: 1;
+}
+
+.screenia-theme .landing-hero h1.landing-hero-title-extra-long {
+  font-size: clamp(2.4rem, 3.1vw, 3.7rem);
+  line-height: 1.02;
+}
+
+.screenia-theme .landing-hero-copy-main-dense {
+  grid-template-rows:
+    minmax(clamp(184px, 17vw, 242px), auto)
+    minmax(clamp(72px, 6vw, 90px), auto)
+    auto
+    auto
+    auto;
+  gap: clamp(8px, 1.15svh, 12px);
+}
+
+.screenia-theme .landing-hero-copy-main-dense .landing-lede {
+  font-size: clamp(0.92rem, 1vw, 1rem);
+  line-height: 1.55;
+}
+
 .screenia-theme .landing-hero h1 strong,
 .screenia-theme .landing-hero h1 mark,
 .screenia-theme .landing-hero-highlight {
@@ -792,6 +826,22 @@
     overflow-wrap: anywhere;
   }
 
+  .screenia-theme .landing-hero h1.landing-hero-title-standard {
+    font-size: clamp(2.2rem, 9.8vw, 3.4rem);
+  }
+
+  .screenia-theme .landing-hero h1.landing-hero-title-medium {
+    font-size: clamp(2.05rem, 9vw, 3.1rem);
+  }
+
+  .screenia-theme .landing-hero h1.landing-hero-title-long {
+    font-size: clamp(1.88rem, 8.2vw, 2.8rem);
+  }
+
+  .screenia-theme .landing-hero h1.landing-hero-title-extra-long {
+    font-size: clamp(1.72rem, 7.4vw, 2.5rem);
+  }
+
   .screenia-theme .landing-hero-copy-main {
     grid-template-rows: auto;
   }
@@ -1216,6 +1266,420 @@
   font-family: var(--landing-font-body);
   font-weight: 800;
   letter-spacing: -0.04em;
+}
+
+/* Customer portal: premium split entry surface. */
+.screenia-theme .screenia-customer-login {
+  min-height: 100svh;
+  background: var(--reference-blue-deep);
+}
+
+.screenia-theme .screenia-customer-login::before {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.055) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.055) 1px, transparent 1px);
+  background-size: 54px 54px;
+  mask-image: linear-gradient(to bottom, #000 35%, transparent 100%);
+}
+
+.screenia-theme .screenia-customer-login .screenia-auth-bg {
+  background:
+    radial-gradient(circle at 13% 16%, rgba(68, 215, 255, 0.2), transparent 28%),
+    radial-gradient(circle at 86% 78%, rgba(255, 210, 31, 0.13), transparent 25%),
+    linear-gradient(135deg, #031637 0%, #073984 48%, #1457bd 100%);
+  background-size: auto;
+}
+
+.screenia-theme .screenia-customer-login-layout {
+  grid-template-columns: minmax(0, 1.08fr) minmax(410px, 0.92fr);
+  max-width: 1280px;
+  min-height: 100svh;
+  align-items: stretch;
+  gap: 0;
+  padding: clamp(28px, 4vw, 54px) clamp(18px, 3vw, 36px);
+}
+
+.screenia-theme .screenia-customer-login-visual {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  min-height: 720px;
+  margin-right: -62px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-right: 0;
+  border-radius: 32px 0 0 32px;
+  background: #082a61;
+  box-shadow: 0 34px 90px rgba(0, 12, 38, 0.34);
+  clip-path: polygon(0 0, 100% 0, calc(100% - 62px) 100%, 0 100%);
+  isolation: isolate;
+}
+
+.screenia-theme .screenia-customer-login-visual::after {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  background: var(--reference-yellow);
+  clip-path: polygon(
+    calc(100% - 5px) 0,
+    100% 0,
+    calc(100% - 62px) 100%,
+    calc(100% - 67px) 100%
+  );
+  content: "";
+}
+
+.screenia-theme .screenia-customer-login-image,
+.screenia-theme .screenia-customer-login-shade {
+  position: absolute;
+  inset: 0;
+}
+
+.screenia-theme .screenia-customer-login-image {
+  z-index: -2;
+  background:
+    url("/landing/free-source/retail-digital-signage.jpg") center / cover no-repeat;
+  transform: scale(1.015);
+}
+
+.screenia-theme .screenia-customer-login-shade {
+  z-index: -1;
+  background:
+    linear-gradient(180deg, rgba(3, 15, 43, 0.28) 0%, rgba(3, 17, 48, 0.12) 28%, rgba(3, 18, 50, 0.88) 100%),
+    linear-gradient(100deg, rgba(4, 27, 70, 0.88) 0%, rgba(5, 38, 89, 0.42) 48%, rgba(4, 24, 61, 0.14) 100%);
+}
+
+.screenia-theme .screenia-customer-login-visual-content {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: clamp(32px, 4vw, 52px);
+}
+
+.screenia-theme .screenia-customer-login-story {
+  max-width: 560px;
+  padding-top: clamp(70px, 9vh, 120px);
+}
+
+.screenia-theme .screenia-customer-login .screenia-auth-hero-kicker {
+  margin: 0;
+  color: #a9d2ff;
+  font-size: 0.75rem;
+  letter-spacing: 0.2em;
+}
+
+.screenia-theme .screenia-customer-login .screenia-auth-hero-title {
+  max-width: 560px;
+  margin-top: 14px;
+  font-size: clamp(2.75rem, 3.4vw, 3.4rem);
+  line-height: 0.98;
+}
+
+.screenia-theme .screenia-customer-login .screenia-auth-hero-copy {
+  max-width: 520px;
+  margin-top: 22px;
+  color: rgba(238, 246, 255, 0.88);
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.7;
+}
+
+.screenia-theme .screenia-customer-login-features {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 26px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.screenia-theme .screenia-customer-login-features li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.17);
+  border-radius: 999px;
+  background: rgba(3, 18, 49, 0.46);
+  padding: 9px 12px;
+  color: #ffffff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  backdrop-filter: blur(10px);
+}
+
+.screenia-theme .screenia-customer-login-features span {
+  color: var(--reference-yellow);
+}
+
+.screenia-theme .screenia-customer-login-caption {
+  margin: 0;
+  color: rgba(229, 241, 255, 0.72);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.screenia-theme .screenia-customer-login-form-panel {
+  display: flex;
+  max-width: none;
+  flex-direction: column;
+  justify-content: center;
+  border: 1px solid #dce7fa;
+  border-left: 0;
+  border-radius: 0 32px 32px 0;
+  background:
+    radial-gradient(circle at 100% 0%, rgba(20, 87, 189, 0.08), transparent 34%),
+    #ffffff;
+  padding: clamp(38px, 5vw, 68px);
+  box-shadow: 0 34px 90px rgba(0, 12, 38, 0.26);
+}
+
+.screenia-theme .screenia-customer-login .screenia-customer-login-card {
+  width: 100%;
+  max-width: 450px;
+  margin: 0 auto;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding: 0;
+  box-shadow: none;
+}
+
+.screenia-theme .screenia-customer-login .screenia-customer-login-card::before {
+  display: none;
+}
+
+.screenia-theme .screenia-customer-login .screenia-auth-logo-link-mobile {
+  display: none;
+}
+
+.screenia-theme .screenia-customer-login .screenia-auth-card-kicker {
+  margin: 0;
+  color: var(--reference-blue);
+}
+
+.screenia-theme .screenia-customer-login-title {
+  margin: 12px 0 0;
+  color: var(--reference-ink);
+  font-size: clamp(2.25rem, 3.2vw, 3.4rem);
+  font-weight: 800;
+  letter-spacing: -0.055em;
+  line-height: 1;
+}
+
+.screenia-theme .screenia-customer-login-intro {
+  max-width: 400px;
+  margin: 16px 0 0;
+  color: var(--reference-muted);
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.65;
+}
+
+.screenia-theme .screenia-customer-login .screenia-auth-form-stack {
+  gap: 18px;
+  margin-top: 30px;
+}
+
+.screenia-theme .screenia-customer-login .screenia-auth-label {
+  color: #36527d;
+  font-size: 0.7rem;
+  letter-spacing: 0.15em;
+}
+
+.screenia-theme .screenia-customer-login .screenia-auth-input {
+  min-height: 58px;
+  margin-top: 8px;
+  border-color: #cbdaf1;
+  border-radius: 14px;
+  background: #f7faff;
+  padding-inline: 17px;
+  box-shadow: inset 0 1px 0 #ffffff;
+}
+
+.screenia-theme .screenia-customer-login .screenia-auth-input:hover {
+  border-color: #9db9df;
+  background: #ffffff;
+}
+
+.screenia-theme .screenia-customer-login .screenia-auth-actions {
+  gap: 14px;
+  margin-top: 28px;
+}
+
+.screenia-theme .screenia-customer-login .screenia-auth-button {
+  min-height: 56px;
+  padding: 10px 12px 10px 22px;
+  box-shadow: 0 14px 30px rgba(255, 195, 0, 0.22);
+}
+
+.screenia-theme .screenia-customer-login .screenia-auth-button:not(:disabled):hover {
+  box-shadow: 0 18px 36px rgba(255, 195, 0, 0.3);
+}
+
+.screenia-theme .screenia-customer-login .screenia-auth-button:disabled {
+  border-color: #eadb77;
+  background: #efe49a;
+  color: rgba(23, 33, 58, 0.65);
+  opacity: 1;
+}
+
+.screenia-theme .screenia-customer-login .screenia-auth-button-icon {
+  width: 36px;
+  height: 36px;
+  color: var(--reference-blue);
+}
+
+.screenia-theme .screenia-customer-login .screenia-auth-secondary-button {
+  min-height: 52px;
+  border-color: #cfddf0;
+  background: #f7faff;
+  box-shadow: none;
+}
+
+.screenia-theme .screenia-customer-login .screenia-auth-secondary-button:disabled {
+  background: #f7faff;
+  color: #66758f;
+}
+
+.screenia-theme .screenia-customer-login .screenia-auth-helper {
+  text-align: center;
+}
+
+.screenia-theme .screenia-customer-login-links {
+  justify-content: space-between;
+  margin-top: 26px;
+  padding-top: 22px;
+  border-top: 1px solid #e3ebf7;
+}
+
+.screenia-theme .screenia-customer-login .screenia-auth-link,
+.screenia-theme .screenia-customer-login .screenia-auth-link-button {
+  color: var(--reference-blue);
+}
+
+.screenia-theme .screenia-customer-login-security {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 22px 0 0;
+  color: #7183a0;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.screenia-theme .screenia-customer-login-security span {
+  display: inline-flex;
+  width: 20px;
+  height: 20px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: #eaf2ff;
+  color: var(--reference-blue);
+  font-size: 0.7rem;
+}
+
+@media (max-width: 960px) {
+  .screenia-theme .screenia-customer-login {
+    overflow: visible;
+  }
+
+  .screenia-theme .screenia-customer-login-layout {
+    grid-template-columns: 1fr;
+    max-width: 720px;
+    min-height: 100svh;
+    align-content: center;
+  }
+
+  .screenia-theme .screenia-customer-login-visual {
+    z-index: auto;
+    min-height: 310px;
+    margin-right: 0;
+    border-right: 1px solid rgba(255, 255, 255, 0.18);
+    border-bottom: 0;
+    border-radius: 28px 28px 0 0;
+    clip-path: none;
+  }
+
+  .screenia-theme .screenia-customer-login-visual::after {
+    display: none;
+  }
+
+  .screenia-theme .screenia-customer-login-visual-content {
+    padding: 30px 34px;
+  }
+
+  .screenia-theme .screenia-customer-login-story {
+    padding-top: 42px;
+  }
+
+  .screenia-theme .screenia-customer-login .screenia-auth-hero-title {
+    max-width: 500px;
+    font-size: clamp(2.5rem, 7vw, 4rem);
+  }
+
+  .screenia-theme .screenia-customer-login .screenia-auth-hero-copy,
+  .screenia-theme .screenia-customer-login-features,
+  .screenia-theme .screenia-customer-login-caption {
+    display: none;
+  }
+
+  .screenia-theme .screenia-customer-login-form-panel {
+    border-top: 0;
+    border-left: 1px solid #dce7fa;
+    border-radius: 0 0 28px 28px;
+    padding: 42px 34px;
+  }
+}
+
+@media (max-width: 560px) {
+  .screenia-theme .screenia-customer-login-layout {
+    align-content: start;
+    padding: 12px;
+  }
+
+  .screenia-theme .screenia-customer-login-visual {
+    min-height: 220px;
+    border-radius: 22px 22px 0 0;
+  }
+
+  .screenia-theme .screenia-customer-login-visual-content {
+    padding: 22px;
+  }
+
+  .screenia-theme .screenia-customer-login-story {
+    padding-top: 28px;
+  }
+
+  .screenia-theme .screenia-customer-login .screenia-auth-hero-kicker {
+    font-size: 0.66rem;
+  }
+
+  .screenia-theme .screenia-customer-login .screenia-auth-hero-title {
+    margin-top: 10px;
+    font-size: clamp(2rem, 10vw, 2.7rem);
+  }
+
+  .screenia-theme .screenia-customer-login-form-panel {
+    border-radius: 0 0 22px 22px;
+    padding: 32px 22px 26px;
+  }
+
+  .screenia-theme .screenia-customer-login-title {
+    font-size: 2.25rem;
+  }
+
+  .screenia-theme .screenia-customer-login .screenia-auth-form-stack {
+    margin-top: 26px;
+  }
+
+  .screenia-theme .screenia-customer-login-security {
+    margin-top: 18px;
+  }
 }
 
 /* Administration: keep information density, replace the legacy visual skin. */

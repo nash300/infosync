@@ -114,40 +114,64 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="screenia-auth-shell">
+    <main className="screenia-auth-shell screenia-customer-login">
       <div className="screenia-auth-bg" />
 
-      <div className="screenia-auth-layout">
-        <section className="screenia-auth-hero screenia-auth-hero-hidden-mobile">
-          <Link href="/" className="screenia-auth-logo-link">
-            <ScreeniaLogo className="screenia-logo-auth-card" />
-          </Link>
+      <div className="screenia-auth-layout screenia-customer-login-layout">
+        <section className="screenia-customer-login-visual">
+          <div className="screenia-customer-login-image" aria-hidden="true" />
+          <div className="screenia-customer-login-shade" aria-hidden="true" />
 
-          <p className="screenia-auth-hero-kicker">
-            Säker inloggning
-          </p>
-          <h1 className="screenia-auth-hero-title">
-            En inloggning för order, innehåll och support.
-          </h1>
+          <div className="screenia-customer-login-visual-content">
+            <Link href="/" className="screenia-auth-logo-link">
+              <ScreeniaLogo className="screenia-logo-auth-card" />
+            </Link>
+
+            <div className="screenia-customer-login-story">
+              <p className="screenia-auth-hero-kicker">Allt samlat på ett ställe</p>
+              <h1 className="screenia-auth-hero-title">
+                Din skärmverksamhet, nära till hands.
+              </h1>
+              <p className="screenia-auth-hero-copy">
+                Följ dina beställningar, dela material och få personlig support
+                i en portal byggd för en enklare vardag.
+              </p>
+
+              <ul className="screenia-customer-login-features" aria-label="Funktioner i kundportalen">
+                <li><span aria-hidden="true">✓</span> Order och leverans</li>
+                <li><span aria-hidden="true">✓</span> Innehåll och underlag</li>
+                <li><span aria-hidden="true">✓</span> Personlig support</li>
+              </ul>
+            </div>
+
+            <p className="screenia-customer-login-caption">
+              En trygg plats för allt som rör dina skärmar.
+            </p>
+          </div>
         </section>
 
-        <section className="screenia-auth-card-wrap">
-          <div className="screenia-auth-card">
+        <section className="screenia-auth-card-wrap screenia-customer-login-form-panel">
+          <div className="screenia-auth-card screenia-customer-login-card">
             <Link href="/" className="screenia-auth-logo-link screenia-auth-logo-link-mobile">
               <ScreeniaLogo className="screenia-logo-auth-inline" />
             </Link>
 
             <p className="screenia-auth-card-kicker screenia-auth-card-kicker-responsive">
-              Screenia kundportal
+              Säker kundinloggning
+            </p>
+            <h2 className="screenia-customer-login-title">Välkommen</h2>
+            <p className="screenia-customer-login-intro">
+              Logga in för att fortsätta till din personliga Screenia-portal.
             </p>
 
             <div className="screenia-auth-form-stack">
               <label className="screenia-auth-field">
-                <span className="screenia-auth-label">
-                  E-post
-                </span>
+                <span className="screenia-auth-label">E-post</span>
                 <input
                   type="email"
+                  name="email"
+                  autoComplete="email"
+                  inputMode="email"
                   placeholder="namn@foretag.se"
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
@@ -156,11 +180,11 @@ export default function LoginPage() {
               </label>
 
               <label className="screenia-auth-field">
-                <span className="screenia-auth-label">
-                  Lösenord
-                </span>
+                <span className="screenia-auth-label">Lösenord</span>
                 <input
                   type="password"
+                  name="password"
+                  autoComplete="current-password"
                   placeholder="Ditt lösenord"
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
@@ -174,11 +198,7 @@ export default function LoginPage() {
               </label>
             </div>
 
-            {message && (
-              <p className="screenia-auth-alert">
-                {message}
-              </p>
-            )}
+            {message && <p className="screenia-auth-alert">{message}</p>}
 
             <div className="screenia-auth-actions">
               <button
@@ -189,11 +209,7 @@ export default function LoginPage() {
               >
                 <span>{loading ? "Kontrollerar..." : "Logga in"}</span>
                 <span className="screenia-auth-button-icon">
-                  <svg
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                    focusable="false"
-                  >
+                  <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                     <path d="M10 7 8.6 8.4l2.6 2.6H3v2h8.2l-2.6 2.6L10 17l5-5-5-5Z" />
                     <path d="M13 4h5v16h-5v-2h3V6h-3V4Z" />
                   </svg>
@@ -226,14 +242,15 @@ export default function LoginPage() {
                     : "Google-inloggning kommer snart"}
               </button>
 
-              <p className="screenia-auth-helper">
-                {isGoogleAuthEnabled
-                  ? "Google fungerar bara om e-postadressen redan hör till ett betalt Screenia-konto."
-                  : "Google aktiveras när Google Cloud och Supabase OAuth är färdigkonfigurerade."}
-              </p>
+              {isGoogleAuthEnabled && (
+                <p className="screenia-auth-helper">
+                  Google fungerar bara om e-postadressen redan hör till ett
+                  betalt Screenia-konto.
+                </p>
+              )}
             </div>
 
-            <div className="screenia-auth-link-row">
+            <div className="screenia-auth-link-row screenia-customer-login-links">
               <button
                 type="button"
                 onClick={sendResetEmail}
@@ -247,6 +264,11 @@ export default function LoginPage() {
               </Link>
             </div>
           </div>
+
+          <p className="screenia-customer-login-security">
+            <span aria-hidden="true">✓</span>
+            Säker anslutning och personlig åtkomst
+          </p>
         </section>
       </div>
     </main>

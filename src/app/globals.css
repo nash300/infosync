@@ -134,20 +134,6 @@ section h1 {
   width: min(12.4rem, 62vw);
 }
 
-.screenia-logo-auth-card::after {
-  position: absolute;
-  inset: auto 0.95rem 0.5rem;
-  color: rgba(6, 25, 66, 0.72);
-  content: "Screenia.se";
-  font-family: var(--font-plus-jakarta), "Open Sans", Arial, Helvetica, sans-serif;
-  font-size: 0.62rem;
-  font-weight: 900;
-  letter-spacing: 0.08em;
-  line-height: 1;
-  text-align: center;
-  text-transform: uppercase;
-}
-
 .screenia-logo-auth-inline .screenia-logo-wordmark {
   width: min(10rem, 58vw);
 }
