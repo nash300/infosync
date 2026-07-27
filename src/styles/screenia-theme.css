@@ -644,6 +644,21 @@
   color: #17213a;
 }
 
+.screenia-theme .landing-pricing .landing-pricing-logo-rail {
+  width: 100%;
+  max-width: none;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.screenia-theme .landing-pricing .landing-pricing-logo-rail::before,
+.screenia-theme .landing-pricing .landing-pricing-logo-rail::after {
+  display: none;
+}
+
 .screenia-theme .landing-examples {
   background: var(--reference-blue) !important;
 }
