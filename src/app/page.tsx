@@ -204,6 +204,7 @@ export default function Home() {
   const [requestOpen, setRequestOpen] = useState(false);
   const [priceBreakdownOpen, setPriceBreakdownOpen] = useState(false);
   const [expandedExample, setExpandedExample] = useState<LandingExampleVideo | null>(null);
+  const [expandedPlanDetails, setExpandedPlanDetails] = useState<Record<string, boolean>>({});
   const [planQuantities, setPlanQuantities] = useState<Record<(typeof plans)[number]["code"], number>>({
     standard_fhd: 0,
     premium_4k: 0,
@@ -723,6 +724,22 @@ export default function Home() {
           title="Bygg en skärmlösning"
           text="Välj Full HD, Premium 4K eller Premium Plus med egna videor. Paketen kan kombineras i samma förfrågan och kostnaden uppdateras direkt."
         >
+          {selectedScreenCount > 0 ? (
+            <a
+              className="landing-mobile-selection-bar"
+              href="#selected-package-summary"
+              aria-label={`Visa vald kombination: ${selectedScreenCount} skärm${selectedScreenCount === 1 ? "" : "ar"}, ${formatLandingSek(selectedMonthlyTotal)} per månad`}
+            >
+              <span>
+                <strong>
+                  {selectedScreenCount} skärm{selectedScreenCount === 1 ? "" : "ar"} vald
+                  {selectedScreenCount === 1 ? "" : "a"}
+                </strong>
+                <small>{formatLandingSek(selectedMonthlyTotal)}/mån totalt</small>
+              </span>
+              <b>Visa val</b>
+            </a>
+          ) : null}
           <div className="landing-price-grid">
             {plans.map((plan) => {
               const planText = planCopy.sv[plan.code];
@@ -799,20 +816,43 @@ export default function Home() {
                       </button>
                     </div>
                   </div>
-                  <div className="landing-plan-details">
+                  <div
+                    className={`landing-plan-details ${
+                      expandedPlanDetails[plan.code] ? "landing-plan-details-expanded" : ""
+                    }`}
+                  >
                     <p className="landing-plan-description">{planText.description}</p>
                     <ul>
                       <li>Upp till {plan.maxSlides} slides per skärm</li>
                       <li>Upp till {plan.maxSectionsPerSlide} sektioner per slide</li>
                       {planText.features.map((feature) => <li key={feature}>{feature}</li>)}
                     </ul>
+                    <button
+                      type="button"
+                      className="landing-plan-details-toggle"
+                      onClick={() =>
+                        setExpandedPlanDetails((current) => ({
+                          ...current,
+                          [plan.code]: !current[plan.code],
+                        }))
+                      }
+                      aria-expanded={Boolean(expandedPlanDetails[plan.code])}
+                    >
+                      {expandedPlanDetails[plan.code]
+                        ? "Visa mindre"
+                        : "Visa alla funktioner"}
+                    </button>
                   </div>
                 </article>
               );
             })}
           </div>
           {selectedScreenCount > 0 ? (
-          <section className="landing-package-builder" aria-live="polite">
+          <section
+            id="selected-package-summary"
+            className="landing-package-builder"
+            aria-live="polite"
+          >
             <div className="landing-package-builder-heading">
               <div>
                 <p className="landing-eyebrow">Vald kombination</p>

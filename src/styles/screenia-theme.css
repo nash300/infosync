@@ -989,6 +989,86 @@
   }
 }
 
+@media (max-width: 1024px) {
+  .screenia-theme .landing-links {
+    top: calc(100% + 8px);
+    right: 12px;
+    left: auto;
+    width: min(330px, calc(100% - 24px));
+    max-height: calc(100dvh - 84px);
+    overflow-y: auto;
+    border: 1px solid rgba(112, 183, 255, 0.34);
+    border-radius: 16px;
+    background: #062a62;
+    padding: 10px;
+    box-shadow: 0 20px 48px rgba(2, 18, 52, 0.3);
+  }
+
+  .screenia-theme .landing-links.landing-links-open {
+    gap: 9px;
+  }
+
+  .screenia-theme .landing-nav-primary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 5px;
+  }
+
+  .screenia-theme .landing-nav-primary .landing-nav-link {
+    width: 100%;
+    min-height: 34px;
+    justify-content: flex-start;
+    border-radius: 9px;
+    background: rgba(255, 255, 255, 0.08);
+    padding: 0 10px;
+    color: #ffffff;
+    font-size: 0.76rem;
+  }
+
+  .screenia-theme .landing-nav-primary .landing-nav-link:hover,
+  .screenia-theme .landing-nav-primary .landing-nav-link:focus-visible {
+    background: rgba(255, 255, 255, 0.16);
+    color: #ffffff;
+    box-shadow: none;
+  }
+
+  .screenia-theme .landing-nav-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 7px;
+  }
+
+  .screenia-theme .landing-nav-actions .landing-nav-cta,
+  .screenia-theme .landing-nav-actions .landing-nav-login {
+    width: 100%;
+    min-height: 38px;
+    justify-content: center;
+    gap: 5px;
+    margin: 0;
+    padding: 0 7px;
+    font-size: 0.74rem;
+    white-space: nowrap;
+  }
+
+  .screenia-theme .landing-nav-actions .landing-nav-cta {
+    color: #17213a;
+  }
+
+  .screenia-theme .landing-nav-actions .landing-nav-login {
+    color: var(--reference-ink);
+    outline: 0;
+  }
+
+  .screenia-theme .landing-nav-action-icon {
+    width: 22px;
+    height: 22px;
+    flex: 0 0 22px;
+  }
+
+  .screenia-theme .landing-nav-action-icon svg {
+    width: 13px;
+    height: 13px;
+  }
+}
+
 @media (max-width: 640px) {
   .screenia-theme .landing-nav {
     height: 64px;
@@ -1059,13 +1139,13 @@
   }
 
   .screenia-theme main > .landing-section-surface {
-    padding: 72px 20px;
+    padding: 50px 18px;
   }
 
   .screenia-theme main > .landing-section-surface > .landing-section-panel > .landing-section-heading h2,
   .screenia-theme main > .landing-section-surface .landing-workflow-heading h2,
   .screenia-theme .landing-contact h2 {
-    font-size: clamp(2.45rem, 12vw, 3.4rem);
+    font-size: clamp(2rem, 9.2vw, 2.75rem);
   }
 
   .screenia-theme .landing-feature,
@@ -1076,6 +1156,409 @@
   .screenia-theme .landing-faq-item,
   .screenia-theme .landing-package-builder {
     border-radius: 18px;
+  }
+}
+
+.screenia-theme .landing-mobile-selection-bar {
+  display: none;
+}
+
+.screenia-theme .landing-plan-details-toggle {
+  display: none;
+}
+
+@media (max-width: 1024px) {
+  .screenia-theme main > .landing-section-surface {
+    padding: 58px 28px;
+  }
+
+  .screenia-theme main > .landing-section-surface > .landing-section-panel > .landing-section-heading h2,
+  .screenia-theme main > .landing-section-surface .landing-workflow-heading h2 {
+    font-size: clamp(2.2rem, 6.4vw, 3.15rem);
+  }
+
+  .screenia-theme .landing-feature-grid {
+    display: grid;
+    grid-auto-columns: min(68vw, 250px);
+    grid-auto-flow: column;
+    grid-template-columns: none;
+    gap: 10px;
+    margin-top: 18px;
+    overflow-x: auto;
+    padding: 2px 2px 8px;
+    scroll-padding-inline: 2px;
+    scroll-snap-type: inline mandatory;
+    scrollbar-width: thin;
+  }
+
+  .screenia-theme .landing-platform .landing-feature {
+    min-height: 150px;
+    padding: 14px;
+    scroll-snap-align: start;
+  }
+
+  .screenia-theme .landing-platform .landing-feature-icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .screenia-theme .landing-platform .landing-feature-icon svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .screenia-theme .landing-platform .landing-feature h3 {
+    margin-top: 11px;
+    font-size: 0.9rem;
+  }
+
+  .screenia-theme .landing-platform .landing-feature p {
+    margin-top: 5px;
+    font-size: 0.72rem;
+    line-height: 1.4;
+  }
+
+  /* Supporting visuals remain available in a compact swipeable row. */
+  .screenia-theme .landing-illustration-grid {
+    display: grid;
+    grid-auto-columns: min(76vw, 280px);
+    grid-auto-flow: column;
+    grid-template-columns: none;
+    gap: 10px;
+    margin-top: 14px;
+    overflow-x: auto;
+    padding: 14px 2px 8px;
+    scroll-padding-inline: 2px;
+    scroll-snap-type: inline mandatory;
+    scrollbar-width: thin;
+  }
+
+  .screenia-theme .landing-illustration {
+    grid-template-columns: 88px minmax(0, 1fr);
+    gap: 10px;
+    min-height: 108px;
+    align-items: center;
+    padding: 9px;
+    scroll-snap-align: start;
+  }
+
+  .screenia-theme .landing-illustration-art {
+    height: 88px;
+  }
+
+  .screenia-theme .landing-illustration-icon {
+    right: 6px;
+    bottom: 6px;
+    width: 28px;
+    height: 28px;
+  }
+
+  .screenia-theme .landing-illustration-icon svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .screenia-theme .landing-illustration h3 {
+    font-size: 0.86rem;
+  }
+
+  .screenia-theme .landing-illustration p {
+    margin-top: 3px;
+    font-size: 0.72rem;
+    line-height: 1.35;
+  }
+
+  /* The five-step journey uses concise media rows instead of tall cards. */
+  .screenia-theme .landing-workflow-panel {
+    padding: 0;
+  }
+
+  .screenia-theme .landing-workflow-heading {
+    gap: 7px;
+  }
+
+  .screenia-theme main > .landing-section-surface .landing-workflow-heading h2 {
+    font-size: clamp(1.9rem, 8.2vw, 2.45rem);
+    line-height: 1.02;
+  }
+
+  .screenia-theme main > .landing-section-surface .landing-workflow-heading p {
+    font-size: 0.82rem;
+    line-height: 1.45;
+  }
+
+  .screenia-theme .landing-workflow-grid {
+    gap: 9px;
+    margin-top: 14px;
+  }
+
+  .screenia-theme .landing-workflow-step {
+    grid-template-columns: 94px minmax(0, 1fr);
+    gap: 9px;
+    padding: 8px;
+  }
+
+  .screenia-theme .landing-workflow-step:not(:last-child)::before,
+  .screenia-theme .landing-workflow-step:not(:last-child)::after {
+    display: none;
+  }
+
+  .screenia-theme .landing-workflow-image-wrap {
+    height: 94px;
+    aspect-ratio: auto;
+    border-radius: 12px;
+  }
+
+  .screenia-theme .landing-workflow-step-copy {
+    gap: 4px;
+    padding: 0;
+  }
+
+  .screenia-theme .landing-workflow-step-copy > span {
+    width: 28px;
+    height: 28px;
+    font-size: 0.76rem;
+  }
+
+  .screenia-theme .landing-workflow-step h3 {
+    font-size: 0.84rem;
+    line-height: 1.16;
+  }
+
+  .screenia-theme .landing-workflow-description {
+    font-size: 0.7rem;
+    line-height: 1.34;
+  }
+
+  /* Packages are compared by swiping, so three full cards no longer stack. */
+  .screenia-theme .landing-pricing .landing-price-grid {
+    display: grid;
+    grid-auto-columns: min(84vw, 390px);
+    grid-auto-flow: column;
+    grid-template-columns: none;
+    gap: 10px;
+    justify-content: start;
+    overflow-x: auto;
+    padding: 2px 2px 10px;
+    scroll-padding-inline: 2px;
+    scroll-snap-type: inline mandatory;
+    scrollbar-width: thin;
+  }
+
+  .screenia-theme .landing-pricing .landing-price-card {
+    width: auto;
+    min-width: 0;
+    padding: 13px;
+    scroll-snap-align: start;
+  }
+
+  .screenia-theme .landing-pricing .landing-plan-device {
+    min-height: 82px;
+  }
+
+  .screenia-theme .landing-pricing .landing-plan-device img {
+    height: 78px;
+  }
+
+  .screenia-theme .landing-pricing .landing-price-card ul {
+    min-height: 0;
+  }
+
+  .screenia-theme .landing-pricing .landing-plan-details:not(.landing-plan-details-expanded) ul {
+    position: relative;
+    max-height: 8.2rem;
+    overflow: hidden;
+    -webkit-mask-image: linear-gradient(#000 72%, transparent);
+    mask-image: linear-gradient(#000 72%, transparent);
+  }
+
+  .screenia-theme .landing-plan-details-toggle {
+    display: inline-flex;
+    min-height: 34px;
+    align-items: center;
+    justify-content: center;
+    margin-top: 7px;
+    border: 1px solid rgba(11, 95, 215, 0.26);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.74);
+    color: var(--reference-blue-dark);
+    padding: 6px 11px;
+    font-size: 0.72rem;
+    font-weight: 800;
+  }
+
+  .screenia-theme .landing-price-card-plus .landing-plan-details-toggle {
+    border-color: rgba(255, 255, 255, 0.22);
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+  }
+
+  .screenia-theme .landing-mobile-selection-bar {
+    position: sticky;
+    top: 70px;
+    z-index: 24;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 14px 0 10px;
+    border: 1px solid rgba(255, 211, 42, 0.72);
+    border-radius: 14px;
+    background: rgba(6, 42, 98, 0.96);
+    color: #ffffff;
+    padding: 10px 12px;
+    box-shadow: 0 14px 32px rgba(3, 25, 64, 0.24);
+    text-decoration: none;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  .screenia-theme .landing-mobile-selection-bar > span {
+    display: grid;
+    gap: 2px;
+  }
+
+  .screenia-theme .landing-mobile-selection-bar strong {
+    font-size: 0.8rem;
+  }
+
+  .screenia-theme .landing-mobile-selection-bar small {
+    color: rgba(255, 255, 255, 0.76);
+    font-size: 0.7rem;
+  }
+
+  .screenia-theme .landing-mobile-selection-bar b {
+    flex: 0 0 auto;
+    border-radius: 999px;
+    background: var(--reference-yellow);
+    color: #17213a;
+    padding: 7px 10px;
+    font-size: 0.72rem;
+  }
+
+  .screenia-theme .landing-pricing .landing-package-builder {
+    scroll-margin-top: 80px;
+    padding: 18px;
+  }
+
+  /* Two short columns reduce FAQ height while keeping every answer available. */
+  .screenia-theme .landing-faq-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-count: initial;
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .screenia-theme .landing-faq-item {
+    margin: 0;
+  }
+
+  .screenia-theme .landing-faq-item summary {
+    min-height: 44px;
+    gap: 6px;
+    padding: 8px 9px;
+    font-size: 0.7rem;
+    line-height: 1.25;
+  }
+
+  .screenia-theme .landing-faq-item summary::after {
+    width: 23px;
+    height: 23px;
+  }
+
+  .screenia-theme .landing-faq-item p {
+    padding: 9px;
+    font-size: 0.72rem;
+    line-height: 1.45;
+  }
+
+  /* The footer becomes a short information strip instead of a large card. */
+  .screenia-theme .landing-footer {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px 16px;
+    align-items: center;
+    padding: 16px 18px;
+  }
+
+  .screenia-theme .landing-footer-brand {
+    gap: 9px;
+  }
+
+  .screenia-theme .landing-footer .screenia-logo-footer {
+    width: 7rem;
+  }
+
+  .screenia-theme .landing-footer-brand p {
+    font-size: 0.7rem;
+  }
+
+  .screenia-theme .landing-footer-contact {
+    gap: 2px;
+    border-left: 0;
+    padding-left: 0;
+  }
+
+  .screenia-theme .landing-footer-contact span {
+    font-size: 0.58rem;
+  }
+
+  .screenia-theme .landing-footer-contact a {
+    font-size: 0.72rem;
+  }
+
+  .screenia-theme .landing-footer nav {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 5px 14px;
+  }
+
+  .screenia-theme .landing-footer nav a {
+    font-size: 0.7rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .screenia-theme main > .landing-section-surface {
+    padding: 50px 18px;
+  }
+
+  .screenia-theme main > .landing-section-surface > .landing-section-panel > .landing-section-heading h2,
+  .screenia-theme main > .landing-section-surface .landing-workflow-heading h2,
+  .screenia-theme .landing-contact h2 {
+    font-size: clamp(2rem, 9.2vw, 2.75rem);
+  }
+
+  .screenia-theme main > .landing-section-surface .landing-workflow-heading h2 {
+    font-size: clamp(1.9rem, 8.2vw, 2.45rem);
+  }
+}
+
+@media (max-width: 420px) {
+  .screenia-theme main > .landing-section-surface {
+    padding-inline: 14px;
+  }
+
+  .screenia-theme .landing-faq-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .screenia-theme .landing-footer {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    padding: 14px;
+  }
+
+  .screenia-theme .landing-footer-brand {
+    justify-content: space-between;
+  }
+
+  .screenia-theme .landing-footer-contact {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
   }
 }
 
