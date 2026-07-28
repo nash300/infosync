@@ -695,7 +695,7 @@ export default function Home() {
               <p>{t.workflowText}</p>
             </div>
             <div className="landing-workflow-grid">
-              {t.steps.map(([number, title, text, note], index) => (
+              {t.steps.map(([number, title, points], index) => (
                 <article key={number} className="landing-workflow-step">
                   <div className="landing-workflow-image-wrap">
                     <Image
@@ -708,8 +708,9 @@ export default function Home() {
                   <div className="landing-workflow-step-copy">
                     <span>{number}</span>
                     <h3>{title}</h3>
-                    <p>{text}</p>
-                    <small>{note}</small>
+                    <p className="landing-workflow-description">
+                      {points.join(" ")}
+                    </p>
                   </div>
                 </article>
               ))}

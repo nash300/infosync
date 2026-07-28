@@ -30,13 +30,27 @@ export const copy = {
     ],
     workflowTitle: "Från paketval till fungerande skärm",
     workflowText:
-      "Processen är byggd för att vara enkel för kunden och tydlig för Screenia. Varje steg har ett konkret syfte: rätt paket, rätt innehåll, rätt enhet och en skärm som kan börja visa färdigt material.",
+      "Ni gör de enkla valen. Screenia sköter planering, innehåll, enhet och support.",
     steps: [
-      ["1", "Välj paket & skicka förfrågan", "Önskad skärmlösning väljs direkt på webbplatsen. Förfrågan ger Screenia de uppgifter som behövs för att kontrollera paket, antal skärmar och nästa steg.", "Enkel start utan onödigt långa formulär."],
-      ["2", "Vi planerar & designar", "Screenia går igenom behovet, tar fram en tydlig plan och förbereder innehåll som passar verksamhetens miljö, erbjudanden och mål.", "Design, justeringar och personlig planeringshjälp ingår."],
-      ["3", "Vi förbereder & skickar din enhet", "När upplägget är klart förbereds skärmenheten, kopplas till rätt kundmiljö och skickas med tydliga instruktioner.", "Enheten levereras redo för enkel installation."],
-      ["4", "Du kopplar in & ansluter", "Enheten kopplas till skärmen och internet enligt instruktionerna. Screenia kan hjälpa till om något behöver kontrolleras vid start.", "Ingen avancerad teknisk installation krävs."],
-      ["5", "Klar att visa – och sälja mer!", "När enheten är ansluten börjar skärmen visa det färdiga innehållet. Budskap, menyer och kampanjer kan därefter uppdateras vid behov.", "Skärmen blir en aktiv sälj- och informationsyta."],
+      ["1", "Välj paket & skicka förfrågan", [
+        "Ni väljer paket och antal skärmar, fyller i företags- och leveransuppgifter och skickar förfrågan.",
+        "Screenia granskar den och återkommer.",
+      ]],
+      ["2", "Bekräfta, betala & skapa profil", [
+        "Screenia skickar en personlig beställningslänk där ni bekräftar uppgifterna och betalar.",
+        "Därefter skapar ni kundprofilen via länken i e-postmeddelandet.",
+      ]],
+      ["3", "Skicka material – Screenia designar", [
+        "Ni skickar materialet som ska visas, och Screenia planerar och designar innehållet.",
+        "Screenia kontaktar er om något behöver stämmas av.",
+      ]],
+      ["4", "Screenia förbereder & levererar", [
+        "Screenia förbereder enheten med ert innehåll och skickar den med enkla instruktioner.",
+      ]],
+      ["5", "Koppla in & börja visa", [
+        "Ni ansluter enheten till TV:n och internet, och mallen visas automatiskt när TV:n slås på.",
+        "Screenia hjälper er vid start och framtida uppdateringar.",
+      ]],
     ],
     process: [["Förfrågan", "Paket valt"], ["Betalning", "Säker checkout"], ["Innehåll", "Efter betalning"], ["Start", "TV + Wi-Fi"]],
     pricingTitle: "Tydliga paket för hanterade skärmar",
@@ -130,13 +144,27 @@ export const copy = {
     ],
     workflowTitle: "From package choice to working screen",
     workflowText:
-      "The process is designed to be simple for the customer and clear for Screenia. Each step has a practical purpose: the right package, the right content, the right device, and a screen ready to show finished material.",
+      "You make the simple choices. Screenia handles planning, content, the device, and support.",
     steps: [
-      ["1", "Choose package & send request", "The preferred screen solution is selected on the website. The request gives Screenia the details needed to review the package, number of screens, and next step.", "A simple start without unnecessarily long forms."],
-      ["2", "We plan & design", "Screenia reviews the need, prepares a clear plan, and creates content suited to the business environment, offers, and goals.", "Design, changes, and personal planning support are included."],
-      ["3", "We prepare & ship the device", "When the setup is ready, the screen device is prepared, connected to the correct customer environment, and shipped with clear instructions.", "The device is delivered ready for easy installation."],
-      ["4", "Connect & go online", "The device is connected to the screen and internet according to the instructions. Screenia can help if anything needs checking at startup.", "No advanced technical installation is required."],
-      ["5", "Ready to show — and sell more!", "When the device is connected, the screen starts showing finished content. Messages, menus, and campaigns can then be updated when needed.", "The screen becomes an active sales and information surface."],
+      ["1", "Choose a package & send a request", [
+        "You choose a package and number of screens, enter the company and delivery details, and send the request.",
+        "Screenia reviews it and contacts you.",
+      ]],
+      ["2", "Confirm, pay & create a profile", [
+        "Screenia sends a personal order link where you confirm the details and pay.",
+        "You then create your profile using the link in the email.",
+      ]],
+      ["3", "Send material — Screenia designs", [
+        "You send the material to be displayed, and Screenia plans and designs the content.",
+        "Screenia contacts you if anything needs clarification.",
+      ]],
+      ["4", "Screenia prepares & delivers", [
+        "Screenia prepares the device with your content and ships it with simple instructions.",
+      ]],
+      ["5", "Connect & start displaying", [
+        "You connect the device to the TV and internet, and the template displays automatically when the TV is turned on.",
+        "Screenia helps with startup and future updates.",
+      ]],
     ],
     process: [["Request", "Package selected"], ["Material", "Menu, images, logo"], ["Production", "Layout + USB device"], ["Start", "HDMI + Wi-Fi"]],
     pricingTitle: "Clear packages for managed screens",

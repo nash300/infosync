@@ -539,10 +539,8 @@
   background: var(--reference-yellow);
 }
 
-.screenia-theme .landing-workflow-step small {
-  border-color: #e1e9f6;
-  color: var(--reference-blue);
-  font-weight: 700;
+.screenia-theme .landing-workflow-description {
+  color: var(--reference-muted);
 }
 
 .screenia-theme .landing-workflow-step-copy > span {
@@ -1826,17 +1824,26 @@
     padding: 12px;
   }
 
-  .screenia-theme .screenia-customer-login-visual {
-    min-height: 220px;
+  .screenia-theme .screenia-customer-login-form-panel {
+    order: 1;
     border-radius: 22px 22px 0 0;
+    padding: 28px 20px 24px;
+  }
+
+  .screenia-theme .screenia-customer-login-visual {
+    order: 2;
+    min-height: 170px;
+    border-top: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 0 0 22px 22px;
   }
 
   .screenia-theme .screenia-customer-login-visual-content {
-    padding: 22px;
+    padding: 20px;
   }
 
   .screenia-theme .screenia-customer-login-story {
-    padding-top: 28px;
+    padding-top: 18px;
   }
 
   .screenia-theme .screenia-customer-login .screenia-auth-hero-kicker {
@@ -1848,13 +1855,8 @@
     font-size: clamp(2rem, 10vw, 2.7rem);
   }
 
-  .screenia-theme .screenia-customer-login-form-panel {
-    border-radius: 0 0 22px 22px;
-    padding: 32px 22px 26px;
-  }
-
   .screenia-theme .screenia-customer-login-title {
-    font-size: 2.25rem;
+    font-size: 2.05rem;
   }
 
   .screenia-theme .screenia-customer-login .screenia-auth-form-stack {
@@ -2371,9 +2373,22 @@
     border-radius: 16px;
   }
 
-  .screenia-admin-login-overview,
   .screenia-admin-login-form-panel {
-    padding: 28px 22px;
+    order: 1;
+    padding: 26px 20px;
+  }
+
+  .screenia-admin-login-overview {
+    order: 2;
+    padding: 24px 20px;
+  }
+
+  .screenia-admin-login-overview-copy {
+    margin-block: 26px;
+  }
+
+  .screenia-admin-login-overview h1 {
+    font-size: 2.25rem;
   }
 
   .screenia-admin-login-capabilities {
