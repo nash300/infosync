@@ -1,3 +1,5 @@
+import { PLAN_PRESENTATION_LIMITS } from "@/lib/pricing/plans";
+
 export const publicSiteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://screenia.se";
 
 export const copy = {
@@ -216,6 +218,7 @@ export const plans = [
     shippingFeeSek: 99,
     monthlyFeeSek: 249,
     trialDays: 21,
+    ...PLAN_PRESENTATION_LIMITS.standard_fhd,
     cardAccent: "blue",
     badge: "Startpaket",
     badgeTone: "default",
@@ -235,6 +238,7 @@ export const plans = [
     shippingFeeSek: 99,
     monthlyFeeSek: 349,
     trialDays: 21,
+    ...PLAN_PRESENTATION_LIMITS.premium_4k,
     cardAccent: "gold",
     badge: "Rekommenderas",
     badgeTone: "recommended",
@@ -254,6 +258,7 @@ export const plans = [
     shippingFeeSek: 99,
     monthlyFeeSek: 399,
     trialDays: 21,
+    ...PLAN_PRESENTATION_LIMITS.premium_plus_4k,
     cardAccent: "plus",
     badge: "Nyhet",
     badgeTone: "plus",

@@ -1,3 +1,18 @@
+export const PLAN_PRESENTATION_LIMITS = {
+  standard_fhd: {
+    maxSlides: 8,
+    maxSectionsPerSlide: 2,
+  },
+  premium_4k: {
+    maxSlides: 8,
+    maxSectionsPerSlide: 3,
+  },
+  premium_plus_4k: {
+    maxSlides: 12,
+    maxSectionsPerSlide: 6,
+  },
+} as const;
+
 export const PRICING_PLANS = [
   {
     code: "standard_fhd",
@@ -10,6 +25,7 @@ export const PRICING_PLANS = [
     additionalShippingFeeSek: 29,
     monthlyFeeSek: 249,
     trialDays: 21,
+    ...PLAN_PRESENTATION_LIMITS.standard_fhd,
     binding: "None",
   },
   {
@@ -23,6 +39,7 @@ export const PRICING_PLANS = [
     additionalShippingFeeSek: 29,
     monthlyFeeSek: 349,
     trialDays: 21,
+    ...PLAN_PRESENTATION_LIMITS.premium_4k,
     binding: "None",
   },
   {
@@ -36,6 +53,7 @@ export const PRICING_PLANS = [
     additionalShippingFeeSek: 29,
     monthlyFeeSek: 399,
     trialDays: 21,
+    ...PLAN_PRESENTATION_LIMITS.premium_plus_4k,
     binding: "None",
   },
 ] as const;

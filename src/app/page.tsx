@@ -800,7 +800,11 @@ export default function Home() {
                   </div>
                   <div className="landing-plan-details">
                     <p className="landing-plan-description">{planText.description}</p>
-                    <ul>{planText.features.map((feature) => <li key={feature}>{feature}</li>)}</ul>
+                    <ul>
+                      <li>Upp till {plan.maxSlides} slides per skärm</li>
+                      <li>Upp till {plan.maxSectionsPerSlide} sektioner per slide</li>
+                      {planText.features.map((feature) => <li key={feature}>{feature}</li>)}
+                    </ul>
                   </div>
                 </article>
               );

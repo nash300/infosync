@@ -4385,7 +4385,9 @@
 .landing-pricing .landing-plan-quantity > div:first-child {
   display: flex;
   min-width: 0;
+  min-height: 36px;
   align-items: center;
+  padding-left: 6px;
 }
 
 .landing-pricing .landing-plan-quantity strong {
@@ -6129,21 +6131,31 @@
 }
 
 .landing-pricing .landing-plan-quantity {
-  display: grid;
-  min-height: 58px;
-  grid-template-columns: minmax(0, 1fr) auto;
+  display: flex;
+  min-height: 50px;
   align-items: center;
-  gap: 12px;
+  flex-direction: row;
+  justify-content: space-between;
+  gap: 10px;
   margin-top: 12px;
-  border-top: 1px solid rgba(221, 238, 255, 0.14);
-  padding: 11px 0 0;
+  border: 1px solid rgba(221, 238, 255, 0.2);
+  border-radius: 11px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0.06)),
+    rgba(4, 18, 48, 0.16);
+  padding: 6px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.13),
+    0 10px 24px rgba(0, 10, 32, 0.1);
 }
 
 .landing-pricing .landing-quantity-stepper {
   display: grid;
-  grid-template-columns: 36px 42px 36px;
-  width: 114px;
+  flex: 0 0 auto;
+  grid-template-columns: repeat(3, 1fr);
+  width: 108px;
   height: 36px;
+  box-sizing: border-box;
   align-items: stretch;
   overflow: hidden;
   border: 1px solid rgba(221, 238, 255, 0.24);
