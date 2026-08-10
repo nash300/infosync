@@ -2,15 +2,16 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { LandingNav } from "@/components/LandingNav";
 import { LandingScrollReveal } from "@/components/LandingScrollReveal";
-import { serializeJsonLd } from "@/lib/seo";
+import { createPublicPageMetadata, serializeJsonLd } from "@/lib/seo";
 import "../public-info.css";
 
 const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://screenia.se";
 
-export const metadata: Metadata = {
-  title: "Så fungerar digital skyltning för företag",
+export const metadata: Metadata = createPublicPageMetadata({
+  path: "/sa-fungerar-det",
+  title: "Digital skyltning med vanlig TV – så fungerar det",
   description:
-    "Guide till hur Screenia hjälper salonger, butiker, restauranger och lokala företag i Sverige att komma igång med digital skyltning utan tekniskt krångel.",
+    "Så fungerar Screenias digitala skyltning med en vanlig TV: ni väljer lösning och skickar material, vi sköter innehåll, enhet, publicering och support.",
   keywords: [
     "så fungerar digital skyltning",
     "digital skyltning företag",
@@ -19,44 +20,46 @@ export const metadata: Metadata = {
     "digital menyskärm restaurang",
     "reklamskärm salong",
   ],
-  alternates: {
-    canonical: "/sa-fungerar-det",
-    languages: {
-      "sv-SE": "/sa-fungerar-det",
-    },
-  },
-  openGraph: {
-    title: "Så fungerar digital skyltning för företag | Screenia",
-    description:
-      "En enkel guide till hur Screenia hjälper lokala företag att visa menyer, kampanjer, prislistor och information på TV-skärm.",
-    url: "/sa-fungerar-det",
-    siteName: "Screenia",
-    locale: "sv_SE",
-    type: "website",
-    images: [
-      {
-        url: "/landing/free-source/retail-digital-signage.jpg",
-        width: 1200,
-        height: 630,
-        alt: "Digital skyltning i en verksamhetsmiljö",
-      },
-    ],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Så fungerar digital skyltning för företag | Screenia",
-    description:
-      "Guide till digital skyltning för lokala företag i Sverige: paket, material, betalning, leverans och löpande uppdateringar.",
-    images: ["/landing/free-source/retail-digital-signage.jpg"],
-  },
-};
+  image: "/landing/free-source/retail-digital-signage.jpg",
+  imageAlt: "Digital skyltning med en vanlig TV i en verksamhet",
+});
 
 const reasons = [
-  ["01", "Tydlig start", "Paket, uppstart, betalning och nästa steg samlas i ett enkelt flöde innan arbetet startar.", "/landing/free-source/business-consultation.jpg"],
-  ["02", "Professionellt uttryck", "Skärminnehållet planeras för att ge lokalen ett modernt, tydligt och säljande intryck.", "/landing/free-source/retail-digital-signage.jpg"],
-  ["03", "Mindre teknikstress", "Screenia förbereder processen så att verksamheten slipper bygga ett eget tekniskt system.", "/landing/free-source/restaurant-neon-sign.jpg"],
-  ["04", "Personlig planering", "Rådgivning, layoutstöd och överenskomna justeringar ingår i uppstarten.", "/landing/free-source/business-consultation.jpg"],
-  ["05", "Redo att växa", "Lösningen kan utökas med fler skärmar när behovet ökar, utan att arbetssättet byts ut.", "/landing/free-source/retail-digital-signage.jpg"],
+  [
+    "01",
+    "Tydlig start",
+    "Paket, uppstart, betalning och nästa steg samlas i ett enkelt flöde innan arbetet startar.",
+    "/landing/how-it-works/screenia-tydlig-start.webp",
+    "Företagare får personlig hjälp med att komma igång med Screenia",
+  ],
+  [
+    "02",
+    "Professionellt uttryck",
+    "Skärminnehållet planeras för att ge lokalen ett modernt, tydligt och säljande intryck.",
+    "/landing/how-it-works/screenia-professionellt-uttryck.webp",
+    "Digitalt innehåll formges professionellt på en ritplatta",
+  ],
+  [
+    "03",
+    "Mindre teknikstress",
+    "Screenia förbereder processen så att verksamheten slipper bygga ett eget tekniskt system.",
+    "/landing/how-it-works/screenia-mindre-teknikstress.webp",
+    "Företagare kan koppla av medan Screenia tar hand om tekniken",
+  ],
+  [
+    "04",
+    "Personlig planering",
+    "Rådgivning, layoutstöd och överenskomna justeringar ingår i uppstarten.",
+    "/landing/how-it-works/screenia-personlig-planering.webp",
+    "Personlig planering av skärmlösningen tillsammans med Screenia",
+  ],
+  [
+    "05",
+    "Redo att växa",
+    "Lösningen kan utökas med fler skärmar när behovet ökar, utan att arbetssättet byts ut.",
+    "/landing/how-it-works/screenia-redo-att-vaxa.webp",
+    "Digitala menyskärmar som kan byggas ut när verksamheten växer",
+  ],
 ] as const;
 
 export default function HowItWorksPage() {
@@ -108,13 +111,24 @@ export default function HowItWorksPage() {
 
       <main className="how-main">
         <section className="how-hero">
-          <p className="landing-eyebrow">Fördelar</p>
-          <h1>Mer synlighet för företaget, utan mer tekniskt arbete.</h1>
-          <p>
-            Screenia samlar uppstart, betalning, innehåll och support i ett
-            tydligt flöde. Resultatet är en professionell skärmlösning utan
-            behov av ett eget tekniskt system.
-          </p>
+          <div className="how-hero-copy">
+            <p className="landing-eyebrow">Fördelar</p>
+            <h1>Digital skyltning med vanlig TV, utan tekniskt krångel.</h1>
+            <p>
+              Screenia samlar uppstart, betalning, innehåll och support i ett
+              tydligt flöde. Resultatet är en professionell skärmlösning utan
+              behov av ett eget tekniskt system.
+            </p>
+          </div>
+          <div className="how-hero-visual">
+            <Image
+              src="/landing/screenia-tv-foretagare.webp"
+              alt="Företagare använder Screenia för digital skyltning på en vanlig TV"
+              fill
+              priority
+              sizes="(max-width: 820px) calc(100vw - 84px), 38vw"
+            />
+          </div>
         </section>
 
         <section className="how-promo-section">
@@ -129,13 +143,14 @@ export default function HowItWorksPage() {
           </div>
 
           <div className="how-reason-grid how-reason-grid-featured" aria-label="Screenia fördelar">
-            {reasons.map(([number, title, text, image]) => (
+            {reasons.map(([number, title, text, image, imageAlt]) => (
               <article key={number} className="how-reason-card">
                 <Image
                   src={image}
-                  alt={`${title} med Screenia`}
+                  alt={imageAlt}
                   width={900}
                   height={720}
+                  sizes="(max-width: 820px) calc(100vw - 72px), (max-width: 1120px) 44vw, 30vw"
                 />
                 <div>
                   <span>{number}</span>

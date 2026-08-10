@@ -12,6 +12,14 @@ type CustomerOperationsInput = {
   activeDiscountCount: number;
 };
 
+export type CustomerBillingGuide = {
+  tone: "success" | "warning" | "danger" | "neutral";
+  title: string;
+  summary: string;
+  steps: string[];
+  recommendedOperationId: CustomerOperationId | null;
+};
+
 const terminalStatuses = new Set(["cancelled", "refunded"]);
 
 export function getCustomerOperations({
@@ -195,6 +203,97 @@ export function getCustomerOperations({
   return operations.filter(
     (operation): operation is CustomerOperation => operation !== null,
   );
+}
+
+export function getCustomerBillingGuide({
+  customer,
+  currentSubscription,
+  operations,
+}: {
+  customer: Customer;
+  currentSubscription: CustomerSubscription | null;
+  operations: CustomerOperation[];
+}): CustomerBillingGuide {
+  const available = new Set(operations.map((operation) => operation.id));
+  const paymentStatus = customer.payment_status || "not paid";
+  const subscriptionStatus = currentSubscription?.status || "not started";
+  const hasBillingFailure = [
+    "failed",
+    "payment_failed",
+    "past_due",
+    "unpaid",
+    "disputed",
+  ].includes(paymentStatus) || ["payment_failed", "past_due", "unpaid", "disputed"].includes(subscriptionStatus);
+
+  if (hasBillingFailure) {
+    return {
+      tone: "danger",
+      title: "Payment needs attention",
+      summary:
+        "Screen access is protected automatically. Verify the latest Stripe invoice and contact the customer if payment is still outstanding.",
+      steps: [
+        "Open the latest invoice in Stripe and confirm the failure reason.",
+        "Ask the customer to update payment details or complete the payment.",
+        "Wait for Stripe to confirm payment; Screenia updates access from the webhook.",
+      ],
+      recommendedOperationId: null,
+    };
+  }
+
+  if (available.has("resume_subscription")) {
+    return {
+      tone: "warning",
+      title: currentSubscription?.cancel_at_period_end
+        ? "Cancellation is scheduled"
+        : "Subscription is paused",
+      summary: currentSubscription?.cancel_at_period_end
+        ? "The service remains available until the paid period ends. Resume only if the customer has withdrawn the cancellation."
+        : "Billing and screen access are paused. Resume only after confirming the customer wants service to continue.",
+      steps: [
+        "Confirm the customer's request.",
+        "Review the result shown below.",
+        "Resume and record the reason in the audit trail.",
+      ],
+      recommendedOperationId: "resume_subscription",
+    };
+  }
+
+  if (paymentStatus === "paid" || subscriptionStatus === "active") {
+    return {
+      tone: "success",
+      title: "Billing is in order",
+      summary:
+        "No billing correction is required. Use an action only when the customer asks for a pause, discount, cancellation, or refund.",
+      steps: [],
+      recommendedOperationId: null,
+    };
+  }
+
+  return {
+    tone: "neutral",
+    title: "Waiting for payment",
+    summary:
+      "The customer has not completed payment yet. Check that the setup link was sent and let the customer finish the secure checkout.",
+    steps: [
+      "Confirm the setup email was sent to the correct address.",
+      "Resend the setup link from Request & quote if it has expired.",
+      "Do not activate service manually before payment is confirmed.",
+    ],
+    recommendedOperationId: null,
+  };
+}
+
+const exceptionalOperationIds = new Set<CustomerOperationId>([
+  "cancel_immediately",
+  "refund_first_payment",
+  "record_post_layout_refund_request",
+  "issue_partial_refund",
+  "suspend_customer",
+  "reactivate_customer",
+]);
+
+export function isExceptionalCustomerOperation(operationId: CustomerOperationId) {
+  return exceptionalOperationIds.has(operationId);
 }
 
 const operationReasonLabels: Partial<Record<CustomerOperationId, string>> = {

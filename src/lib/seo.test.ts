@@ -44,6 +44,25 @@ describe("public search discovery", () => {
     });
     expect(metadata.openGraph).toMatchObject({ url: "/kontakt", locale: "sv_SE" });
     expect(metadata.twitter).toMatchObject({ card: "summary_large_image" });
+    expect(metadata.title).toBe("Kontakta oss");
+    expect(metadata.openGraph).toMatchObject({
+      title: "Kontakta oss | Screenia",
+    });
+  });
+
+  it("uses Swedish search-friendly metadata without duplicating the brand", () => {
+    const metadata = createPublicPageMetadata({
+      path: "/sa-fungerar-det",
+      title: "Digital skyltning med vanlig TV – så fungerar det",
+      description:
+        "Så fungerar digital skyltning med en vanlig TV för företag i Sverige.",
+    });
+
+    expect(metadata.title).not.toContain("Screenia");
+    expect(metadata.openGraph).toMatchObject({
+      title: "Digital skyltning med vanlig TV – så fungerar det | Screenia",
+      locale: "sv_SE",
+    });
   });
 });
 

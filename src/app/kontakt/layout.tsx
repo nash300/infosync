@@ -25,7 +25,7 @@ export default function ContactLayout({
     description: metadata.description,
     inLanguage: "sv-SE",
     isPartOf: { "@id": `${siteUrl}/#website` },
-    about: { "@id": `${siteUrl}/#business` },
+    about: { "@id": `${siteUrl}/#organization` },
   };
 
   return (

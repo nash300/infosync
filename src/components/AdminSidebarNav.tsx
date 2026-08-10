@@ -12,6 +12,7 @@ import {
 export default function AdminSidebarNav() {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
 
   return (
     <>
@@ -23,7 +24,7 @@ export default function AdminSidebarNav() {
         onClick={() => setIsOpen((open) => !open)}
       >
         <span>Adminmeny</span>
-        <span aria-hidden="true">{isOpen ? "×" : "☰"}</span>
+        <span aria-hidden="true">{isOpen ? "Close" : "Menu"}</span>
       </button>
       <nav
         id="admin-sidebar-navigation"
@@ -31,9 +32,44 @@ export default function AdminSidebarNav() {
           isOpen ? " admin-sidebar-navigation-open" : ""
         }`}
       >
-        {adminNavGroups.map((group) => (
-          <section key={group.title} className="admin-nav-group">
-            <p className="admin-nav-group-title">{group.title}</p>
+        {adminNavGroups.map((group) => {
+          const groupIsActive = adminNavItems
+            .filter((item) => group.hrefs.includes(item.href))
+            .some((item) => {
+              if (item.href === "/admin/site-content") {
+                return (
+                  pathname === "/admin/site-content" ||
+                  siteContentNavItems.some(
+                    (contentItem) =>
+                      pathname === contentItem.href ||
+                      pathname.startsWith(`${contentItem.href}/`),
+                  )
+                );
+              }
+
+              return item.href === "/admin"
+                ? pathname === "/admin"
+                : pathname === item.href || pathname.startsWith(`${item.href}/`);
+            });
+
+          return (
+          <details
+            key={group.title}
+            className="admin-nav-group"
+            open={expandedGroups[group.title] ?? (group.defaultOpen || groupIsActive)}
+            onToggle={(event) => {
+              const open = event.currentTarget.open;
+              setExpandedGroups((current) =>
+                current[group.title] === open
+                  ? current
+                  : { ...current, [group.title]: open },
+              );
+            }}
+          >
+            <summary className="admin-nav-group-title">
+              <span>{group.title}</span>
+              <span aria-hidden="true" className="admin-nav-group-chevron">+</span>
+            </summary>
             <div className="admin-nav-list">
               {adminNavItems
                 .filter((item) => group.hrefs.includes(item.href))
@@ -71,8 +107,9 @@ export default function AdminSidebarNav() {
                   );
                 })}
             </div>
-          </section>
-        ))}
+          </details>
+          );
+        })}
       </nav>
     </>
   );

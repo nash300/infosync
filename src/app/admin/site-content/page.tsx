@@ -7,7 +7,7 @@ export default function SiteContentPage() {
       <header className="admin-page-header">
         <div>
           <p className="admin-operation-kicker">Website editing</p>
-          <h1 className="admin-title">Site content</h1>
+          <h1 className="admin-title">Website</h1>
           <p className="admin-subtitle">
             Edit customer-facing website content from one place. Keep public text,
             images, legal documents, and policy pages clear before publishing.

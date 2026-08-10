@@ -1,27 +1,27 @@
 export const adminNavItems = [
   {
     href: "/admin",
-    label: "Dashboard",
+    label: "Overview",
     icon: "DB",
-    description: "Daily overview, alerts, and setup health.",
+    description: "Start here and continue the next customer task.",
   },
   {
     href: "/admin/customers",
-    label: "Customer work",
+    label: "Customers",
     icon: "CU",
-    description: "Requests, customer profiles, onboarding links, files, messages, and handoff.",
+    description: "Requests, profiles, onboarding, files, and delivery progress.",
   },
   {
     href: "/admin/contact-inquiries",
-    label: "Visitor messages",
+    label: "Messages",
     icon: "VM",
-    description: "Contact form questions, replies, delivery status, and case progress.",
+    description: "Read and answer website enquiries.",
   },
   {
     href: "/admin/orders",
-    label: "Orders & billing",
+    label: "Orders & payments",
     icon: "OR",
-    description: "Orders, Stripe payments, refunds, cancellations, invoices, and accounting exports.",
+    description: "Orders, payments, refunds, invoices, and exports.",
   },
   {
     href: "/admin/devices",
@@ -31,25 +31,25 @@ export const adminNavItems = [
   },
   {
     href: "/admin/inventory",
-    label: "Hardware stock",
+    label: "Hardware",
     icon: "ST",
-    description: "Physical devices, serial numbers, warranty, returns, repairs, and retirement.",
+    description: "Stock, serial numbers, assignments, returns, and repairs.",
   },
   {
     href: "/admin/pricing",
-    label: "Pricing",
+    label: "Pricing & VAT",
     icon: "PR",
-    description: "Plans, setup fees, device prices, shipping, VAT, and Stripe sync.",
+    description: "Plans, fees, shipping, VAT, and Stripe sync.",
   },
   {
     href: "/admin/site-content",
-    label: "Site content",
+    label: "Website",
     icon: "SC",
-    description: "Hero slides, images, document pages, and public website text.",
+    description: "Public pages, images, examples, and documents.",
   },
   {
     href: "/admin/training",
-    label: "Training catalog",
+    label: "Training",
     icon: "TR",
     description: "Reserved workspace for future Screenia training material.",
   },
@@ -63,7 +63,8 @@ export const adminNavItems = [
 
 export const adminNavGroups = [
   {
-    title: "Customer work",
+    title: "Daily work",
+    defaultOpen: true,
     hrefs: [
       "/admin",
       "/admin/customers",
@@ -72,15 +73,18 @@ export const adminNavGroups = [
     ],
   },
   {
-    title: "Service delivery",
+    title: "Delivery",
+    defaultOpen: false,
     hrefs: ["/admin/devices", "/admin/inventory"],
   },
   {
-    title: "Content and business",
+    title: "Business",
+    defaultOpen: false,
     hrefs: ["/admin/pricing", "/admin/site-content", "/admin/training"],
   },
   {
-    title: "System support",
+    title: "More tools",
+    defaultOpen: false,
     hrefs: ["/admin/troubleshooting"],
   },
 ];

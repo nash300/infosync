@@ -791,21 +791,22 @@
   box-shadow: none;
 }
 
-.screenia-theme .landing-pricing .landing-package-lines > div {
-  border: 1px solid #dce7fa;
+.screenia-theme .landing-pricing .landing-package-cost-group {
+  border-color: #dce7fa;
   background: linear-gradient(135deg, #f5f8ff, #eaf2ff);
   box-shadow: none;
 }
 
-.screenia-theme .landing-pricing .landing-package-lines span {
+.screenia-theme .landing-pricing .landing-package-cost-group > div > span {
   color: var(--reference-ink);
 }
 
-.screenia-theme .landing-pricing .landing-package-lines strong {
+.screenia-theme .landing-pricing .landing-package-cost-group strong b {
   color: var(--reference-blue);
 }
 
-.screenia-theme .landing-pricing .landing-package-lines small {
+.screenia-theme .landing-pricing .landing-package-cost-group small,
+.screenia-theme .landing-pricing .landing-package-cost-group strong > span {
   color: var(--reference-muted);
 }
 
@@ -1518,6 +1519,10 @@
   .screenia-theme .landing-footer nav a {
     font-size: 0.7rem;
   }
+
+  .screenia-theme .landing-footer-legal {
+    padding-top: 9px;
+  }
 }
 
 @media (max-width: 640px) {
@@ -1559,6 +1564,19 @@
     display: flex;
     align-items: baseline;
     justify-content: space-between;
+  }
+
+  .screenia-theme .landing-footer-legal {
+    display: grid;
+    gap: 4px;
+  }
+
+  .screenia-theme .landing-footer-legal > p {
+    font-size: 0.64rem;
+  }
+
+  .screenia-theme .landing-footer-registration {
+    white-space: normal;
   }
 }
 
@@ -1677,12 +1695,6 @@
 
 .screenia-theme .public-info-page .how-hero {
   border-top: 6px solid var(--reference-yellow);
-}
-
-@media (min-width: 821px) {
-  .screenia-theme .public-info-page .how-hero > * {
-    max-width: 54%;
-  }
 }
 
 .screenia-theme .public-info-page :is(
@@ -2887,5 +2899,198 @@
   .screenia-admin-login-links {
     align-items: flex-start;
     flex-direction: column;
+  }
+}
+
+/* Så fungerar det: polished public presentation */
+.screenia-theme .public-info-page.how-page .how-main {
+  isolation: isolate;
+  background:
+    radial-gradient(circle at 8% 8%, rgba(50, 136, 255, 0.2), transparent 25%),
+    radial-gradient(circle at 92% 42%, rgba(255, 211, 42, 0.12), transparent 24%),
+    linear-gradient(rgba(20, 87, 189, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(20, 87, 189, 0.045) 1px, transparent 1px),
+    #f3f7ff;
+  background-size: auto, auto, 72px 72px, 72px 72px, auto;
+}
+
+.screenia-theme .public-info-page.how-page :is(.how-hero, .how-promo-section) {
+  border-color: rgba(20, 87, 189, 0.16);
+  box-shadow:
+    0 32px 76px rgba(9, 41, 95, 0.13),
+    0 3px 12px rgba(9, 41, 95, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.screenia-theme .public-info-page.how-page .how-hero {
+  border-top-color: var(--reference-yellow);
+  background:
+    radial-gradient(circle at 75% 44%, rgba(49, 126, 246, 0.14), transparent 34%),
+    linear-gradient(132deg, #ffffff 0 52%, #edf5ff 52% 100%);
+}
+
+.screenia-theme .public-info-page.how-page .how-hero::after {
+  inset: 0;
+  border: 0;
+  border-radius: inherit;
+  background:
+    linear-gradient(115deg, transparent 0 64%, rgba(255, 211, 42, 0.12) 64% 65%, transparent 65%),
+    radial-gradient(circle at 92% 8%, rgba(20, 87, 189, 0.1), transparent 22%);
+}
+
+.screenia-theme .public-info-page.how-page .how-hero-visual {
+  border: 7px solid rgba(255, 255, 255, 0.88);
+  border-radius: 22px;
+  background: #dbeaff;
+  box-shadow:
+    0 28px 62px rgba(8, 42, 101, 0.24),
+    0 0 0 1px rgba(20, 87, 189, 0.12),
+    -18px 18px 0 rgba(255, 211, 42, 0.18);
+}
+
+.screenia-theme .public-info-page.how-page .how-hero-visual img {
+  filter: saturate(0.98) contrast(1.03);
+}
+
+.screenia-theme .public-info-page.how-page .how-promo-section {
+  isolation: isolate;
+  background:
+    radial-gradient(circle at 94% 2%, rgba(49, 126, 246, 0.1), transparent 24%),
+    linear-gradient(145deg, #ffffff, #f8fbff 58%, #f1f6ff);
+}
+
+.screenia-theme .public-info-page.how-page .how-promo-section::after {
+  position: absolute;
+  z-index: -1;
+  top: -190px;
+  right: -150px;
+  width: 440px;
+  height: 440px;
+  border: 1px solid rgba(20, 87, 189, 0.08);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(73, 147, 255, 0.08), transparent 66%);
+  content: "";
+  pointer-events: none;
+}
+
+.screenia-theme .public-info-page.how-page .how-section-heading {
+  position: relative;
+  z-index: 1;
+  border-bottom: 1px solid rgba(20, 87, 189, 0.13);
+  padding-bottom: clamp(24px, 3vw, 36px);
+}
+
+.screenia-theme .public-info-page.how-page .how-section-heading h2 {
+  color: var(--reference-ink);
+}
+
+.screenia-theme .public-info-page.how-page .how-reason-grid {
+  position: relative;
+  z-index: 1;
+}
+
+.screenia-theme .public-info-page.how-page .how-reason-card {
+  --how-card-accent: #2f7df6;
+  border: 1px solid rgba(20, 87, 189, 0.18);
+  border-top: 4px solid var(--how-card-accent);
+  border-radius: 20px;
+  background: #ffffff;
+  box-shadow:
+    0 18px 42px rgba(9, 41, 95, 0.12),
+    0 2px 8px rgba(9, 41, 95, 0.06);
+}
+
+.screenia-theme .public-info-page.how-page .how-reason-card:nth-child(2),
+.screenia-theme .public-info-page.how-page .how-reason-card:nth-child(5) {
+  --how-card-accent: #ffd32a;
+}
+
+.screenia-theme .public-info-page.how-page .how-reason-card:nth-child(4) {
+  --how-card-accent: #58a1ff;
+}
+
+.screenia-theme .public-info-page.how-page .how-reason-card img {
+  border-bottom: 0;
+  filter: saturate(0.96) contrast(1.03);
+}
+
+.screenia-theme .public-info-page.how-page .how-reason-card > div {
+  position: relative;
+  background:
+    linear-gradient(90deg, var(--how-card-accent), var(--how-card-accent)) top / 100% 3px no-repeat,
+    linear-gradient(145deg, #ffffff, #f4f8ff);
+  padding: 20px 22px 23px;
+}
+
+.screenia-theme .public-info-page.how-page .how-reason-card > div::after {
+  position: absolute;
+  right: 18px;
+  bottom: 16px;
+  width: 38px;
+  height: 38px;
+  border: 1px solid rgba(20, 87, 189, 0.09);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(49, 126, 246, 0.09), transparent 68%);
+  content: "";
+  pointer-events: none;
+}
+
+.screenia-theme .public-info-page.how-page .how-reason-card span {
+  border: 1px solid rgba(13, 58, 129, 0.08);
+  box-shadow: 0 8px 20px rgba(255, 211, 42, 0.25);
+}
+
+.screenia-theme .public-info-page.how-page .how-reason-card:hover {
+  border-color: rgba(20, 87, 189, 0.32);
+  box-shadow:
+    0 28px 62px rgba(9, 41, 95, 0.2),
+    0 4px 12px rgba(9, 41, 95, 0.08);
+}
+
+@media (max-width: 820px) {
+  .screenia-theme .public-info-page.how-page .how-main {
+    background:
+      radial-gradient(circle at 12% 8%, rgba(50, 136, 255, 0.18), transparent 28%),
+      linear-gradient(rgba(20, 87, 189, 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(20, 87, 189, 0.04) 1px, transparent 1px),
+      #f3f7ff;
+    background-size: auto, 48px 48px, 48px 48px, auto;
+  }
+
+  .screenia-theme .public-info-page.how-page .how-hero {
+    background: linear-gradient(155deg, #ffffff 0 52%, #edf5ff 52% 100%);
+  }
+
+  .screenia-theme .public-info-page.how-page .how-hero-visual {
+    border-width: 5px;
+    border-radius: 17px;
+    box-shadow:
+      0 20px 42px rgba(8, 42, 101, 0.2),
+      0 0 0 1px rgba(20, 87, 189, 0.1),
+      -9px 10px 0 rgba(255, 211, 42, 0.16);
+  }
+
+  .screenia-theme .public-info-page.how-page .how-reason-card {
+    border-radius: 18px;
+  }
+}
+
+@media (min-width: 640px) and (max-width: 820px) {
+  .screenia-theme .public-info-page.how-page .how-reason-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .screenia-theme .public-info-page.how-page .how-reason-card:nth-child(5) {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 560px) {
+  .screenia-theme .public-info-page.how-page .how-section-heading {
+    padding-bottom: 22px;
+  }
+
+  .screenia-theme .public-info-page.how-page .how-reason-card > div {
+    padding: 17px 18px 20px;
   }
 }

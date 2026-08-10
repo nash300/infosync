@@ -8,9 +8,9 @@ export const copy = {
     demo: "Kontakta oss",
     eyebrow: "Digital skyltning för företag",
     hero:
-      "Professionellt skärminnehåll, hanterat från en tydlig plattform.",
+      "Digital skyltning för företag – med skärmen ni redan har.",
     lede:
-      "Screenia hjälper salonger, butiker och serviceföretag att visa kampanjer, prislistor och information på skärm. Full HD- och 4K-enheter kan kombineras efter verksamhetens behov, med stöd genom hela uppstarten.",
+      "Screenia hjälper företag och organisationer att visa information och erbjudanden på skärm, oavsett bransch. Full HD- och 4K-enheter kan kombineras efter verksamhetens behov, med stöd genom hela uppstarten.",
     pricingCta: "Se paket",
     workflowCta: "Se fördelarna",
     stats: [
@@ -18,15 +18,6 @@ export const copy = {
       ["Fungerar med en vanlig TV", "Använd en vanlig TV som reklamskärm – du väljer själv var den ska placeras."],
       ["Ingen bindningstid", "Avsluta abonnemanget när du vill."],
       ["Vi tar hand om tekniken", "Du behöver bara en TV. Screenia hanterar systemet, innehållet och den tekniska driften åt dig."],
-    ],
-    platformTitle: "En enklare väg till professionell skärmvisning",
-    platformText:
-      "Ett eget tekniskt system eller komplicerade inställningar behövs inte. Screenia hanterar processen från första förfrågan till en skärm med rätt innehåll för verksamheten.",
-    features: [
-      ["Smidig start", "Vald skärmlösning följs av en personlig startguide med tydliga nästa steg."],
-      ["Tydlig kostnad", "Startavgift, enhetspris, månadskostnad, provperiod och bindningstid redovisas innan beställningen slutförs."],
-      ["Hjälp med skärmen", "Efter betalning samlar vi in material, gör layouten och skickar enheten med instruktioner."],
-      ["Innehåll som syns", "Lösningen kan visa erbjudanden, prislistor, nyheter och annan information som passar lokalen."],
     ],
     workflowTitle: "Från paketval till fungerande skärm",
     workflowText:
@@ -68,7 +59,7 @@ export const copy = {
       "Vi kan skicka skärmenheten med etablerade transportörer i Sverige och väljer alternativ efter adress, paketstorlek och ledtid.",
     galleryTitle: "Presentationer i rörelse",
     galleryText:
-      "Se exempel på digitala presentationer som vi har formgivit för tydlig och levande visning på skärm.",
+      "Se hur professionellt utformade presentationer kan lyfta information och erbjudanden på både stående och liggande skärmar.",
     faqTitle: "Svar inför val av skärmlösning",
     faqs: [
       ["Vad händer efter valet av skärmar?", "En kort förfrågan skickas med önskad kombination. Efter Screenias granskning skickas en personlig startguide för bekräftelse av uppgifter, villkor och betalning."],
@@ -97,7 +88,7 @@ export const copy = {
       "Ange önskat antal skärmar i Standard, Premium eller Premium Plus samt planerat innehåll. Screenia kontrollerar kombinationen innan betalning kan genomföras.",
     contactButton: "Kontakta Screenia",
     seoIntro:
-      "Screenia erbjuder digital skyltning för företag och organisationer i Sverige, oavsett bransch eller verksamhetstyp. Lösningen gör det möjligt att visa information, erbjudanden, menyer, prislistor och annat visuellt innehåll med kundens befintliga utrustning och fungerar med olika typer av skärmar, från vanliga TV-apparater till professionella skärmar för digital skyltning.",
+      "Screenia erbjuder digital skyltning för företag och organisationer i Sverige, oavsett bransch eller verksamhetstyp. Visa information, erbjudanden och annat visuellt innehåll på en vanlig TV eller professionell informationsskärm. Ni använder er befintliga skärm medan Screenia sköter skärminnehåll, publicering och teknisk support.",
     modalEyebrow: "Skicka förfrågan",
     modalTitle: "Starta med",
     modalText:
@@ -132,15 +123,6 @@ export const copy = {
       ["Use your own equipment", "Choose which screens to use and where to place them."],
       ["No commitment period", "Cancel the subscription whenever you want."],
       ["Easy to get started", "No technical knowledge is required."],
-    ],
-    platformTitle: "A simpler path to professional screen display",
-    platformText:
-      "No proprietary technical system or complex configuration is required. Screenia manages the process from the initial request to a screen displaying the appropriate content for the business.",
-    features: [
-      ["Smooth start", "The selected screen solution is followed by a personal setup guide with clear next steps."],
-      ["Clear costs", "The setup fee, device price, monthly price, trial period, and commitment are presented before the order is completed."],
-      ["Screen support", "Screenia creates the layout from the submitted material and sends the device with instructions."],
-      ["Visible content", "The solution can display offers, price lists, news, and other information suited to the premises."],
     ],
     workflowTitle: "From package choice to working screen",
     workflowText:
@@ -375,14 +357,6 @@ export const planCopy = {
   },
 } as const;
 
-export const featureIcons = ["spark", "receipt", "screen", "megaphone"] as const;
-
-export const visualImages = [
-  "/landing/section-art/digital-menu-board.jpg",
-  "/landing/section-art/restaurant-menu-screens.jpg",
-  "/landing/section-art/salon-service-window.jpg",
-] as const;
-
 export const workflowImages = [
   "/landing/workflow/01-package-request.png",
   "/landing/workflow/02-design-planning.png",
@@ -390,19 +364,6 @@ export const workflowImages = [
   "/landing/workflow/04-connect-device.png",
   "/landing/workflow/05-live-display.png",
 ] as const;
-
-export const visualCopy = {
-  sv: [
-    ["Planera innehåll", "Meny, kampanj och logotyp samlas på ett ställe."],
-    ["Trygg betalning", "Villkor, uppgifter och betalning sker i samma tydliga flöde."],
-    ["Färdig visning", "Enheten kopplas in och visar materialet utan krånglig installation."],
-  ],
-  en: [
-    ["Plan content", "Menu, campaign, and logo are collected in one place."],
-    ["Secure payment", "Terms, details, and payment stay in the same clear flow."],
-    ["Ready display", "The device plugs in and shows the material without complicated setup."],
-  ],
-} as const;
 
 export const heroBenefits = [
   ["Ingen bindningstid", "Avsluta när som helst."],

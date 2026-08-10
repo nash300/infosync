@@ -1,8 +1,14 @@
+"""Create Screenia's print-ready, two-sided A4 sales leaflet.
+
+The PDF has a 3 mm bleed on every edge (216 x 303 mm). All typography and
+shapes are vector; the supplied brand photography is placed at native quality.
+"""
+
 from pathlib import Path
 
 from PIL import Image
 from reportlab.lib.colors import Color, HexColor, white
-from reportlab.lib.pagesizes import A4
+from reportlab.lib.units import mm
 from reportlab.lib.utils import ImageReader, simpleSplit
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
@@ -13,58 +19,63 @@ from reportlab.graphics.shapes import Drawing
 
 
 ROOT = Path(__file__).resolve().parents[1]
-OUT = ROOT / "output" / "pdf" / "screenia-a4-leaflet-sv.pdf"
+OUT = ROOT / "output" / "pdf" / "screenia-a4-leaflet-two-sided-sv.pdf"
 ASSETS = ROOT / "public"
 
-W, H = A4
+# Finished page: A4 trim size plus 3 mm bleed on all sides.
+BLEED = 3 * mm
+TRIM_W, TRIM_H = 210 * mm, 297 * mm
+W, H = TRIM_W + BLEED * 2, TRIM_H + BLEED * 2
+SAFE = 9 * mm
 
 NAVY = HexColor("#09295F")
 BLUE = HexColor("#1457BD")
 BLUE_DARK = HexColor("#073984")
-PALE_BLUE = HexColor("#EFF5FF")
-LINE = HexColor("#D7E5FA")
+BLUE_DEEP = HexColor("#04265E")
+PALE = HexColor("#F5F8FF")
+ICE = HexColor("#EAF2FF")
+LINE = HexColor("#D3E2FA")
 MUTED = HexColor("#587099")
 YELLOW = HexColor("#FFD32A")
 INK = HexColor("#17213A")
-TEAL = HexColor("#0B9AB2")
+GREEN = HexColor("#168A71")
+PLUS = HexColor("#6A46B8")
 
 
-def register_fonts():
-    regular = ASSETS / "fonts" / "manrope" / "Manrope-500.ttf"
-    semibold = ASSETS / "fonts" / "manrope" / "Manrope-600.ttf"
-    bold = ASSETS / "fonts" / "manrope" / "Manrope-800.ttf"
-    pdfmetrics.registerFont(TTFont("Screenia", str(regular)))
-    pdfmetrics.registerFont(TTFont("Screenia-Semibold", str(semibold)))
-    pdfmetrics.registerFont(TTFont("Screenia-Bold", str(bold)))
+def fonts():
+    family = ASSETS / "fonts" / "manrope"
+    pdfmetrics.registerFont(TTFont("Screenia", str(family / "Manrope-500.ttf")))
+    pdfmetrics.registerFont(TTFont("Screenia-Medium", str(family / "Manrope-600.ttf")))
+    pdfmetrics.registerFont(TTFont("Screenia-Bold", str(family / "Manrope-800.ttf")))
 
 
-def rounded_rect(c, x, y, width, height, radius, fill, stroke=None, stroke_width=0.8):
-    c.setLineWidth(stroke_width)
+def rr(c, x, y, width, height, radius, fill, stroke=None, sw=0.7):
     c.setFillColor(fill)
     c.setStrokeColor(stroke or fill)
+    c.setLineWidth(sw)
     c.roundRect(x, y, width, height, radius, fill=1, stroke=1 if stroke else 0)
 
 
-def draw_cover_image(c, path, x, y, width, height):
-    image = Image.open(path)
-    source_width, source_height = image.size
-    scale = max(width / source_width, height / source_height)
-    draw_width = source_width * scale
-    draw_height = source_height * scale
-    draw_x = x + (width - draw_width) / 2
-    draw_y = y + (height - draw_height) / 2
-    c.saveState()
-    clip = c.beginPath()
-    clip.rect(x, y, width, height)
-    c.clipPath(clip, stroke=0, fill=0)
-    c.drawImage(ImageReader(image), draw_x, draw_y, draw_width, draw_height, mask="auto")
-    c.restoreState()
+def crop_image(c, path, x, y, width, height, focus_x=0.5, focus_y=0.5):
+    """Place an image like CSS object-fit: cover, with optional focal point."""
+    with Image.open(path) as source:
+        source_width, source_height = source.size
+        scale = max(width / source_width, height / source_height)
+        draw_width, draw_height = source_width * scale, source_height * scale
+        left = x - (draw_width - width) * focus_x
+        bottom = y - (draw_height - height) * focus_y
+        c.saveState()
+        clip = c.beginPath()
+        clip.rect(x, y, width, height)
+        c.clipPath(clip, stroke=0, fill=0)
+        c.drawImage(ImageReader(source.copy()), left, bottom, draw_width, draw_height, mask="auto")
+        c.restoreState()
 
 
-def text(c, value, x, y, width, font="Screenia", size=10, color=INK, leading=None, max_lines=None):
+def draw_lines(c, value, x, y, width, font="Screenia", size=9, color=INK, leading=None, max_lines=None):
     leading = leading or size * 1.35
     lines = simpleSplit(value, font, size, width)
-    if max_lines:
+    if max_lines is not None:
         lines = lines[:max_lines]
     c.setFont(font, size)
     c.setFillColor(color)
@@ -74,165 +85,363 @@ def text(c, value, x, y, width, font="Screenia", size=10, color=INK, leading=Non
     return y
 
 
-def centered(c, value, x, y, width, font="Screenia", size=10, color=INK):
+def centered(c, value, x, y, width, font="Screenia", size=9, color=INK):
     c.setFont(font, size)
     c.setFillColor(color)
     c.drawCentredString(x + width / 2, y, value)
 
 
-def check_mark(c, x, y, fill=BLUE):
-    c.setStrokeColor(fill)
-    c.setLineWidth(1.7)
-    c.line(x, y, x + 2.6, y - 2.6)
-    c.line(x + 2.6, y - 2.6, x + 7, y + 3.5)
+def bullet(c, value, x, y, width, color=INK, size=7.15, bullet_color=BLUE, leading=9.8):
+    c.setFillColor(bullet_color)
+    c.circle(x + 2, y + 2.1, 1.4, fill=1, stroke=0)
+    c.setFont("Screenia", size)
+    c.setFillColor(color)
+    lines = simpleSplit(value, "Screenia", size, width - 11)
+    for i, line in enumerate(lines):
+        c.drawString(x + 8, y - i * leading, line)
+    return y - len(lines) * leading - 2.5
 
 
-def benefit_card(c, x, y, width, icon, title, body):
-    rounded_rect(c, x, y, width, 53, 12, white, LINE)
-    c.setFillColor(PALE_BLUE)
-    c.circle(x + 20, y + 31, 12, fill=1, stroke=0)
-    c.setFont("Screenia-Bold", 12)
-    c.setFillColor(BLUE)
-    c.drawCentredString(x + 20, y + 27, icon)
-    text(c, title, x + 38, y + 34, width - 47, "Screenia-Bold", 7.9, NAVY, 9.5, 1)
-    text(c, body, x + 38, y + 20, width - 47, "Screenia", 6.8, MUTED, 8.5, 2)
-
-
-def plan_card(c, x, y, width, name, resolution, first_payment, monthly, points, accent, recommended=False):
-    height = 166
-    rounded_rect(c, x, y, width, height, 14, white, accent, 1)
-    c.setFillColor(accent)
-    c.roundRect(x, y + height - 7, width, 7, 6, fill=1, stroke=0)
-    if recommended:
-        rounded_rect(c, x + width - 73, y + height - 26, 62, 17, 8.5, YELLOW)
-        centered(c, "REKOMMENDERAS", x + width - 73, y + height - 20.5, 62, "Screenia-Bold", 5.2, INK)
-    text(c, name, x + 12, y + height - 28, width - 24, "Screenia-Bold", 13.5, NAVY)
-    text(c, resolution, x + 12, y + height - 41, width - 24, "Screenia-Semibold", 7.1, accent)
-    c.setStrokeColor(LINE)
-    c.setLineWidth(0.6)
-    c.line(x + 12, y + height - 51, x + width - 12, y + height - 51)
-    text(c, "FÖRSTA BETALNING", x + 12, y + height - 65, width - 24, "Screenia-Bold", 5.8, MUTED)
-    text(c, first_payment, x + 12, y + height - 82, width - 24, "Screenia-Bold", 16, NAVY)
-    text(c, "startavgift + enhet + frakt", x + 12, y + height - 94, width - 24, "Screenia", 6.2, MUTED)
-    c.setFillColor(PALE_BLUE)
-    c.roundRect(x + 10, y + height - 117, width - 20, 18, 7, fill=1, stroke=0)
-    text(c, f"{monthly} / mån efter 21 dagar gratis", x + 16, y + height - 110, width - 32, "Screenia-Bold", 6.4, NAVY)
-    bullet_y = y + height - 132
-    for point in points:
-        check_mark(c, x + 14, bullet_y + 2, accent)
-        text(c, point, x + 25, bullet_y, width - 37, "Screenia", 6.25, MUTED, 8, 1)
-        bullet_y -= 11
-
-
-def draw_qr(c, value, x, y, size):
-    qr = QrCodeWidget(value)
-    bounds = qr.getBounds()
-    width = bounds[2] - bounds[0]
-    height = bounds[3] - bounds[1]
-    drawing = Drawing(size, size, transform=[size / width, 0, 0, size / height, 0, 0])
-    drawing.add(qr)
+def qr(c, x, y, size, value):
+    widget = QrCodeWidget(value)
+    bounds = widget.getBounds()
+    drawing = Drawing(size, size, transform=[size / (bounds[2] - bounds[0]), 0, 0, size / (bounds[3] - bounds[1]), 0, 0])
+    drawing.add(widget)
     renderPDF.draw(drawing, c, x, y)
 
 
-def create_leaflet():
-    OUT.parent.mkdir(parents=True, exist_ok=True)
-    register_fonts()
-    c = canvas.Canvas(str(OUT), pagesize=A4, pageCompression=1)
-    c.setTitle("Screenia – Digital skyltning för småföretag")
-    c.setAuthor("Screenia")
+def logo(c, x, y, width):
+    image = ASSETS / "brand" / "screenia-logo-full-transparent.png"
+    with Image.open(image) as source:
+        ratio = source.height / source.width
+    c.drawImage(str(image), x, y, width, width * ratio, mask="auto")
 
-    margin = 28
-    inner_width = W - margin * 2
 
-    c.setFillColor(HexColor("#F7FAFF"))
-    c.rect(0, 0, W, H, fill=1, stroke=0)
-
-    # Header
-    logo = ASSETS / "brand" / "screenia-logo-full-transparent.png"
-    c.drawImage(str(logo), margin, H - 51, 155, 46, mask="auto", preserveAspectRatio=True, anchor="sw")
-    rounded_rect(c, W - 162, H - 39, 134, 23, 11.5, PALE_BLUE)
-    centered(c, "DIGITAL SKYLTNING FÖR FÖRETAG", W - 162, H - 31.7, 134, "Screenia-Bold", 5.9, BLUE)
-
-    # Hero image and strong overlay.
-    hero_x, hero_y, hero_w, hero_h = margin, 579, inner_width, 185
-    rounded_rect(c, hero_x, hero_y, hero_w, hero_h, 20, BLUE_DARK)
-    draw_cover_image(c, ASSETS / "landing" / "hero-slides" / "01" / "image.png", hero_x, hero_y, hero_w, hero_h)
-    c.saveState()
-    c.setFillColor(Color(0.02, 0.12, 0.30, alpha=0.86))
-    c.roundRect(hero_x, hero_y, 270, hero_h, 20, fill=1, stroke=0)
-    c.rect(hero_x + 250, hero_y, 55, hero_h, fill=1, stroke=0)
-    c.restoreState()
-    rounded_rect(c, hero_x + 20, hero_y + 146, 102, 18, 9, YELLOW)
-    centered(c, "DIN TV. VÅRT INNEHÅLL.", hero_x + 20, hero_y + 152, 102, "Screenia-Bold", 5.9, INK)
-    text(c, "Få fler att\nstanna, titta\noch köpa.", hero_x + 20, hero_y + 119, 220, "Screenia-Bold", 22.5, white, 23.5)
-    text(c, "Screenia gör din befintliga TV till en professionell sälj- och informationsyta.", hero_x + 20, hero_y + 36, 214, "Screenia", 8.3, HexColor("#DCEBFF"), 11.2, 3)
-
-    # Benefits row.
-    benefit_y = 513
-    card_width = (inner_width - 16) / 3
-    benefit_card(c, margin, benefit_y, card_width, "01", "Använd er egen TV", "HDMI + Wi-Fi är allt som krävs.")
-    benefit_card(c, margin + card_width + 8, benefit_y, card_width, "02", "Vi gör innehållet", "Layout, kampanjer och uppdateringar.")
-    benefit_card(c, margin + (card_width + 8) * 2, benefit_y, card_width, "03", "Enkel start", "21 dagar gratis. Ingen bindningstid.")
-
-    # How it works.
-    text(c, "Så fungerar det", margin, 483, 250, "Screenia-Bold", 16.5, NAVY)
-    text(c, "Från idé till levande skärm – utan krånglig teknik.", margin, 467, 330, "Screenia", 7.7, MUTED)
-    flow_y = 435
-    step_width = 166
-    steps = [
-        ("1", "Välj paket", "Välj FHD eller 4K utifrån skärm och innehåll."),
-        ("2", "Vi planerar & designar", "Ni skickar logotyp, meny, priser och bilder."),
-        ("3", "Koppla in & visa", "Ni ansluter enheten. Vi sköter publiceringen."),
-    ]
-    for index, (number, title, body) in enumerate(steps):
-        x = margin + index * (step_width + 19)
-        c.setFillColor(BLUE)
-        c.circle(x + 13, flow_y + 13, 13, fill=1, stroke=0)
-        centered(c, number, x, flow_y + 8.8, 26, "Screenia-Bold", 9.5, white)
-        text(c, title, x + 34, flow_y + 20, 132, "Screenia-Bold", 8, NAVY, 9.5, 1)
-        text(c, body, x + 34, flow_y + 8, 132, "Screenia", 6.3, MUTED, 8, 2)
-
-    # Packages heading.
-    text(c, "Tydliga paket. Alltid inklusive moms.", margin, 397, 360, "Screenia-Bold", 16.5, NAVY)
-    text(c, "Första betalningen omfattar startavgift, konfigurerad enhet och frakt.", margin, 381, 430, "Screenia", 7.6, MUTED)
-
-    plan_y = 204
-    plan_width = (inner_width - 16) / 3
-    plan_card(
-        c, margin, plan_y, plan_width, "Standard", "FULL HD · för mindre skärmar",
-        "2 397 kr", "249 kr", ["1080p-visning", "För kampanjer och erbjudanden", "FHD HDMI Stick"], TEAL
-    )
-    plan_card(
-        c, margin + plan_width + 8, plan_y, plan_width, "Premium", "ÄKTA 4K · extra skarpt",
-        "2 797 kr", "349 kr", ["3840 × 2160", "För menyer och detaljer", "4K TV Box"], BLUE, True
-    )
-    plan_card(
-        c, margin + (plan_width + 8) * 2, plan_y, plan_width, "Premium Plus", "4K + EGNA VIDEOR",
-        "2 797 kr", "399 kr", ["Allt i Premium", "MP4- och WEBM-videor", "Granskning före publicering"], NAVY
-    )
-
-    # Bottom call-to-action.
-    c.setFillColor(BLUE_DARK)
-    c.roundRect(margin, 45, inner_width, 137, 20, fill=1, stroke=0)
-    c.setFillColor(YELLOW)
-    c.roundRect(margin + 22, 155, 91, 16, 8, fill=1, stroke=0)
-    centered(c, "DET HÄR INGÅR", margin + 22, 160, 91, "Screenia-Bold", 5.7, INK)
-    text(c, "Personlig planering · första layouten · överenskomna justeringar · konfiguration · support", margin + 22, 137, 330, "Screenia-Semibold", 7.4, white, 10, 2)
-    text(c, "Startavgift 1 599 kr. Enhet 699–1 099 kr. Frakt 99 kr. Startavgiften och frakten täcker upp till 3 skärmar; därefter tillkommer 249 kr/skärm och 29 kr/enhet i frakt.", margin + 22, 110, 338, "Screenia", 6.1, HexColor("#CFE2FF"), 8.3, 3)
-    text(c, "Klar för en skärm som arbetar för er?", margin + 22, 76, 325, "Screenia-Bold", 12.7, white)
-    text(c, "Skanna koden eller besök screenia.se", margin + 22, 61, 325, "Screenia", 7.6, HexColor("#DCEBFF"))
-    c.setFillColor(white)
-    c.roundRect(W - 123, 61, 72, 92, 12, fill=1, stroke=0)
-    draw_qr(c, "https://screenia.se", W - 113, 79, 52)
-    centered(c, "SCREENIA.SE", W - 123, 68, 72, "Screenia-Bold", 5.8, NAVY)
-
-    c.setFont("Screenia", 5.3)
+def top_brand(c, page):
+    logo(c, BLEED + SAFE, H - BLEED - SAFE - 12 * mm, 37 * mm)
+    c.setFont("Screenia-Medium", 6.7)
     c.setFillColor(MUTED)
-    c.drawString(margin, 25, "Priser och villkor gäller enligt aktuell offert och orderöversikt. TV/skärm ingår inte. © Screenia")
+    c.drawRightString(W - BLEED - SAFE, H - BLEED - SAFE - 5 * mm, f"SCREENIA  |  {page}/2")
+
+
+def check(c, x, y, color=GREEN):
+    c.setStrokeColor(color)
+    c.setLineWidth(1.3)
+    p = c.beginPath()
+    p.moveTo(x, y)
+    p.lineTo(x + 2.2, y - 2.4)
+    p.lineTo(x + 6.3, y + 3.0)
+    c.drawPath(p, stroke=1, fill=0)
+
+
+def workflow_tile(c, x, y, width, height, image, number, title, body):
+    rr(c, x, y, width, height, 3.2 * mm, white, LINE)
+    image_h = 34 * mm
+    crop_image(c, image, x + 2.1 * mm, y + height - image_h - 2.1 * mm, width - 4.2 * mm, image_h, 0.5, 0.55)
+    c.setFillColor(BLUE)
+    c.circle(x + 6 * mm, y + height - 6 * mm, 3.4 * mm, fill=1, stroke=0)
+    centered(c, str(number), x + 2.6 * mm, y + height - 8.1 * mm, 6.8 * mm, "Screenia-Bold", 5.5, white)
+    c.setFont("Screenia-Medium", 6.6)
+    c.setFillColor(NAVY)
+    c.drawString(x + 3 * mm, y + 16 * mm, title)
+    draw_lines(c, body, x + 3 * mm, y + 10.4 * mm, width - 6 * mm, size=5.45, color=MUTED, leading=6.6, max_lines=2)
+
+
+def screen_mockup(c, x, y, width, height, image, corner=5 * mm):
+    """A minimal physical-display frame for product imagery."""
+    rr(c, x + 2.5 * mm, y - 2.5 * mm, width, height, corner, Color(0, 0, 0, alpha=0.23))
+    rr(c, x, y, width, height, corner, HexColor("#07182F"))
+    crop_image(c, image, x + 2.4 * mm, y + 2.4 * mm, width - 4.8 * mm, height - 4.8 * mm, 0.5, 0.52)
+    c.setFillColor(Color(1, 1, 1, alpha=0.45))
+    c.roundRect(x + 2.4 * mm, y + height - 4.8 * mm, width - 4.8 * mm, 2.4 * mm, 1.2 * mm, fill=1, stroke=0)
+
+
+def front(c):
+    # Premium brochure cover - product-led imagery and editorial typography, not website cards.
+    c.setFillColor(NAVY)
+    c.rect(0, 0, W, H, fill=1, stroke=0)
+    x0 = BLEED + SAFE
+    content_w = TRIM_W - 2 * SAFE
+    top = H - BLEED - SAFE
+    # visual accents / white logo block
+    c.setFillColor(BLUE)
+    c.circle(W - 10 * mm, H - 27 * mm, 39 * mm, fill=1, stroke=0)
+    c.setFillColor(Color(1, 1, 1, alpha=0.045))
+    c.circle(W - 7 * mm, H - 27 * mm, 52 * mm, fill=1, stroke=0)
+    rr(c, x0, top - 13 * mm, 62 * mm, 13 * mm, 4 * mm, white)
+    logo(c, x0 + 4 * mm, top - 10.3 * mm, 35 * mm)
+    c.setFont("Screenia-Medium", 6.1)
+    c.setFillColor(Color(1, 1, 1, alpha=0.72))
+    c.drawRightString(x0 + content_w, top - 5 * mm, "DIGITAL SKYLTNING FÖR FÖRETAG")
+
+    # Hero copy and a composed stack of product examples.
+    c.setFillColor(YELLOW)
+    c.rect(x0, top - 29 * mm, 16 * mm, 1.8 * mm, fill=1, stroke=0)
+    c.setFont("Screenia-Medium", 7.1)
+    c.setFillColor(Color(1, 1, 1, alpha=0.78))
+    c.drawString(x0, top - 37 * mm, "FRÅN FÖRSTA BLICK TILL NÄSTA STEG")
+    c.setFont("Screenia-Bold", 24.2)
+    c.setFillColor(white)
+    c.drawString(x0, top - 51 * mm, "En skärm.")
+    c.drawString(x0, top - 63 * mm, "En tydligare affär.")
+    draw_lines(c, "Screenia gör din befintliga TV eller skärm till en levande kanal för kampanjer, menyer, prislistor och kundinformation.", x0, top - 76 * mm, 65 * mm, size=8.0, color=Color(1, 1, 1, alpha=0.8), leading=10.5)
+    c.setFont("Screenia-Medium", 6.7)
+    c.setFillColor(YELLOW)
+    c.drawString(x0, top - 111 * mm, "PLANERING  •  DESIGN  •  TEKNIK  •  UPPDATERINGAR")
+
+    # Main mock-up and two smaller, overlapping example frames.
+    mx, my = x0 + 92 * mm, top - 119 * mm
+    screen_mockup(c, mx, my, 86 * mm, 68 * mm, ASSETS / "landing" / "workflow" / "05-live-display.png")
+    screen_mockup(c, mx - 13 * mm, my + 9 * mm, 34 * mm, 47 * mm, ASSETS / "landing" / "workflow" / "01-package-request.png", 4 * mm)
+    screen_mockup(c, mx + 53 * mm, my + 45 * mm, 38 * mm, 29 * mm, ASSETS / "landing" / "workflow" / "02-design-planning.png", 4 * mm)
+    c.setFillColor(YELLOW)
+    c.circle(mx + 77 * mm, my + 64 * mm, 4.5 * mm, fill=1, stroke=0)
+    centered(c, "01", mx + 72.5 * mm, my + 62.4 * mm, 9 * mm, "Screenia-Bold", 5.5, NAVY)
+
+    # White content band, inspired by a print editorial spread rather than a UI grid.
+    lower_y = BLEED
+    rr(c, 0, lower_y, W, 112 * mm, 0, white)
+    content_y = lower_y + 84 * mm
+    c.setFont("Screenia-Bold", 15.5)
+    c.setFillColor(NAVY)
+    c.drawString(x0, content_y + 15 * mm, "Så går det till.")
+    c.setFont("Screenia", 6.8)
+    c.setFillColor(MUTED)
+    c.drawString(x0, content_y + 8 * mm, "Fem enkla steg från din idé till innehåll som möter kunder på skärmen.")
+    steps = [
+        ("Välj", "Paket och antal skärmar"),
+        ("Dela", "Meny, bilder och budskap"),
+        ("Skapa", "Layouten utformas"),
+        ("Anslut", "Enheten till HDMI + Wi-Fi"),
+        ("Visa", "Ditt innehåll går live"),
+    ]
+    step_y = lower_y + 54 * mm
+    step_w = content_w / 5
+    for index, (title, body) in enumerate(steps, 1):
+        sx = x0 + (index - 1) * step_w
+        if index < 5:
+            c.setStrokeColor(LINE)
+            c.setLineWidth(1.1)
+            c.line(sx + 10 * mm, step_y + 11 * mm, sx + step_w - 4 * mm, step_y + 11 * mm)
+        c.setFillColor(BLUE if index != 3 else YELLOW)
+        c.circle(sx + 6 * mm, step_y + 11 * mm, 5.3 * mm, fill=1, stroke=0)
+        centered(c, str(index), sx + 0.7 * mm, step_y + 9.1 * mm, 10.6 * mm, "Screenia-Bold", 6.0, NAVY if index == 3 else white)
+        c.setFont("Screenia-Bold", 7.0)
+        c.setFillColor(NAVY)
+        c.drawString(sx, step_y - 1.5 * mm, title)
+        draw_lines(c, body, sx, step_y - 7 * mm, step_w - 4 * mm, size=5.55, color=MUTED, leading=6.8, max_lines=2)
+
+    # Image-led proof strip.
+    proof_y = lower_y + 19 * mm
+    proof_w = 36 * mm
+    for index, image in enumerate([
+        ASSETS / "landing" / "section-art" / "salon-service-window.jpg",
+        ASSETS / "landing" / "section-art" / "restaurant-menu-screens.jpg",
+        ASSETS / "landing" / "section-art" / "digital-menu-board.jpg",
+    ]):
+        px = x0 + index * (proof_w + 3 * mm)
+        rr(c, px - 0.6 * mm, proof_y - 0.6 * mm, proof_w + 1.2 * mm, 21 * mm + 1.2 * mm, 3 * mm, white, LINE)
+        crop_image(c, image, px, proof_y, proof_w, 21 * mm, 0.5, 0.54)
+    text_x = x0 + 3 * (proof_w + 3 * mm) + 3 * mm
+    qsize = 15 * mm
+    qx = x0 + content_w - qsize
+    draw_lines(c, "Din skärm. Ditt budskap.", text_x, proof_y + 14.2 * mm, qx - text_x - 4 * mm, font="Screenia-Bold", size=8.0, color=NAVY, leading=9.0, max_lines=2)
+    draw_lines(c, "TV/skärm ingår inte - du behöver bara HDMI och Wi-Fi. Screenia hjälper till med resten.", text_x, proof_y + 5.8 * mm, qx - text_x - 4 * mm, size=5.35, color=MUTED, leading=6.4, max_lines=2)
+    qr(c, qx, proof_y + 3.4 * mm, qsize, "https://screenia.se")
     c.showPage()
+
+
+def package_card(c, x, y, width, height, name, resolution, badge, badge_color, description, features, device_path, prices):
+    rr(c, x, y, width, height, 4.5 * mm, white, LINE)
+    c.setFillColor(badge_color)
+    c.roundRect(x + 5 * mm, y + height - 12 * mm, 34 * mm, 7 * mm, 3.5 * mm, fill=1, stroke=0)
+    centered(c, badge, x + 5 * mm, y + height - 9.5 * mm, 34 * mm, "Screenia-Medium", 5.8, white)
+    c.setFont("Screenia-Bold", 13.5)
+    c.setFillColor(NAVY)
+    c.drawString(x + 5 * mm, y + height - 22 * mm, name)
+    c.setFont("Screenia-Medium", 7.2)
+    c.setFillColor(badge_color)
+    c.drawString(x + 5 * mm, y + height - 28 * mm, resolution)
+
+    # A small product visual makes package cards feel product-led rather than tabular.
+    with Image.open(device_path) as source:
+        ratio = source.height / source.width
+    iw = 21 * mm
+    ih = iw * ratio
+    c.drawImage(str(device_path), x + width - iw - 4 * mm, y + height - ih - 4 * mm, iw, ih, mask="auto")
+
+    text_y = y + height - 37 * mm
+    end_y = draw_lines(c, description, x + 5 * mm, text_y, width - 10 * mm, "Screenia", 6.75, MUTED, 8.9)
+    current_y = end_y - 1.5 * mm
+    for item in features:
+        current_y = bullet(c, item, x + 5 * mm, current_y, width - 10 * mm, size=6.3, leading=8.0, bullet_color=badge_color)
+
+    # Price band stays consistent across all packages.
+    band_h = 26 * mm
+    c.setFillColor(PALE)
+    c.roundRect(x + 4 * mm, y + 4 * mm, width - 8 * mm, band_h, 3 * mm, fill=1, stroke=0)
+    c.setFont("Screenia-Medium", 5.8)
+    c.setFillColor(MUTED)
+    c.drawString(x + 7 * mm, y + 23.2 * mm, "FÖRSTA BETALNINGEN - 1 SKÄRM")
+    c.setFont("Screenia-Bold", 9.2)
+    c.setFillColor(NAVY)
+    c.drawString(x + 7 * mm, y + 17.2 * mm, prices[0])
+    c.setFont("Screenia", 5.65)
+    c.setFillColor(MUTED)
+    c.drawString(x + 7 * mm, y + 12.3 * mm, prices[1])
+    c.setStrokeColor(LINE)
+    c.setLineWidth(0.5)
+    c.line(x + 7 * mm, y + 9 * mm, x + width - 7 * mm, y + 9 * mm)
+    c.setFont("Screenia-Bold", 8.2)
+    c.setFillColor(badge_color)
+    c.drawString(x + 7 * mm, y + 5.6 * mm, prices[2])
+
+
+def package_row(c, x, y, width, height, name, resolution, label, tone, description, feature_columns, device, first_payment, breakdown, monthly):
+    rr(c, x, y, width, height, 4 * mm, white, LINE)
+    left_w = 56 * mm
+    rr(c, x, y, left_w, height, 4 * mm, tone)
+    c.setFillColor(Color(1, 1, 1, alpha=0.17))
+    c.circle(x + left_w - 6 * mm, y + height - 7 * mm, 15 * mm, fill=1, stroke=0)
+    c.setFont("Screenia-Medium", 5.7)
+    c.setFillColor(NAVY if tone == YELLOW else white)
+    c.drawString(x + 5 * mm, y + height - 8 * mm, label)
+    c.setFont("Screenia-Bold", 11.8 if name == "Premium Plus" else 15.2)
+    c.drawString(x + 5 * mm, y + height - 16 * mm, name)
+    c.setFont("Screenia-Medium", 6.2)
+    c.drawString(x + 5 * mm, y + height - 22 * mm, resolution)
+    with Image.open(device) as source:
+        ratio = source.height / source.width
+    iw = 21 * mm
+    c.drawImage(str(device), x + left_w - iw - 4 * mm, y + height - iw * ratio - 2 * mm, iw, iw * ratio, mask="auto")
+    c.setFont("Screenia-Medium", 5.3)
+    c.setFillColor(NAVY if tone == YELLOW else Color(1, 1, 1, alpha=0.82))
+    c.drawString(x + 5 * mm, y + 17 * mm, "FÖRSTA BETALNINGEN - 1 SKÄRM")
+    c.setFont("Screenia-Bold", 12.4)
+    c.drawString(x + 5 * mm, y + 11.2 * mm, first_payment)
+    c.setFont("Screenia", 5.2)
+    c.drawString(x + 5 * mm, y + 6.7 * mm, breakdown)
+    c.setFont("Screenia-Bold", 6.7)
+    c.drawString(x + 5 * mm, y + 2.4 * mm, monthly)
+
+    body_x = x + left_w + 5 * mm
+    body_w = width - left_w - 10 * mm
+    draw_lines(c, description, body_x, y + height - 9 * mm, body_w, size=6.5, color=MUTED, leading=8.0, max_lines=2)
+    col_gap = 4 * mm
+    col_w = (body_w - col_gap) / 2
+    for col, items in enumerate(feature_columns):
+        current_y = y + height - 20 * mm
+        bx = body_x + col * (col_w + col_gap)
+        for item in items:
+            current_y = bullet(c, item, bx, current_y, col_w, size=5.65, leading=6.9, bullet_color=tone)
+
+
+def back(c):
+    c.setFillColor(PALE)
+    c.rect(0, 0, W, H, fill=1, stroke=0)
+    top_brand(c, 2)
+    x0 = BLEED + SAFE
+    content_w = TRIM_W - 2 * SAFE
+    top = H - BLEED - SAFE - 23 * mm
+    c.setFillColor(YELLOW)
+    c.rect(x0, top + 5 * mm, 15 * mm, 1.7 * mm, fill=1, stroke=0)
+    c.setFont("Screenia-Bold", 18.5)
+    c.setFillColor(NAVY)
+    c.drawString(x0, top - 5 * mm, "Välj paket som passar din skärm.")
+    c.setFont("Screenia", 7.1)
+    c.setFillColor(MUTED)
+    c.drawString(x0, top - 11.5 * mm, "Samma trygga uppstart - olika skärpa och möjligheter. Paketen kan kombineras mellan flera skärmar.")
+
+    row_h = 52 * mm
+    row_gap = 3 * mm
+    row1_y = top - 19 * mm - row_h
+    packages = [
+        (
+            "Standard", "FULL HD 1080P", "STARTPAKET", BLUE,
+            "För mindre skärmar och standardinnehåll i Full HD.",
+            [["Uppspelning i Full HD (1080p)", "Rekommenderas för skärmar under 55 tum", "Passar kampanjer, erbjudanden och informationsskärmar"], ["Planeringshjälp, layoutdesign och överenskomna ändringar ingår i startavgiften", "3 veckors kostnadsfri provperiod", "Ingen bindningstid"]],
+            ASSETS / "brand" / "screenia-standard-device.png", "2 397 kr", "1 599 start + 699 enhet + 99 frakt", "249 kr/mån efter provperiod",
+        ),
+        (
+            "Premium", "ÄKTA 4K 3840 x 2160", "REKOMMENDERAS", YELLOW,
+            "För större skärmar och extra skarpt innehåll i 4K.",
+            [["Uppspelning i äkta 4K (3840 x 2160)", "Rekommenderas för skärmar från 55 tum", "Skarpare text, menyer och detaljerade bilder"], ["Planeringshjälp, layoutdesign och överenskomna ändringar ingår i startavgiften", "3 veckors kostnadsfri provperiod", "Ingen bindningstid"]],
+            ASSETS / "brand" / "screenia-premium-device.png", "2 797 kr", "1 599 start + 1 099 enhet + 99 frakt", "349 kr/mån efter provperiod",
+        ),
+        (
+            "Premium Plus", "ÄKTA 4K + EGEN VIDEO", "NYHET", PLUS,
+            "För verksamheter som vill kombinera extra skarp 4K-visning med egna videoklipp.",
+            [["Alla funktioner som ingår i Premium", "Uppspelning i äkta 4K (3840 x 2160)", "Ladda upp egna MP4- och WEBM-videor via kundportalen", "Screenia granskar materialet före publicering"], ["Planeringshjälp, layoutdesign och överenskomna ändringar ingår i startavgiften", "3 veckors kostnadsfri provperiod", "Ingen bindningstid"]],
+            ASSETS / "brand" / "screenia-premium-device.png", "2 797 kr", "1 599 start + 1 099 enhet + 99 frakt", "399 kr/mån efter provperiod",
+        ),
+    ]
+    for index, package in enumerate(packages):
+        package_row(c, x0, row1_y - index * (row_h + row_gap), content_w, row_h, *package)
+
+    # Useful, customer-facing price and delivery details fill the lower page without repetition.
+    info_y = BLEED + SAFE + 32 * mm
+    info_h = 38 * mm
+    split = 113 * mm
+    rr(c, x0, info_y, split, info_h, 4 * mm, white, LINE)
+    c.setFont("Screenia-Bold", 10.8)
+    c.setFillColor(NAVY)
+    c.drawString(x0 + 5 * mm, info_y + 28 * mm, "Tydliga kostnader när du växer.")
+    draw_lines(c, "Startavgift 1 599 kr täcker upp till 3 skärmar. För fler skärmar tillkommer 249 kr per skärm i uppstart. Frakt är 99 kr för upp till 3 enheter, sedan 29 kr per extra enhet.", x0 + 5 * mm, info_y + 20.5 * mm, split - 10 * mm, size=6.15, color=MUTED, leading=7.6)
+    c.setFont("Screenia-Medium", 6.0)
+    c.setFillColor(BLUE)
+    c.drawString(x0 + 5 * mm, info_y + 6 * mm, "Månadsabonnemanget börjar först efter den kostnadsfria provperioden.")
+
+    rx = x0 + split + 3 * mm
+    rw = content_w - split - 3 * mm
+    rr(c, rx, info_y, rw, info_h, 4 * mm, NAVY)
+    c.setFont("Screenia-Bold", 10.2)
+    c.setFillColor(white)
+    c.drawString(rx + 5 * mm, info_y + 28 * mm, "Det här behöver du.")
+    needs = ["En egen TV eller skärm", "HDMI-ingång och Wi-Fi", "Meny, bilder, priser eller kampanjinnehåll"]
+    need_y = info_y + 20 * mm
+    for value in needs:
+        c.setFillColor(YELLOW)
+        c.circle(rx + 7 * mm, need_y + 1.3 * mm, 2.6 * mm, fill=1, stroke=0)
+        check(c, rx + 4.8 * mm, need_y + 1.0 * mm, NAVY)
+        c.setFont("Screenia", 6.15)
+        c.setFillColor(Color(1, 1, 1, alpha=0.9))
+        c.drawString(rx + 13 * mm, need_y - 0.6 * mm, value)
+        need_y -= 7 * mm
+
+    footer_y = BLEED + SAFE
+    rr(c, x0, footer_y, content_w, 29 * mm, 4 * mm, BLUE_DEEP)
+    c.setFont("Screenia-Bold", 12.0)
+    c.setFillColor(white)
+    c.drawString(x0 + 6 * mm, footer_y + 18.5 * mm, "Se exempel och hitta rätt paket.")
+    c.setFont("Screenia", 6.7)
+    c.setFillColor(Color(1, 1, 1, alpha=0.86))
+    c.drawString(x0 + 6 * mm, footer_y + 12 * mm, "Besök screenia.se för exempel, aktuell information och en oförbindlig förfrågan.")
+    c.setFont("Screenia-Medium", 5.55)
+    c.setFillColor(Color(1, 1, 1, alpha=0.72))
+    c.drawString(x0 + 6 * mm, footer_y + 5.3 * mm, "Priser inkl. moms. TV/skärm ingår inte. Aktuella villkor och priser finns på screenia.se.")
+    qsize = 20 * mm
+    qr(c, x0 + content_w - qsize - 6 * mm, footer_y + 4.5 * mm, qsize, "https://screenia.se")
+    c.setFont("Screenia-Medium", 5.7)
+    c.setFillColor(white)
+    c.drawRightString(x0 + content_w - qsize - 4 * mm, footer_y + 14.2 * mm, "Skanna för att komma igång")
+    c.setFont("Screenia", 5.7)
+    c.setFillColor(Color(1, 1, 1, alpha=0.72))
+    c.drawRightString(x0 + content_w - qsize - 4 * mm, footer_y + 8.2 * mm, "screenia.se")
+    c.showPage()
+
+
+def main():
+    OUT.parent.mkdir(parents=True, exist_ok=True)
+    fonts()
+    c = canvas.Canvas(str(OUT), pagesize=(W, H), pageCompression=1)
+    c.setTitle("Screenia - Digital skyltning för företag")
+    c.setAuthor("Screenia")
+    c.setSubject("Print-ready two-sided A4 sales leaflet with 3 mm bleed")
+    front(c)
+    back(c)
     c.save()
     print(OUT)
 
 
 if __name__ == "__main__":
-    create_leaflet()
+    main()

@@ -329,7 +329,7 @@ export default function PricingPage() {
     <main>
       <div className="admin-page-header">
         <p className="admin-eyebrow">Screenia Admin</p>
-        <h1 className="admin-title">Pricing</h1>
+        <h1 className="admin-title">Pricing &amp; VAT</h1>
         <p className="admin-subtitle">
           Edit live package prices, then sync matching Stripe products and
           prices for tracking. Amounts are customer-pay totals including Swedish

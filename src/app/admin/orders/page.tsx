@@ -388,7 +388,7 @@ function AdminOrdersContent() {
     <div className="admin-orders-page">
       <div className="admin-page-header admin-orders-header">
         <div>
-          <h1 className="admin-title">Orders & billing</h1>
+          <h1 className="admin-title">Orders &amp; payments</h1>
           <p className="admin-subtitle">
             Review payments, production, device allocation, and delivery.
           </p>

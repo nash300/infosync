@@ -10,13 +10,10 @@ import { serializeJsonLd } from "@/lib/seo";
 import {
   copy,
   fallbackHeroBenefits,
-  featureIcons,
   heroHighlightWords,
   planCopy,
   plans,
   publicSiteUrl,
-  visualCopy,
-  visualImages,
   workflowImages,
   type HeroBenefit,
   type HeroSlideAsset,
@@ -62,7 +59,6 @@ function renderHighlightedText(text: string, words: string[]) {
     );
   });
 }
-
 function isValidOptionalPhone(value: string) {
   const trimmed = value.trim();
   if (!trimmed) return true;
@@ -232,6 +228,7 @@ export default function Home() {
   const t = copy.sv;
   const companyEmail = process.env.NEXT_PUBLIC_COMPANY_EMAIL || "service@screenia.se";
   const footerLinks = [
+    { label: "Så fungerar digital skyltning", href: "/sa-fungerar-det" },
     { label: "Integritet", href: "/privacy" },
     { label: "Villkor", href: "/terms" },
     { label: "Kundinloggning", href: "/login" },
@@ -240,8 +237,8 @@ export default function Home() {
   const structuredData = [
     {
       "@context": "https://schema.org",
-      "@type": "LocalBusiness",
-      "@id": `${publicSiteUrl}/#business`,
+      "@type": "Organization",
+      "@id": `${publicSiteUrl}/#organization`,
       name: "Screenia",
       url: publicSiteUrl,
       image: `${publicSiteUrl}/brand/screenia-logo-full-white-bg.png`,
@@ -270,7 +267,7 @@ export default function Home() {
       url: publicSiteUrl,
       inLanguage: "sv-SE",
       publisher: {
-        "@id": `${publicSiteUrl}/#business`,
+        "@id": `${publicSiteUrl}/#organization`,
       },
     },
     {
@@ -280,7 +277,11 @@ export default function Home() {
       name: "Digital skyltning för företag",
       serviceType: "Digital signage",
       provider: {
-        "@id": `${publicSiteUrl}/#business`,
+        "@id": `${publicSiteUrl}/#organization`,
+      },
+      audience: {
+        "@type": "BusinessAudience",
+        audienceType: "Företag och organisationer i Sverige",
       },
       areaServed: {
         "@type": "Country",
@@ -296,6 +297,7 @@ export default function Home() {
           description: planCopy.sv[plan.code].description,
           priceCurrency: "SEK",
           price: Number(plan.monthlyFee.replace(/\D/g, "")),
+          url: `${publicSiteUrl}/#pricing`,
           category: "Digital signage subscription",
           availability: "https://schema.org/InStock",
           eligibleDuration: {
@@ -665,30 +667,6 @@ export default function Home() {
           )}
         </section>
 
-        <LandingSection id="platform" title={t.platformTitle} text={t.platformText}>
-          <div className="landing-feature-grid">
-            {t.features.map(([title, text], index) => (
-              <Feature
-                key={title}
-                title={title}
-                text={text}
-                icon={featureIcons[index] || "spark"}
-              />
-            ))}
-          </div>
-          <div className="landing-illustration-grid">
-            {visualCopy.sv.map(([title, text], index) => (
-              <Illustration
-                key={title}
-                title={title}
-                text={text}
-                index={index}
-                image={visualImages[index]}
-              />
-            ))}
-          </div>
-        </LandingSection>
-
         <section id="workflow" className="landing-section landing-section-surface landing-workflow">
           <div className="landing-section-panel landing-workflow-panel">
             <div className="landing-workflow-heading">
@@ -722,7 +700,7 @@ export default function Home() {
         <LandingSection
           id="pricing"
           title="Bygg en skärmlösning"
-          text="Välj Full HD, Premium 4K eller Premium Plus med egna videor. Paketen kan kombineras i samma förfrågan och kostnaden uppdateras direkt."
+          text="Välj det paket och antal skärmar som passar er verksamhet. Se månads- och startkostnaden direkt innan ni går vidare."
         >
           {selectedScreenCount > 0 ? (
             <a
@@ -867,16 +845,82 @@ export default function Home() {
 
             {selectedScreenCount > 0 ? (
               <>
-                <div className="landing-package-lines">
-                  {selectedQuoteItems.map(({ plan, quantity }) => (
-                    <div key={plan.code}>
-                      <span>{quantity} × {plan.name} {plan.resolution}</span>
+                <div className="landing-package-lines" aria-label="Specifikation av vald kombination">
+                  <section className="landing-package-cost-group">
+                    <h4>Efter provperioden</h4>
+                    {selectedQuoteItems.map(({ plan, quantity }) => (
+                      <div key={`subscription-${plan.code}`}>
+                        <span>
+                          {plan.name} {plan.resolution}
+                          <small>Abonnemang per månad</small>
+                        </span>
+                        <strong>
+                          <span>{quantity} × {formatLandingSek(plan.monthlyFeeSek)}</span>
+                          <b>{formatLandingSek(plan.monthlyFeeSek * quantity)}/mån</b>
+                        </strong>
+                      </div>
+                    ))}
+                  </section>
+
+                  <section className="landing-package-cost-group">
+                    <h4>Vid start</h4>
+                    <div>
+                      <span>
+                        Startavgift
+                        <small>Upp till {INCLUDED_SETUP_SCREEN_COUNT} skärmar</small>
+                      </span>
                       <strong>
-                        {formatLandingSek(plan.monthlyFeeSek * quantity)}/mån
-                        <small>Skärmenheter: {formatLandingSek(plan.hardwareFeeSek * quantity)} engångsvis</small>
+                        <span>1 × {formatLandingSek(plans[0].setupFeeSek)}</span>
+                        <b>{formatLandingSek(plans[0].setupFeeSek)}</b>
                       </strong>
                     </div>
-                  ))}
+                    {selectedAdditionalSetupScreens > 0 && (
+                      <div>
+                        <span>
+                          Extra startavgift
+                          <small>Skärmar utöver de {INCLUDED_SETUP_SCREEN_COUNT} inkluderade</small>
+                        </span>
+                        <strong>
+                          <span>{selectedAdditionalSetupScreens} × {formatLandingSek(ADDITIONAL_SETUP_FEE_PER_SCREEN_SEK)}</span>
+                          <b>{formatLandingSek(selectedAdditionalSetupScreens * ADDITIONAL_SETUP_FEE_PER_SCREEN_SEK)}</b>
+                        </strong>
+                      </div>
+                    )}
+                    {selectedQuoteItems.map(({ plan, quantity }) => (
+                      <div key={`hardware-${plan.code}`}>
+                        <span>
+                          {plan.name} {plan.resolution}
+                          <small>Skärmenhet</small>
+                        </span>
+                        <strong>
+                          <span>{quantity} × {formatLandingSek(plan.hardwareFeeSek)}</span>
+                          <b>{formatLandingSek(plan.hardwareFeeSek * quantity)}</b>
+                        </strong>
+                      </div>
+                    ))}
+                    <div>
+                      <span>
+                        Frakt
+                        <small>Upp till {INCLUDED_SHIPPING_DEVICE_COUNT} enheter</small>
+                      </span>
+                      <strong>
+                        <span>1 × {formatLandingSek(BASE_SHIPPING_FEE_SEK)}</span>
+                        <b>{formatLandingSek(BASE_SHIPPING_FEE_SEK)}</b>
+                      </strong>
+                    </div>
+                    {selectedAdditionalShippingDevices > 0 && (
+                      <div>
+                        <span>
+                          Extra frakt
+                          <small>Enheter utöver de {INCLUDED_SHIPPING_DEVICE_COUNT} inkluderade</small>
+                        </span>
+                        <strong>
+                          <span>{selectedAdditionalShippingDevices} × {formatLandingSek(ADDITIONAL_SHIPPING_FEE_PER_DEVICE_SEK)}</span>
+                          <b>{formatLandingSek(selectedAdditionalShippingDevices * ADDITIONAL_SHIPPING_FEE_PER_DEVICE_SEK)}</b>
+                        </strong>
+                      </div>
+                    )}
+                  </section>
                 </div>
                 <div className="landing-package-totals">
                   <div className="landing-package-total-primary">
@@ -1000,6 +1044,13 @@ export default function Home() {
             </Link>
           ))}
         </nav>
+        <div className="landing-footer-legal">
+          <p>© 2026 Screenia. Screenia drivs som enskild näringsverksamhet i Sverige.</p>
+          <p className="landing-footer-registration">
+            <span>Godkänd för F-skatt</span>
+            <span>Momsregistrerad</span>
+          </p>
+        </div>
       </footer>
 
       <script
@@ -1275,117 +1326,3 @@ function FormField({
     </label>
   );
 }
-
-function Illustration({
-  title,
-  text,
-  index,
-  image,
-}: {
-  title: string;
-  text: string;
-  index: number;
-  image: string;
-}) {
-  return (
-    <article className={`landing-illustration landing-illustration-${index + 1}`}>
-      <div className="landing-illustration-art" aria-hidden="true">
-        <Image src={image} alt="" width={420} height={300} />
-        <span className="landing-illustration-icon">
-          <SectionIcon name={index === 0 ? "layout" : index === 1 ? "shield" : "screen"} />
-        </span>
-      </div>
-      <div>
-        <h3>{title}</h3>
-        <p>{text}</p>
-      </div>
-    </article>
-  );
-}
-
-function Feature({
-  title,
-  text,
-  icon,
-}: {
-  title: string;
-  text: string;
-  icon: (typeof featureIcons)[number];
-}) {
-  return (
-    <article className="landing-feature">
-      <span className="landing-feature-icon" aria-hidden="true">
-        <SectionIcon name={icon} />
-      </span>
-      <h3>{title}</h3>
-      <p>{text}</p>
-    </article>
-  );
-}
-
-function SectionIcon({
-  name,
-}: {
-  name: "spark" | "receipt" | "screen" | "megaphone" | "layout" | "shield";
-}) {
-  const common = {
-    fill: "none",
-    stroke: "currentColor",
-    strokeLinecap: "round" as const,
-    strokeLinejoin: "round" as const,
-    strokeWidth: 1.8,
-  };
-
-  if (name === "receipt") {
-    return (
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path {...common} d="M7 4h10a1 1 0 0 1 1 1v15l-3-2-3 2-3-2-3 2V5a1 1 0 0 1 1-1Z" />
-        <path {...common} d="M9 8h6M9 12h6M9 16h3" />
-      </svg>
-    );
-  }
-
-  if (name === "screen") {
-    return (
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <rect {...common} x="3" y="5" width="18" height="12" rx="2" />
-        <path {...common} d="M8 21h8M12 17v4M7 9h5M7 13h10" />
-      </svg>
-    );
-  }
-
-  if (name === "megaphone") {
-    return (
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path {...common} d="M4 13h3l9 4V7l-9 4H4v2Z" />
-        <path {...common} d="M7 13v5a2 2 0 0 0 2 2h1M19 9.5a4 4 0 0 1 0 5" />
-      </svg>
-    );
-  }
-
-  if (name === "layout") {
-    return (
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <rect {...common} x="4" y="5" width="16" height="14" rx="2" />
-        <path {...common} d="M4 10h16M10 10v9M13 14h4" />
-      </svg>
-    );
-  }
-
-  if (name === "shield") {
-    return (
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path {...common} d="M12 3 19 6v5c0 4.5-2.8 7.7-7 10-4.2-2.3-7-5.5-7-10V6l7-3Z" />
-        <path {...common} d="m9 12 2 2 4-5" />
-      </svg>
-    );
-  }
-
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path {...common} d="M12 3v4M12 17v4M4.2 7.2l2.8 2.8M17 17l2.8 2.8M3 12h4M17 12h4M4.2 16.8 7 14M17 7l2.8-2.8" />
-      <circle {...common} cx="12" cy="12" r="3.2" />
-    </svg>
-  );
-}
-

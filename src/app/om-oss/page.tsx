@@ -3,15 +3,16 @@ import Image from "next/image";
 import Link from "next/link";
 import { LandingNav } from "@/components/LandingNav";
 import { LandingScrollReveal } from "@/components/LandingScrollReveal";
-import { serializeJsonLd } from "@/lib/seo";
+import { createPublicPageMetadata, serializeJsonLd } from "@/lib/seo";
 import "../public-info.css";
 
 const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://screenia.se";
 
-export const metadata: Metadata = {
-  title: "Om Screenia | Digital skyltning för lokala företag",
+export const metadata: Metadata = createPublicPageMetadata({
+  path: "/om-oss",
+  title: "Om Screenia och vår digitala skyltning",
   description:
-    "Lär känna Screenia, vår vision och hur vi hjälper lokala företag i Sverige att använda digital skyltning utan tekniskt krångel.",
+    "Lär känna Screenia och hur vi hjälper företag i Sverige med planering, innehåll och teknik för enkel och professionell digital skyltning.",
   keywords: [
     "om Screenia",
     "digital skyltning Sverige",
@@ -19,37 +20,9 @@ export const metadata: Metadata = {
     "skärmlösningar småföretag",
     "Screenia vision",
   ],
-  alternates: {
-    canonical: "/om-oss",
-    languages: {
-      "sv-SE": "/om-oss",
-    },
-  },
-  openGraph: {
-    title: "Om Screenia | Digital skyltning för lokala företag",
-    description:
-      "Screenia gör professionell digital skyltning enkel, tydlig och tillgänglig för lokala företag.",
-    url: "/om-oss",
-    siteName: "Screenia",
-    locale: "sv_SE",
-    type: "website",
-    images: [
-      {
-        url: "/landing/free-source/business-consultation.jpg",
-        width: 1200,
-        height: 630,
-        alt: "Planering inför digital skyltning med Screenia",
-      },
-    ],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Om Screenia | Digital skyltning för lokala företag",
-    description:
-      "Vår vision är att göra digital skyltning lika enkel att använda som den är effektiv att se.",
-    images: ["/landing/free-source/business-consultation.jpg"],
-  },
-};
+  image: "/landing/free-source/business-consultation.jpg",
+  imageAlt: "Planering inför digital skyltning med Screenia",
+});
 
 const beliefs = [
   ["Tydlighet före teknik", "Kunden ska förstå upplägg, nästa steg och resultat utan att behöva tolka tekniska begrepp."],
@@ -98,9 +71,7 @@ export default function AboutPage() {
         url: siteUrl,
       },
       about: {
-        "@type": "Organization",
-        name: "Screenia",
-        url: siteUrl,
+        "@id": `${siteUrl}/#organization`,
       },
     },
     {

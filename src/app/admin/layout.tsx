@@ -34,10 +34,9 @@ export default function AdminLayout({
           </Link>
 
           <div className="admin-sidebar-intro">
-            <p className="admin-sidebar-kicker">Admin Panel</p>
+            <p className="admin-sidebar-kicker">Admin workspace</p>
             <p className="admin-sidebar-description">
-              Manage the customer journey, payments, device allocation, screen
-              content, inventory, and business operations.
+              Start on Overview. It shows the next customer task.
             </p>
           </div>
         </div>
@@ -45,8 +44,6 @@ export default function AdminLayout({
         <AdminSidebarNav />
 
         <div className="admin-sidebar-footer">
-          <p className="admin-sidebar-kicker">Screenia</p>
-          <p className="admin-sidebar-version">Version 0.1</p>
           <AdminSignOutButton />
         </div>
           <Suspense fallback={null}>

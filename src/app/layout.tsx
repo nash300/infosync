@@ -1,5 +1,6 @@
 import { Bubblegum_Sans, Geist_Mono, Plus_Jakarta_Sans, Special_Elite } from "next/font/google";
 import type { Metadata } from "next";
+import { siteUrl } from "@/lib/seo";
 import "./globals.css";
 import "./landing.css";
 import "./public-info.css";
@@ -28,33 +29,34 @@ const specialElite = Special_Elite({
   weight: "400",
 });
 
-const siteUrl = process.env.NEXT_PUBLIC_APP_URL || "https://screenia.se";
-
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "Screenia | Digital skyltning för företag i Sverige",
+    default: "Digital skyltning för företag med vanlig TV | Screenia",
     template: "%s | Screenia",
   },
   description:
-    "Screenia hjälper salonger, butiker, restauranger och serviceföretag i Sverige med digital skyltning, skärminnehåll och kampanjer på TV-skärm.",
+    "Digital skyltning för företag i Sverige. Visa information och erbjudanden på en vanlig TV eller professionell skärm – Screenia sköter innehåll och teknik.",
   applicationName: "Screenia",
   authors: [{ name: "Screenia" }],
   creator: "Screenia",
   publisher: "Screenia",
-  category: "Digital signage",
+  verification: {
+    google: process.env.GOOGLE_SITE_VERIFICATION,
+    other: process.env.BING_SITE_VERIFICATION
+      ? { "msvalidate.01": process.env.BING_SITE_VERIFICATION }
+      : undefined,
+  },
+  category: "Digital skyltning",
   keywords: [
     "digital skyltning",
-    "digital signage Sverige",
-    "skärmreklam",
-    "menyskärm",
-    "informationsskärm",
-    "TV skyltning företag",
-    "digital skyltning salong",
-    "digital skyltning butik",
-    "digital skyltning restaurang",
-    "skärminnehåll företag",
-    "reklamskärm butik",
+    "digital skyltning företag",
+    "digital skyltning Sverige",
+    "digital skyltning TV",
+    "digital informationsskärm",
+    "reklam på TV-skärm",
+    "digitala menytavlor",
+    "skärminnehåll för företag",
   ],
   alternates: {
     canonical: "/",
@@ -63,9 +65,9 @@ export const metadata: Metadata = {
     },
   },
   openGraph: {
-    title: "Screenia | Digital skyltning för företag i Sverige",
+    title: "Digital skyltning för företag med vanlig TV | Screenia",
     description:
-      "Professionellt skärminnehåll för lokala företag. Visa menyer, prislistor, erbjudanden och information på TV-skärm.",
+      "Visa information och erbjudanden på en vanlig TV eller professionell skärm. Screenia sköter innehåll, system och support.",
     url: "/",
     siteName: "Screenia",
     locale: "sv_SE",
@@ -75,15 +77,15 @@ export const metadata: Metadata = {
         url: "/landing/hero-slides/01/image.png",
         width: 1200,
         height: 675,
-        alt: "Screenia digital skyltning för lokala företag",
+        alt: "Digital skyltning för företag med Screenia",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Screenia | Digital skyltning för företag i Sverige",
+    title: "Digital skyltning för företag med vanlig TV | Screenia",
     description:
-      "Digital signage, skärmreklam och hanterat skärminnehåll för företag i Sverige.",
+      "Hanterad digital skyltning och professionellt skärminnehåll för företag i Sverige.",
     images: ["/landing/hero-slides/01/image.png"],
   },
   icons: {

@@ -404,7 +404,7 @@ function CustomersContent() {
   return (
     <div className="admin-customers-page">
       <div className="admin-page-header">
-        <h1 className="admin-title">Customer work</h1>
+        <h1 className="admin-title">Customers</h1>
         <p className="admin-subtitle">
           Find customers, review their current stage, and continue the next task.
         </p>
@@ -512,27 +512,13 @@ function CustomersContent() {
           <h2 className="admin-card-title admin-customers-panel-title">Customer queue</h2>
           <span>{loading ? "Loading" : `${filteredCustomers.length} records`}</span>
         </div>
-        <div className="admin-customer-table-wrap">
+        <div className="admin-customer-queue-list">
             {loading ? (
               <p className="admin-muted">Loading...</p>
             ) : filteredCustomers.length === 0 ? (
               <p className="admin-muted">No customers found.</p>
             ) : (
-              <table className="admin-data-table admin-customer-table">
-                <thead>
-                  <tr>
-                    <th>Customer</th>
-                    <th>Contact</th>
-                    <th>Status</th>
-                    <th>Order</th>
-                    <th>Payment</th>
-                    <th>Device allocation</th>
-                    <th>Created</th>
-                    <th>Updated</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {paginatedCustomers.map((customer) => {
+              paginatedCustomers.map((customer) => {
                     const deviceCount = getDeviceCount(customer);
                     const subscription = latestSubscription(customer);
                     const needsSetup =
@@ -542,51 +528,59 @@ function CustomersContent() {
                           ? "Needs playlist content"
                           : "";
                     return (
-                      <tr key={customer.id}>
-                        <td>
+                      <article key={customer.id} className="admin-customer-queue-item">
+                        <div className="admin-customer-queue-primary">
                           <Link href={`/admin/customers/${customer.id}`}>
-                            <strong>{customer.name}</strong>
-                            <span>#{customer.customer_number || "pending"}</span>
+                            {customer.name}
                           </Link>
-                        </td>
-                        <td>
-                          <strong>{customer.email || "No email"}</strong>
-                          <span>{customer.phone || "No phone"}{customer.city ? ` - ${customer.city}` : ""}</span>
-                        </td>
-                        <td>
+                          <span>Customer #{customer.customer_number || "pending"}</span>
+                          <small>{customer.email || "No contact email"}</small>
+                        </div>
+
+                        <div className="admin-customer-queue-stage">
                           <span className={`admin-table-pill ${getStatusClass(customer.status)}`}>
                             {formatStatusLabel(customer.status || "draft")}
                           </span>
-                          {needsSetup && <small>{needsSetup}</small>}
-                        </td>
-                        <td>
-                          <strong>{subscription?.order_number || "-"}</strong>
-                          <span>{formatStatusLabel(subscription?.status || "No order")}</span>
-                          <small>{formatDate(subscription?.created_at)}</small>
-                        </td>
-                        <td>
-                          <strong>{formatStripeSek(subscription?.total_amount_sek)}</strong>
-                          <span>
-                            {formatStatusLabel(
-                              subscription?.stripe_payment_status ||
-                                customer.payment_status ||
-                                "-",
-                            )}
-                          </span>
-                          <small>{formatDate(subscription?.updated_at)}</small>
-                        </td>
-                        <td>{deviceCount}</td>
-                        <td>{formatDate(customer.created_at)}</td>
-                        <td>
-                          {formatDate(customer.updated_at)}
-                          {customer.activated_at && <small>Active {formatDate(customer.activated_at)}</small>}
-                          {customer.cancelled_at && <small>Cancelled {formatDate(customer.cancelled_at)}</small>}
-                        </td>
-                      </tr>
+                          <small>{needsSetup || "No setup exception"}</small>
+                        </div>
+
+                        <dl className="admin-customer-queue-facts">
+                          <div>
+                            <dt>Order</dt>
+                            <dd>{subscription?.order_number || "No order"}</dd>
+                          </div>
+                          <div>
+                            <dt>Payment</dt>
+                            <dd>
+                              {formatStatusLabel(
+                                subscription?.stripe_payment_status ||
+                                  customer.payment_status ||
+                                  "Not started",
+                              )}
+                              {subscription?.total_amount_sek
+                                ? ` · ${formatStripeSek(subscription.total_amount_sek)}`
+                                : ""}
+                            </dd>
+                          </div>
+                          <div>
+                            <dt>Displays</dt>
+                            <dd>{deviceCount}</dd>
+                          </div>
+                          <div>
+                            <dt>Updated</dt>
+                            <dd>{formatDate(customer.updated_at || customer.created_at)}</dd>
+                          </div>
+                        </dl>
+
+                        <Link
+                          href={`/admin/customers/${customer.id}`}
+                          className="admin-button-primary admin-customer-queue-open"
+                        >
+                          Open customer
+                        </Link>
+                      </article>
                     );
-                  })}
-                </tbody>
-              </table>
+                  })
             )}
         </div>
         {!loading && filteredCustomers.length > PAGE_SIZE && (

@@ -193,7 +193,7 @@ export default function AdminContactInquiriesPage() {
     <div className="admin-dashboard-page admin-contact-page">
       <div className="admin-page-header admin-dashboard-header">
         <div>
-          <h1 className="admin-title">Visitor messages</h1>
+          <h1 className="admin-title">Messages</h1>
           <p className="admin-subtitle">
             Read public questions, reply by email, and retain the full case and
             delivery history.

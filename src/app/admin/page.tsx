@@ -265,10 +265,9 @@ export default function AdminHomePage() {
     <div className="admin-dashboard-page">
       <div className="admin-page-header admin-dashboard-header">
         <div>
-          <h1 className="admin-title">Dashboard</h1>
+          <h1 className="admin-title">Overview</h1>
           <p className="admin-subtitle">
-            Operational overview of customer intake, material, billing,
-            displays, and setup readiness.
+            Start with the first task below. The list is already ordered by urgency.
           </p>
         </div>
 
@@ -287,21 +286,15 @@ export default function AdminHomePage() {
       <section className="admin-card admin-work-queue">
         <div className="admin-work-queue-header">
           <div>
-            <p className="admin-operation-kicker">Next best action</p>
-            <h2 className="admin-card-title">Today&apos;s customer work</h2>
+            <p className="admin-operation-kicker">Your work list</p>
+            <h2 className="admin-card-title">What to do next</h2>
             <p className="admin-muted">
-              Prioritized by customer impact. Open a row to continue at the correct step.
+              Open the first item and continue from the recommended step.
             </p>
           </div>
           <div className="admin-work-queue-commands">
-            <Link href="/admin/contact-inquiries" className="admin-button-secondary">
-              Visitor messages
-            </Link>
-            <Link href="/admin/orders" className="admin-button-secondary">
-              Orders &amp; billing
-            </Link>
             <Link href="/admin/customers" className="admin-button-primary">
-              Customer work
+              View all customers
             </Link>
           </div>
         </div>
@@ -342,7 +335,17 @@ export default function AdminHomePage() {
         )}
       </section>
 
-      <section className="admin-action-grid">
+      <section className="admin-dashboard-attention" aria-labelledby="attention-heading">
+        <div className="admin-section-heading-row">
+          <div>
+            <p className="admin-operation-kicker">Attention</p>
+            <h2 id="attention-heading" className="admin-card-title">
+              Items waiting for action
+            </h2>
+          </div>
+          <p className="admin-muted">Select a card to open the filtered customer list.</p>
+        </div>
+        <div className="admin-action-grid">
         <ActionCard
           href="/admin/customers?filter=new_request"
           title="New requests"
@@ -383,6 +386,7 @@ export default function AdminHomePage() {
           tone="danger"
           loading={loading}
         />
+        </div>
       </section>
 
       <div className="admin-dashboard-kpis">
@@ -411,8 +415,16 @@ export default function AdminHomePage() {
         />
       </div>
 
-      <div className="admin-dashboard-grid">
-        <section className="admin-card admin-dashboard-panel">
+      <details className="admin-card admin-dashboard-details">
+        <summary>
+          <span>
+            <strong>Operational details</strong>
+            <small>Account, setup, and material totals</small>
+          </span>
+          <span className="admin-details-action">Show details</span>
+        </summary>
+        <div className="admin-dashboard-grid admin-dashboard-grid-details">
+        <section className="admin-dashboard-panel">
           <h2 className="admin-card-title admin-dashboard-panel-title">Account health</h2>
 
           <div className="admin-status-list">
@@ -429,7 +441,7 @@ export default function AdminHomePage() {
           </div>
         </section>
 
-        <section className="admin-card admin-dashboard-panel">
+        <section className="admin-dashboard-panel">
           <h2 className="admin-card-title admin-dashboard-panel-title">Setup health</h2>
 
           <div className="admin-progress-block">
@@ -460,7 +472,7 @@ export default function AdminHomePage() {
           </div>
         </section>
 
-        <section className="admin-card admin-dashboard-panel">
+        <section className="admin-dashboard-panel">
           <h2 className="admin-card-title admin-dashboard-panel-title">Material review</h2>
           <div className="admin-status-list">
             <StatusRow label="New material" value={newMaterialCount} tone="warning" />
@@ -468,7 +480,10 @@ export default function AdminHomePage() {
           </div>
         </section>
 
-        <section className="admin-card admin-dashboard-panel">
+        </div>
+      </details>
+
+        <section className="admin-card admin-dashboard-panel admin-dashboard-notification-center">
           <div className="admin-dashboard-panel-heading">
             <h2 className="admin-card-title admin-dashboard-panel-title">Notifications</h2>
             <button
@@ -571,7 +586,6 @@ export default function AdminHomePage() {
             )}
           </div>
         </section>
-      </div>
     </div>
   );
 }

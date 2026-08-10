@@ -429,7 +429,7 @@ export default function AdminInventoryPage() {
     <div className="admin-inventory-page">
       <div className="admin-page-header admin-inventory-header">
         <div>
-          <h1 className="admin-title">Hardware stock</h1>
+          <h1 className="admin-title">Hardware</h1>
           <p className="admin-subtitle">
             Add physical hardware to stock, track serial numbers, warranty,
             seller details, returns, defects, repair, and retirement.

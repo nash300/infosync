@@ -1991,6 +1991,35 @@
   line-height: 1.55;
 }
 
+.landing-footer-legal {
+  display: flex;
+  grid-column: 1 / -1;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1.5rem;
+  border-top: 1px solid rgba(231, 241, 255, 0.16);
+  padding-top: 0.9rem;
+}
+
+.landing-footer-legal > p {
+  color: rgba(195, 213, 235, 0.78);
+  font-size: 0.7rem;
+  line-height: 1.4;
+}
+
+.landing-footer-registration {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  white-space: nowrap;
+}
+
+.landing-footer-registration span + span::before {
+  margin-right: 0.6rem;
+  color: rgba(195, 213, 235, 0.48);
+  content: "•";
+}
+
 .landing-modal-backdrop {
   position: fixed;
   inset: 0;
@@ -4440,34 +4469,72 @@
 
 .landing-package-lines {
   display: grid;
-  gap: 8px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 12px;
   margin-top: 16px;
 }
 
-.landing-package-lines > div {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 20px;
-  border-radius: 6px;
+.landing-package-cost-group {
+  overflow: hidden;
+  border: 1px solid #dce7fa;
+  border-radius: 8px;
   background: #f5f8fd;
-  padding: 11px 13px;
+  padding: 10px 12px;
+}
+
+.landing-package-cost-group h4 {
+  margin: 0 0 4px;
+  color: var(--screenia-navy);
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.landing-package-cost-group > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  border-top: 1px solid #dce7fa;
+  padding: 7px 0;
   color: var(--screenia-navy);
 }
 
-.landing-package-lines span {
+.landing-package-cost-group > div > span {
+  display: grid;
+  gap: 1px;
+  font-size: 0.78rem;
   font-weight: 850;
 }
 
-.landing-package-lines strong {
-  text-align: right;
+.landing-package-cost-group small {
+  color: var(--landing-muted);
+  font-size: 0.64rem;
+  font-weight: 650;
 }
 
-.landing-package-lines small {
-  display: block;
-  margin-top: 2px;
+.landing-package-cost-group strong {
+  display: grid;
+  grid-template-columns: auto auto;
+  align-items: center;
+  gap: 10px;
+  color: var(--screenia-navy);
+  font-size: 0.72rem;
+  white-space: nowrap;
+}
+
+.landing-package-cost-group strong > span {
   color: var(--landing-muted);
   font-weight: 700;
+}
+
+.landing-package-cost-group strong b {
+  min-width: 76px;
+  color: var(--screenia-blue);
+  font-size: 0.78rem;
+  text-align: right;
 }
 
 .landing-package-totals {
@@ -4614,10 +4681,21 @@
 
 @media (max-width: 720px) {
   .landing-pricing .landing-plan-quantity,
-  .landing-package-builder-heading,
-  .landing-package-lines > div {
+  .landing-package-builder-heading {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .landing-package-lines {
+    grid-template-columns: 1fr;
+  }
+
+  .landing-package-cost-group > div {
+    gap: 8px;
+  }
+
+  .landing-package-cost-group strong {
+    gap: 6px;
   }
 
   .landing-pricing .landing-quantity-stepper {

@@ -4,7 +4,7 @@ export default function AdminTrainingPage() {
       <header className="admin-page-header">
         <div>
           <p className="admin-operation-kicker">Screenia learning</p>
-          <h1 className="admin-title">Training catalog</h1>
+          <h1 className="admin-title">Training</h1>
           <p className="admin-subtitle">
             Compact admin procedures collected from realistic customer testing.
           </p>

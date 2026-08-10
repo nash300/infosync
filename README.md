@@ -67,6 +67,21 @@ and `info@screenia.se` for newsletters. Restart the Next.js development server
 after changing `.env.local`; environment variables are loaded when the server
 starts.
 
+## Search engine verification
+
+The public site exposes `robots.txt`, `sitemap.xml`, canonical URLs, Swedish
+metadata, and structured data. To verify the production domain, add the tokens
+provided by Google Search Console and Bing Webmaster Tools to Vercel:
+
+```bash
+GOOGLE_SITE_VERIFICATION=your_google_token
+BING_SITE_VERIFICATION=your_bing_token
+```
+
+After deployment, submit `https://screenia.se/sitemap.xml` in each webmaster
+portal. Keep `NEXT_PUBLIC_APP_URL=https://screenia.se` in production so canonical
+URLs and the sitemap use the public domain.
+
 ## Supabase Migrations
 
 Production needs every SQL file in:

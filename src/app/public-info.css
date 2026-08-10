@@ -121,46 +121,46 @@
 }
 
 .public-info-page .how-hero {
-  display: block;
-  min-height: min(560px, calc(100svh - 150px));
+  display: grid;
+  min-height: min(520px, calc(100svh - 150px));
   max-width: none;
+  grid-template-columns: minmax(0, 1.1fr) minmax(420px, 0.9fr);
+  gap: clamp(30px, 5vw, 74px);
+  align-items: center;
   margin: 0;
   padding: clamp(34px, 6vw, 74px);
 }
 
-.public-info-page .how-hero > * {
+.public-info-page .how-hero-copy {
   position: relative;
   z-index: 1;
   max-width: 740px;
 }
 
-.public-info-page .how-hero::before {
-  position: absolute;
-  top: 50%;
-  right: clamp(32px, 6vw, 74px);
-  left: auto;
+.public-info-page .how-hero-visual {
+  position: relative;
   z-index: 1;
-  width: min(370px, 30vw);
-  height: auto;
-  aspect-ratio: 1.22;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
   border: 1px solid rgba(218, 236, 255, 0.24);
   border-radius: 16px;
-  background:
-    linear-gradient(180deg, rgba(4, 16, 42, 0.04), rgba(4, 16, 42, 0.44)),
-    url("/landing/free-source/retail-digital-signage.jpg") center / cover;
   box-shadow: 0 28px 66px rgba(0, 10, 32, 0.32);
-  content: "";
-  transform: translateY(-42%);
+}
+
+.public-info-page .how-hero-visual img {
+  object-fit: cover;
+  object-position: center;
 }
 
 .public-info-page .how-hero h1 {
-  max-width: 13ch;
+  max-width: 15ch;
   margin: 10px 0 18px;
-  font-size: clamp(2.8rem, 5.5vw, 4.9rem);
-  line-height: 0.96;
+  font-size: clamp(2.7rem, 4.2vw, 4rem);
+  line-height: 0.98;
 }
 
-.public-info-page .how-hero p:last-child {
+.public-info-page .how-hero-copy > p:last-child {
   max-width: 760px;
   margin: 0;
 }
@@ -173,16 +173,23 @@
 
 .public-info-page .how-promo-section {
   display: grid;
-  gap: clamp(20px, 2.6vw, 32px);
+  gap: clamp(28px, 3.2vw, 42px);
   margin: 0;
-  padding: clamp(26px, 4vw, 48px);
+  padding: clamp(32px, 4.6vw, 58px);
 }
 
 .public-info-page .how-section-heading {
   display: grid;
-  max-width: 880px;
-  gap: 12px;
+  max-width: none;
+  grid-template-columns: minmax(0, 1.15fr) minmax(280px, 0.75fr);
+  column-gap: clamp(30px, 5vw, 76px);
+  row-gap: 12px;
+  align-items: end;
   margin: 0;
+}
+
+.public-info-page .how-section-heading .landing-eyebrow {
+  grid-column: 1 / -1;
 }
 
 .public-info-page .how-section-heading h2 {
@@ -193,8 +200,9 @@
 }
 
 .public-info-page .how-section-heading p:last-child {
-  max-width: 820px;
+  max-width: 520px;
   margin: 0;
+  padding-bottom: 4px;
 }
 
 .public-info-page .how-reason-grid {
@@ -210,6 +218,7 @@
 .public-info-page .how-reason-grid-featured .how-reason-card:nth-child(1),
 .public-info-page .how-reason-grid-featured .how-reason-card:nth-child(2) {
   grid-column: span 3;
+  grid-template-rows: 230px 1fr;
 }
 
 .public-info-page .how-reason-card {
@@ -249,6 +258,26 @@
   border-bottom: 3px solid #6d8dff;
   object-fit: cover;
   transition: transform 520ms ease, filter 520ms ease;
+}
+
+.public-info-page .how-reason-card:nth-child(1) img {
+  object-position: center 18%;
+}
+
+.public-info-page .how-reason-card:nth-child(2) img {
+  object-position: center;
+}
+
+.public-info-page .how-reason-card:nth-child(3) img {
+  object-position: center 42%;
+}
+
+.public-info-page .how-reason-card:nth-child(4) img {
+  object-position: center 36%;
+}
+
+.public-info-page .how-reason-card:nth-child(5) img {
+  object-position: center 24%;
 }
 
 .public-info-page .how-reason-card:hover img,
@@ -560,6 +589,10 @@
 }
 
 @media (max-width: 1120px) {
+  .public-info-page .how-hero {
+    grid-template-columns: minmax(0, 1fr) minmax(320px, 0.78fr);
+  }
+
   .public-info-page .how-reason-grid,
   .public-info-page .about-signals,
   .public-info-page .about-value-grid,
@@ -595,6 +628,15 @@
     padding: 26px;
   }
 
+  .public-info-page .how-section-heading {
+    grid-template-columns: 1fr;
+  }
+
+  .public-info-page .how-section-heading .landing-eyebrow,
+  .public-info-page .how-section-heading p:last-child {
+    grid-column: auto;
+  }
+
   .public-info-page .how-hero h1,
   .public-info-page .about-hero-copy h1 {
     max-width: 100%;
@@ -602,12 +644,12 @@
     line-height: 1;
   }
 
-  .public-info-page .how-hero > p:last-child::after {
+  .public-info-page .how-hero-copy > p:last-child::after {
     content: none;
   }
 
-  .public-info-page .how-hero::before {
-    content: none;
+  .public-info-page .how-hero-visual {
+    aspect-ratio: 16 / 9;
   }
 
   .public-info-page .how-reason-grid,

@@ -26,8 +26,10 @@ import {
   subscriptionCountsTowardDeviceEntitlement,
 } from "./customer-detail-utils";
 import {
+  getCustomerBillingGuide,
   getCustomerOperationReasonLabel,
   getCustomerOperations,
+  isExceptionalCustomerOperation,
 } from "./customer-detail-operations";
 import type {
   AuditEvent,
@@ -1205,6 +1207,18 @@ export default function CustomerDetailPage({
     setOperationConfirmed(false);
   };
 
+  const openCustomerOperationFromBilling = (operationId: CustomerOperationId) => {
+    openCustomerOperation(operationId);
+    router.push(
+      `/admin/customers/${customerId}?section=onboarding#customer-operations`,
+    );
+    window.setTimeout(() => {
+      document
+        .getElementById("customer-operations")
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 100);
+  };
+
   const closeCustomerOperation = () => {
     if (saving) return;
     setSelectedOperationId("");
@@ -1628,14 +1642,14 @@ export default function CustomerDetailPage({
     },
     {
       id: "communication",
-      label: "Communication & material",
+      label: "Messages & material",
       count: messages.length + assets.length,
       stage: "3",
       description: "Messages, uploads, and screen content",
     },
     {
       id: "orders",
-      label: "Orders & billing",
+      label: "Orders & payments",
       count: subscriptions.length,
       stage: "4",
       description: "Stripe, invoices, refunds, and subscriptions",
@@ -1797,6 +1811,9 @@ export default function CustomerDetailPage({
         currentSubscription.status,
       ),
   );
+  const hasExistingOnboarding = Boolean(
+    currentOnboardingLink || hasPreparedQuote,
+  );
   const setupFeeWasPaid = Boolean(
     currentSubscription?.setup_fee_paid ||
       currentSubscription?.stripe_payment_status === "paid" ||
@@ -1815,6 +1832,39 @@ export default function CustomerDetailPage({
   );
   const selectedOperationReasonLabel =
     getCustomerOperationReasonLabel(selectedOperationId);
+  const billingGuide = getCustomerBillingGuide({
+    customer,
+    currentSubscription,
+    operations: customerOperations,
+  });
+  const everydayCustomerOperations = customerOperations.filter(
+    (operation) => !isExceptionalCustomerOperation(operation.id),
+  );
+  const exceptionalCustomerOperations = customerOperations.filter((operation) =>
+    isExceptionalCustomerOperation(operation.id),
+  );
+  const onboardingSteps = [
+    {
+      label: "Request received",
+      complete: Boolean(
+        customer.requested_screen_quantity ||
+          customer.requested_quote_items?.length ||
+          currentSubscription,
+      ),
+    },
+    {
+      label: "Setup link sent",
+      complete: Boolean(customer.onboarding_token),
+    },
+    {
+      label: "Customer details accepted",
+      complete: Boolean(customer.terms_accepted_at && customer.privacy_accepted_at),
+    },
+    {
+      label: "Payment confirmed",
+      complete: customer.payment_status === "paid",
+    },
+  ];
   const recommendedAction = getCustomerWorkflowAction({
     id: customer.id,
     status: customer.status,
@@ -2082,11 +2132,15 @@ export default function CustomerDetailPage({
           <div className="admin-customer-quote-header">
             <div>
               <p className="admin-customer-quote-kicker">
-                Quote and onboarding workflow
+                Guided onboarding
               </p>
               <h3>
-                Send quote, setup link, material upload, and payment in one flow
+                Review the request and send one secure setup link
               </h3>
+              <p className="admin-muted">
+                Screenia creates the offer, customer profile, material upload,
+                and payment steps together. The customer completes the rest.
+              </p>
             </div>
 
             {currentOnboardingLink && (
@@ -2095,6 +2149,18 @@ export default function CustomerDetailPage({
               </span>
             )}
           </div>
+
+          <ol className="admin-customer-onboarding-progress" aria-label="Onboarding progress">
+            {onboardingSteps.map((step, index) => (
+              <li
+                key={step.label}
+                className={step.complete ? "admin-customer-onboarding-progress-complete" : ""}
+              >
+                <span>{step.complete ? "✓" : index + 1}</span>
+                <strong>{step.label}</strong>
+              </li>
+            ))}
+          </ol>
 
           <div className="admin-customer-quote-layout">
             <div className="admin-customer-quote-form">
@@ -2199,62 +2265,64 @@ export default function CustomerDetailPage({
                 ))}
               </div>
 
-              <div className="admin-customer-quote-discount-grid">
+              <details className="admin-customer-quote-advanced">
+                <summary>Adjust discount or email message</summary>
+                <div className="admin-customer-quote-discount-grid">
+                  <label className="admin-customer-onboarding-field">
+                    Introductory discount %
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={quoteDiscountPercent}
+                      onChange={(event) =>
+                        setQuoteDiscountPercent(
+                          Math.min(
+                            100,
+                            Math.max(0, Number(event.target.value) || 0),
+                          ),
+                        )
+                      }
+                      className="admin-customer-onboarding-control"
+                    />
+                  </label>
+
+                  <label className="admin-customer-onboarding-field">
+                    Discount months
+                    <input
+                      type="number"
+                      min="0"
+                      max="36"
+                      value={quoteDiscountMonths}
+                      onChange={(event) =>
+                        setQuoteDiscountMonths(
+                          Math.min(
+                            36,
+                            Math.max(0, Number(event.target.value) || 0),
+                          ),
+                        )
+                      }
+                      className="admin-customer-onboarding-control"
+                    />
+                  </label>
+                </div>
+
+                <p className="admin-customer-quote-discount-note">
+                  A discount reduces only the monthly subscription for the chosen
+                  period. Setup, devices, and shipping are unchanged.
+                </p>
+
                 <label className="admin-customer-onboarding-field">
-                  Introductory discount %
-                  <input
-                    type="number"
-                    min="0"
-                    max="100"
-                    value={quoteDiscountPercent}
-                    onChange={(event) =>
-                      setQuoteDiscountPercent(
-                        Math.min(
-                          100,
-                          Math.max(0, Number(event.target.value) || 0),
-                        ),
-                      )
-                    }
+                  Optional message on quote email
+                  <textarea
+                    value={quoteNotes}
+                    onChange={(event) => setQuoteNotes(event.target.value)}
+                    rows={3}
+                    placeholder="Only add a message when the standard email needs context"
                     className="admin-customer-onboarding-control"
                   />
                 </label>
-
-                <label className="admin-customer-onboarding-field">
-                  Discount months
-                  <input
-                    type="number"
-                    min="0"
-                    max="36"
-                    value={quoteDiscountMonths}
-                    onChange={(event) =>
-                      setQuoteDiscountMonths(
-                        Math.min(
-                          36,
-                          Math.max(0, Number(event.target.value) || 0),
-                        ),
-                      )
-                    }
-                    className="admin-customer-onboarding-control"
-                  />
-                </label>
-              </div>
-
-              <p className="admin-customer-quote-discount-note">
-                The introductory discount only reduces the monthly subscription
-                for the selected number of months. The first payment, setup,
-                devices, and shipping are never discounted here.
-              </p>
-
-              <label className="admin-customer-onboarding-field">
-                Message on quote email
-                <textarea
-                  value={quoteNotes}
-                  onChange={(event) => setQuoteNotes(event.target.value)}
-                  rows={3}
-                  placeholder="Optional internal/customer-facing note for this quote"
-                  className="admin-customer-onboarding-control"
-                />
-              </label>
+              </details>
 
               <button
                 type="button"
@@ -2263,19 +2331,18 @@ export default function CustomerDetailPage({
                 className="admin-button-primary"
               >
                 {saving
-                  ? hasPreparedQuote
+                  ? hasExistingOnboarding
                     ? "Resending..."
                     : "Preparing..."
-                  : hasPreparedQuote
-                    ? "Resend current offer and replace link"
-                    : "Prepare quote and send onboarding"}
+                  : hasExistingOnboarding
+                    ? "Review and resend secure setup link"
+                    : "Review and send secure setup link"}
               </button>
 
-              {hasPreparedQuote && (
+              {hasExistingOnboarding && (
                 <p className="admin-customer-quote-resend-warning">
-                  Resending keeps the current order and prices, creates a new
-                  14-day secure link, and makes the previous link invalid.
-                  Confirm the email address before continuing.
+                  This replaces the previous 14-day link. Confirm the email
+                  address before resending.
                 </p>
               )}
 
@@ -2341,14 +2408,16 @@ export default function CustomerDetailPage({
                     <span>Included VAT</span>
                     <strong>{formatSek(quoteStartupVat.vat)}</strong>
                   </div>
-                  <p className="admin-customer-quote-preview-note">
-                    New screens in this quote: {quoteScreenQuantity}. Already
-                    paid screen entitlement: {paidDeviceQuantity}. Free trial:{" "}
-                    {primaryQuotePlan.trial_days} days. Monthly
-                    discount duration: {quoteDiscountMonths} months. Monthly
-                    VAT included: {formatSek(quoteMonthlyVat.vat)}. Stripe
-                    shows the VAT portion without increasing these totals.
-                  </p>
+                  <details className="admin-customer-quote-preview-note">
+                    <summary>Price calculation details</summary>
+                    <p>
+                      New screens: {quoteScreenQuantity}. Existing paid screen
+                      entitlement: {paidDeviceQuantity}. Free trial:{" "}
+                      {primaryQuotePlan.trial_days} days. Discount duration:{" "}
+                      {quoteDiscountMonths} months. Monthly VAT included:{" "}
+                      {formatSek(quoteMonthlyVat.vat)}.
+                    </p>
+                  </details>
                 </div>
               ) : (
                 <p className="admin-muted admin-customer-quote-preview-empty">
@@ -2359,7 +2428,9 @@ export default function CustomerDetailPage({
           </div>
         </div>
 
-        <div className="admin-table-wrap admin-customer-onboarding-table-wrap">
+        <details className="admin-customer-technical-details">
+          <summary>Technical and audit details</summary>
+          <div className="admin-table-wrap admin-customer-onboarding-table-wrap">
           <table className="admin-data-table">
             <thead>
               <tr>
@@ -2435,9 +2506,16 @@ export default function CustomerDetailPage({
                 <td>{formatDateTime(customer.setup_fee_locked_at)}</td>
               </tr>
             </tbody>
-          </table>
-        </div>
+            </table>
+          </div>
+        </details>
 
+        <details
+          className="admin-customer-advanced-operations"
+          id="customer-operations"
+          open={Boolean(selectedOperationId)}
+        >
+          <summary>Advanced account, production, and billing actions</summary>
         <div className="admin-operation-panel admin-customer-operation-panel">
           <div className="admin-operation-header">
             <div>
@@ -2475,25 +2553,51 @@ export default function CustomerDetailPage({
                   No customer operations are currently available for this state.
                 </p>
               ) : (
-                customerOperations.map((operation) => (
-                  <button
-                    key={operation.id}
-                    type="button"
-                    onClick={() => openCustomerOperation(operation.id)}
-                    disabled={saving}
-                    className={`admin-operation-card admin-operation-${operation.tone} ${
-                      selectedOperationId === operation.id
-                        ? "admin-operation-card-selected"
-                        : ""
-                    }`}
-                  >
-                    <span>
-                      <strong>{operation.title}</strong>
-                      <small>{operation.description}</small>
-                    </span>
-                    <em>{operation.requiresStripe ? "Stripe" : "Screenia"}</em>
-                  </button>
-                ))
+                <>
+                  {everydayCustomerOperations.map((operation) => (
+                    <button
+                      key={operation.id}
+                      type="button"
+                      onClick={() => openCustomerOperation(operation.id)}
+                      disabled={saving}
+                      className={`admin-operation-card admin-operation-${operation.tone} ${
+                        selectedOperationId === operation.id
+                          ? "admin-operation-card-selected"
+                          : ""
+                      }`}
+                    >
+                      <span>
+                        <strong>{operation.title}</strong>
+                        <small>{operation.description}</small>
+                      </span>
+                      <em>{operation.requiresStripe ? "Stripe" : "Screenia"}</em>
+                    </button>
+                  ))}
+                  {exceptionalCustomerOperations.length > 0 && (
+                    <details className="admin-operation-exceptional">
+                      <summary>Exceptional actions</summary>
+                      {exceptionalCustomerOperations.map((operation) => (
+                        <button
+                          key={operation.id}
+                          type="button"
+                          onClick={() => openCustomerOperation(operation.id)}
+                          disabled={saving}
+                          className={`admin-operation-card admin-operation-${operation.tone} ${
+                            selectedOperationId === operation.id
+                              ? "admin-operation-card-selected"
+                              : ""
+                          }`}
+                        >
+                          <span>
+                            <strong>{operation.title}</strong>
+                            <small>{operation.description}</small>
+                          </span>
+                          <em>{operation.requiresStripe ? "Stripe" : "Screenia"}</em>
+                        </button>
+                      ))}
+                    </details>
+                  )}
+                </>
               )}
             </div>
 
@@ -2619,6 +2723,7 @@ export default function CustomerDetailPage({
             </div>
           </div>
         </div>
+        </details>
       </div>
       )}
 
@@ -2696,6 +2801,36 @@ export default function CustomerDetailPage({
                   {item.message}
                 </p>
 
+                <div className="admin-customer-message-reply admin-customer-message-reply-primary">
+                  <label className="admin-customer-message-field">
+                    Reply to customer
+                    <textarea
+                      id={`message-customer-reply-${item.id}`}
+                      name={`messageCustomerReply-${item.id}`}
+                      value={messageReplyDrafts[item.id] || ""}
+                      onChange={(event) =>
+                        setMessageReplyDrafts((current) => ({
+                          ...current,
+                          [item.id]: event.target.value,
+                        }))
+                      }
+                      rows={4}
+                      placeholder="Write the reply shown in the customer portal and sent by email."
+                      className="admin-customer-message-control"
+                    />
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => sendCustomerMessageReply(item)}
+                    disabled={saving || !(messageReplyDrafts[item.id] || "").trim()}
+                    className="admin-button-primary admin-customer-message-send-button"
+                  >
+                    {saving ? "Sending..." : "Send reply"}
+                  </button>
+                </div>
+
+                <details className="admin-customer-message-admin-details">
+                  <summary>Internal status and audit note</summary>
                 <div className="admin-customer-message-review">
                   <div className="admin-customer-message-review-grid">
                     <label className="admin-customer-message-field">
@@ -2781,34 +2916,8 @@ export default function CustomerDetailPage({
                       </span>
                     )}
                   </div>
-                  <div className="admin-customer-message-reply">
-                    <label className="admin-customer-message-field">
-                      Customer-visible reply
-                      <textarea
-                        id={`message-customer-reply-${item.id}`}
-                        name={`messageCustomerReply-${item.id}`}
-                        value={messageReplyDrafts[item.id] || ""}
-                        onChange={(event) =>
-                          setMessageReplyDrafts((current) => ({
-                            ...current,
-                            [item.id]: event.target.value,
-                          }))
-                        }
-                        rows={4}
-                        placeholder="Write the reply that the customer should see in the portal and receive by email."
-                        className="admin-customer-message-control"
-                      />
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() => sendCustomerMessageReply(item)}
-                      disabled={saving}
-                      className="admin-button-primary admin-customer-message-send-button"
-                    >
-                      {saving ? "Sending..." : "Send customer reply"}
-                    </button>
-                  </div>
                 </div>
+                </details>
 
                 {item.files.length > 0 && (
                   <div className="admin-customer-message-files">
@@ -2855,13 +2964,18 @@ export default function CustomerDetailPage({
           </div>
         </div>
 
+        <details
+          className="admin-customer-preview-disclosure"
+          open={Boolean(customer?.preview_url)}
+        >
+          <summary>Optional customer preview</summary>
         <div className="admin-customer-preview-panel">
           <div className="admin-customer-preview-header">
             <div>
-              <h3>Customer design preview</h3>
+              <h3>Send a view-only design preview</h3>
               <p>
-                Publish a view-only Canva or web preview. The customer can approve it or
-                request changes from the portal.
+                Use this only when a customer preview has been agreed. Normal
+                planning can continue through direct contact.
               </p>
             </div>
             <span className="admin-customer-preview-status">
@@ -2894,9 +3008,8 @@ export default function CustomerDetailPage({
           </div>
           <div className="admin-customer-preview-actions">
             <p>
-              Warning: verify that the link has no edit permission and exposes no other
-              customer data. Publishing resets earlier feedback and emails the customer.
-              Paid, active service access is required.
+              Verify that the link is view-only and contains no other customer
+              data. Publishing emails the customer and requires paid, active service.
             </p>
             <button
               type="button"
@@ -2919,6 +3032,7 @@ export default function CustomerDetailPage({
             </p>
           )}
         </div>
+        </details>
 
         {assets.length === 0 ? (
           <p className="admin-muted admin-customer-material-empty">No display material yet.</p>
@@ -3057,7 +3171,83 @@ export default function CustomerDetailPage({
       ============================== */}
       {activeSection === "orders" && (
       <div className="admin-card admin-customer-orders-panel">
-        <h2 className="admin-card-title admin-customer-orders-title">Orders</h2>
+        <div className="admin-customer-orders-heading">
+          <div>
+            <p className="admin-operation-kicker">Billing assistant</p>
+            <h2 className="admin-card-title admin-customer-orders-title">
+              Orders &amp; payments
+            </h2>
+            <p className="admin-muted">
+              Start with the status below. Technical identifiers and exceptional
+              actions stay out of the normal workflow.
+            </p>
+          </div>
+          <div className="admin-operation-summary">
+            <span>{customer.payment_status || "not paid"}</span>
+            <strong>{customer.service_access_status || "access not set"}</strong>
+          </div>
+        </div>
+
+        <section
+          className={`admin-billing-guide admin-billing-guide-${billingGuide.tone}`}
+          aria-labelledby="billing-guide-title"
+        >
+          <div>
+            <p className="admin-operation-kicker">Recommended next step</p>
+            <h3 id="billing-guide-title">{billingGuide.title}</h3>
+            <p>{billingGuide.summary}</p>
+          </div>
+          {billingGuide.steps.length > 0 && (
+            <ol>
+              {billingGuide.steps.map((step) => (
+                <li key={step}>{step}</li>
+              ))}
+            </ol>
+          )}
+          {billingGuide.recommendedOperationId && (
+            <button
+              type="button"
+              className="admin-button-primary"
+              onClick={() =>
+                openCustomerOperationFromBilling(
+                  billingGuide.recommendedOperationId as CustomerOperationId,
+                )
+              }
+            >
+              Review {customerOperations.find(
+                (operation) => operation.id === billingGuide.recommendedOperationId,
+              )?.title.toLowerCase()}
+            </button>
+          )}
+        </section>
+
+        {everydayCustomerOperations.length > 0 && (
+          <details className="admin-billing-actions">
+            <summary>Customer-requested billing actions</summary>
+            <p className="admin-muted">
+              Choose an action only after confirming the customer request. You
+              will review its effect and record a reason before anything changes.
+            </p>
+            <div className="admin-billing-action-grid">
+              {everydayCustomerOperations
+                .filter((operation) => operation.id !== "start_layout")
+                .map((operation) => (
+                  <button
+                    key={operation.id}
+                    type="button"
+                    className="admin-operation-card"
+                    onClick={() => openCustomerOperationFromBilling(operation.id)}
+                  >
+                    <span>
+                      <strong>{operation.title}</strong>
+                      <small>{operation.description}</small>
+                    </span>
+                    <em>Review</em>
+                  </button>
+                ))}
+            </div>
+          </details>
+        )}
 
         {subscriptions.length === 0 ? (
           <p className="admin-muted admin-customer-orders-empty">No orders yet.</p>
@@ -3077,18 +3267,6 @@ export default function CustomerDetailPage({
                       Status: {subscription.status} | Fulfillment:{" "}
                       {subscription.fulfillment_status || "pending"} | Stock allocation:{" "}
                       {subscription.inventory_status || "not reserved"}
-                    </p>
-                    <p className="admin-customer-order-meta">
-                      Stripe checkout:{" "}
-                      {subscription.stripe_checkout_session_id || "Not started"}
-                    </p>
-                    <p className="admin-customer-order-meta">
-                      Stripe subscription:{" "}
-                      {subscription.stripe_subscription_id || "Not created yet"}
-                    </p>
-                    <p className="admin-customer-order-meta">
-                      Latest Stripe invoice:{" "}
-                      {subscription.stripe_invoice_id || "Not recorded yet"}
                     </p>
                     <p className="admin-customer-order-meta">
                       Paid period: {formatDateTime(subscription.stripe_current_period_start)} -{" "}
@@ -3152,6 +3330,23 @@ export default function CustomerDetailPage({
                     </p>
                   </div>
                 </div>
+                <details className="admin-customer-order-technical">
+                  <summary>Stripe and audit references</summary>
+                  <dl>
+                    <div>
+                      <dt>Checkout</dt>
+                      <dd>{subscription.stripe_checkout_session_id || "Not started"}</dd>
+                    </div>
+                    <div>
+                      <dt>Subscription</dt>
+                      <dd>{subscription.stripe_subscription_id || "Not created yet"}</dd>
+                    </div>
+                    <div>
+                      <dt>Latest invoice</dt>
+                      <dd>{subscription.stripe_invoice_id || "Not recorded yet"}</dd>
+                    </div>
+                  </dl>
+                </details>
               </div>
             ))}
           </div>
@@ -3268,6 +3463,21 @@ export default function CustomerDetailPage({
           create display endpoints after onboarding. Stock purchase records,
           warranty, returns, and repairs stay in Hardware stock.
         </p>
+
+        <ol className="admin-customer-device-guide" aria-label="Device allocation steps">
+          <li>
+            <span>1</span>
+            <strong>Confirm an available paid screen slot</strong>
+          </li>
+          <li>
+            <span>2</span>
+            <strong>Choose the prepared hardware from stock</strong>
+          </li>
+          <li>
+            <span>3</span>
+            <strong>Record its location and allocate it</strong>
+          </li>
+        </ol>
 
         <div className="admin-customer-device-slots">
           <InfoTile
