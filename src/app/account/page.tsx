@@ -1977,6 +1977,12 @@ export default function AccountPage() {
                         value={statusLabel(activeSubscription.stripe_payment_status)}
                       />
                       <Fact label="Provperiod" value={trialStatus(activeSubscription)} />
+                      {activeSubscription.setup_fee_waived && (
+                        <Fact
+                          label="Administrativ grundavgift"
+                          value="Borttagen enligt din offert"
+                        />
+                      )}
                       <p className="account-price-note">
                         Första betalningen består av startavgift {money(activeSubscription.setup_fee_sek)},
                         skärmenhet {money(hardwareSubtotalSek)} och frakt {money(shippingSubtotalSek)}
@@ -1984,6 +1990,9 @@ export default function AccountPage() {
                           ? `, minus rabatt ${money(activeSubscription.device_discount_amount_sek)}`
                           : ""}.
                         Alla priser visas inklusive moms.
+                        {activeSubscription.setup_fee_waived
+                          ? " Den administrativa grundavgiften är borttagen enligt din offert."
+                          : ""}
                         {activeTemporaryDiscount
                           ? ` Den tillfälliga rabatten används på upp till ${activeTemporaryDiscount.duration_months} månadsfakturor. Därefter återgår priset automatiskt till ${money(monthlyPaymentSek)}.`
                           : ""}

@@ -18,6 +18,7 @@ const labels: Record<string, string> = {
   subscriptions: "Subscriptions",
   "email-events": "Email delivery",
   training: "Training",
+  services: "Services",
   troubleshooting: "Troubleshooting",
   new: "New",
 };
@@ -30,7 +31,7 @@ const sectionLabels: Record<string, string> = {
   uploads: "Uploads",
   orders: "Orders",
   devices: "Device allocation",
-  history: "History",
+  history: "Customer journal",
   details: "Details",
   preview: "Preview",
   media: "Media",

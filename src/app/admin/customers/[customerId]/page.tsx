@@ -31,6 +31,15 @@ import {
   getCustomerOperations,
   isExceptionalCustomerOperation,
 } from "./customer-detail-operations";
+import {
+  journalCategories,
+  journalCategoryLabel,
+  journalEntriesFromAuditEvents,
+  mergeJournalEntries,
+  type CustomerJournalEntry,
+  type JournalCategory,
+} from "./customer-journal";
+import { getCustomerSectionHelp } from "./customer-section-help";
 import type {
   AuditEvent,
   CommunicationView,
@@ -101,7 +110,6 @@ export default function CustomerDetailPage({
   const [editWebsiteUrl, setEditWebsiteUrl] = useState("");
   const [editPreferredContactChannel, setEditPreferredContactChannel] =
     useState("email");
-  const [editNotes, setEditNotes] = useState("");
   const [editReason, setEditReason] = useState("");
   const [anonymizeReason, setAnonymizeReason] = useState("");
   const [anonymizeConfirmed, setAnonymizeConfirmed] = useState(false);
@@ -127,6 +135,8 @@ export default function CustomerDetailPage({
   ]);
   const [quoteDiscountPercent, setQuoteDiscountPercent] = useState(0);
   const [quoteDiscountMonths, setQuoteDiscountMonths] = useState(0);
+  const [quoteSetupFeeWaived, setQuoteSetupFeeWaived] = useState(false);
+  const [quoteSetupFeeWaiverReason, setQuoteSetupFeeWaiverReason] = useState("");
   const [schemaNotice, setSchemaNotice] = useState("");
   const [selectedOperationId, setSelectedOperationId] =
     useState<CustomerOperationId | "">("");
@@ -138,6 +148,11 @@ export default function CustomerDetailPage({
   const [activeDiscountCount, setActiveDiscountCount] = useState(0);
   const [previewUrlDraft, setPreviewUrlDraft] = useState("");
   const [previewPublishReason, setPreviewPublishReason] = useState("");
+  const [journalCategory, setJournalCategory] =
+    useState<JournalCategory>("general");
+  const [journalTitle, setJournalTitle] = useState("");
+  const [journalNote, setJournalNote] = useState("");
+  const [journalSearch, setJournalSearch] = useState("");
 
   const formatInactiveReason = (
     reason: string | null,
@@ -397,7 +412,6 @@ export default function CustomerDetailPage({
     setEditPreferredContactChannel(
       loadedCustomer.preferred_contact_channel || "email",
     );
-    setEditNotes(loadedCustomer.notes || "");
     setEditReason("");
     setPreviewUrlDraft(loadedCustomer.preview_url || "");
     if (
@@ -454,6 +468,8 @@ export default function CustomerDetailPage({
           status,
           setup_fee_sek,
           setup_fee_paid,
+          setup_fee_waived,
+          setup_fee_waiver_reason,
           hardware_fee_sek,
           shipping_fee_sek,
           base_shipping_fee_sek,
@@ -560,6 +576,8 @@ export default function CustomerDetailPage({
           status: subscription.status,
           setup_fee_sek: null,
           setup_fee_paid: null,
+          setup_fee_waived: false,
+          setup_fee_waiver_reason: null,
           hardware_fee_sek: null,
           shipping_fee_sek: null,
           monthly_fee_sek: null,
@@ -624,6 +642,12 @@ export default function CustomerDetailPage({
         );
         setQuoteDiscountMonths(
           Number(latestQuotedSubscription.device_discount_months) || 0,
+        );
+        setQuoteSetupFeeWaived(
+          latestQuotedSubscription.setup_fee_waived === true,
+        );
+        setQuoteSetupFeeWaiverReason(
+          latestQuotedSubscription.setup_fee_waiver_reason || "",
         );
         setQuoteNotes(latestQuotedSubscription.quote_notes || "");
       }
@@ -775,7 +799,7 @@ export default function CustomerDetailPage({
       .select("id, actor_type, actor_id, event_type, event_description, metadata, created_at")
       .eq("customer_id", customerId)
       .order("created_at", { ascending: false })
-      .limit(100);
+      .limit(500);
 
     if (auditError) {
       console.error("Audit events error:", auditError);
@@ -786,6 +810,45 @@ export default function CustomerDetailPage({
 
     setLoading(false);
   }, [customerId]);
+
+  const saveJournalEntry = async () => {
+    const note = journalNote.trim();
+    if (note.length < 5) {
+      showAdminNotification(
+        "warning",
+        "Write at least 5 characters before saving the journal entry.",
+      );
+      return;
+    }
+
+    setSaving(true);
+    const response = await fetch(`/api/admin/customers/${customerId}/journal`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        category: journalCategory,
+        title: journalTitle.trim(),
+        note,
+      }),
+    });
+    const result = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      showAdminNotification(
+        "error",
+        result.error || "The journal entry could not be saved.",
+      );
+      setSaving(false);
+      return;
+    }
+
+    setJournalCategory("general");
+    setJournalTitle("");
+    setJournalNote("");
+    await loadData();
+    showAdminNotification("success", "Journal entry saved.");
+    setSaving(false);
+  };
 
   const saveCustomerDetails = async () => {
     if (!customer) return;
@@ -829,7 +892,7 @@ export default function CustomerDetailPage({
       business_category: editBusinessCategory.trim() || null,
       website_url: editWebsiteUrl.trim() || null,
       preferred_contact_channel: editPreferredContactChannel,
-      notes: editNotes.trim() || null,
+      notes: customer.notes,
       reason: editReason.trim(),
     };
     const response = await fetch(`/api/admin/customers/${customer.id}`, {
@@ -1387,6 +1450,22 @@ export default function CustomerDetailPage({
       return;
     }
 
+    if (quoteSetupFeeWaived && paidDeviceQuantity > 0) {
+      showAdminNotification(
+        "warning",
+        "The administrative-charge waiver is only available for new clients.",
+      );
+      return;
+    }
+
+    if (quoteSetupFeeWaived && quoteSetupFeeWaiverReason.trim().length < 3) {
+      showAdminNotification(
+        "warning",
+        "Enter a reason before waiving the administrative charge.",
+      );
+      return;
+    }
+
     setSaving(true);
     setQuoteResultUrl("");
 
@@ -1406,6 +1485,10 @@ export default function CustomerDetailPage({
         ),
         deviceDiscountPercent: quoteDiscountPercent,
         deviceDiscountMonths: quoteDiscountMonths,
+        waiveSetupFee: quoteSetupFeeWaived,
+        setupFeeWaiverReason: quoteSetupFeeWaived
+          ? quoteSetupFeeWaiverReason.trim()
+          : "",
       }),
     });
 
@@ -1621,6 +1704,115 @@ export default function CustomerDetailPage({
     );
   }
 
+  const contextualJournalEntries: CustomerJournalEntry[] = [];
+
+  if (customer.notes?.trim()) {
+    contextualJournalEntries.push({
+      id: "customer-profile-notes",
+      category: "general",
+      title: "Legacy customer notes",
+      body: customer.notes.trim(),
+      source: "Customer profile",
+      createdAt: customer.updated_at || customer.created_at || new Date(0).toISOString(),
+    });
+  }
+
+  messages.forEach((message) => {
+    if (!message.adminNote?.trim()) return;
+    contextualJournalEntries.push({
+      id: `support-note-${message.id}`,
+      category: "customer_question",
+      title: message.subject || "Support message review",
+      body: message.adminNote.trim(),
+      source: "Support message",
+      createdAt: message.adminNoteUpdatedAt || message.createdAt,
+    });
+  });
+
+  assets.forEach((asset) => {
+    if (!asset.adminNote?.trim()) return;
+    contextualJournalEntries.push({
+      id: `material-note-${asset.id}`,
+      category: "investigation",
+      title: asset.fileName || "Material review",
+      body: asset.adminNote.trim(),
+      source: "Material review",
+      createdAt: asset.adminNoteUpdatedAt || asset.reviewedAt || asset.createdAt,
+    });
+  });
+
+  subscriptions.forEach((subscription) => {
+    if (subscription.quote_notes?.trim()) {
+      contextualJournalEntries.push({
+        id: `quote-note-${subscription.id}`,
+        category: "decision",
+        title: `Quote${subscription.order_number ? ` ${subscription.order_number}` : ""}`,
+        body: subscription.quote_notes.trim(),
+        source: "Quote",
+        createdAt: subscription.created_at,
+      });
+    }
+    if (subscription.setup_fee_waiver_reason?.trim()) {
+      contextualJournalEntries.push({
+        id: `waiver-note-${subscription.id}`,
+        category: "decision",
+        title: "Administrative-charge waiver",
+        body: subscription.setup_fee_waiver_reason.trim(),
+        source: "Order decision",
+        createdAt: subscription.created_at,
+      });
+    }
+    if (subscription.pause_reason?.trim()) {
+      contextualJournalEntries.push({
+        id: `pause-note-${subscription.id}`,
+        category: "decision",
+        title: "Subscription pause",
+        body: subscription.pause_reason.trim(),
+        source: "Subscription",
+        createdAt: subscription.pause_started_at || subscription.created_at,
+      });
+    }
+  });
+
+  refundCases.forEach((refundCase) => {
+    if (refundCase.customer_reason?.trim()) {
+      contextualJournalEntries.push({
+        id: `refund-customer-note-${refundCase.id}`,
+        category: "customer_question",
+        title: `Refund request${refundCase.order_number ? ` ${refundCase.order_number}` : ""}`,
+        body: refundCase.customer_reason.trim(),
+        source: "Customer request",
+        createdAt: refundCase.requested_at,
+      });
+    }
+    if (refundCase.admin_reason?.trim()) {
+      contextualJournalEntries.push({
+        id: `refund-admin-note-${refundCase.id}`,
+        category: "decision",
+        title: "Refund decision",
+        body: refundCase.admin_reason.trim(),
+        source: "Refund case",
+        createdAt: refundCase.decided_at || refundCase.created_at,
+      });
+    }
+  });
+
+  const journalEntries = mergeJournalEntries(
+    journalEntriesFromAuditEvents(auditEvents),
+    contextualJournalEntries,
+  );
+  const normalizedJournalSearch = journalSearch.trim().toLowerCase();
+  const visibleJournalEntries = normalizedJournalSearch
+    ? journalEntries.filter((entry) =>
+        [
+          entry.title,
+          entry.body,
+          entry.source,
+          journalCategoryLabel(entry.category),
+        ].some((value) => value.toLowerCase().includes(normalizedJournalSearch)),
+      )
+    : journalEntries;
+
   const detailSections: Array<{
     id: CustomerDetailSection;
     label: string;
@@ -1632,41 +1824,41 @@ export default function CustomerDetailPage({
       id: "overview",
       label: "Overview",
       stage: "1",
-      description: "Identity, contact, consent, and notes",
+      description: "Contact details and permissions",
     },
     {
       id: "onboarding",
       label: "Request & quote",
       stage: "2",
-      description: "Offer, setup link, and onboarding start",
+      description: "Create offer and send setup link",
     },
     {
       id: "communication",
       label: "Messages & material",
       count: messages.length + assets.length,
       stage: "3",
-      description: "Messages, uploads, and screen content",
+      description: "Customer questions and files",
     },
     {
       id: "orders",
       label: "Orders & payments",
       count: subscriptions.length,
       stage: "4",
-      description: "Stripe, invoices, refunds, and subscriptions",
+      description: "Payments, refunds, and subscriptions",
     },
     {
       id: "devices",
       label: "Device allocation",
       count: devices.length,
       stage: "5",
-      description: "Customer screens and stock assignment",
+      description: "Customer screens and hardware",
     },
     {
       id: "history",
-      label: "Audit trail",
-      count: auditEvents.length,
+      label: "Journal",
+      count: journalEntries.length,
       stage: "6",
-      description: "Legal and troubleshooting evidence",
+      description: "Notes and work history",
     },
   ];
   const communicationWorkflows: Array<{
@@ -1681,14 +1873,14 @@ export default function CustomerDetailPage({
       stage: "1",
       label: "Support inbox",
       count: messages.length,
-      description: "Customer questions, replies, and troubleshooting notes",
+      description: "Read questions and send replies",
     },
     {
       id: "uploads",
       stage: "2",
       label: "Material review",
       count: assets.length,
-      description: "Uploaded logos, images, videos, and display content",
+      description: "Check logos, images, videos, and menus",
     },
   ];
   const paidDeviceQuantity = subscriptions
@@ -1760,6 +1952,9 @@ export default function CustomerDetailPage({
   const quoteMatchesCurrentSubscription =
     Boolean(currentSubscription?.quote_items?.length) &&
     currentSubscriptionQuoteKey === currentFormQuoteKey;
+  const quotePricingMatchesCurrentSubscription =
+    quoteMatchesCurrentSubscription &&
+    Boolean(currentSubscription?.setup_fee_waived) === quoteSetupFeeWaived;
   const calculatedQuoteShippingSubtotal = calculateShippingFeeSek(
     quoteScreenQuantity,
     primaryQuotePlan?.shipping_fee_sek ?? 99,
@@ -1781,14 +1976,17 @@ export default function CustomerDetailPage({
     ? calculateIncrementalSetupFeeSek(
         paidDeviceQuantity,
         quoteScreenQuantity,
-        primaryQuotePlan.setup_fee_sek,
+        quoteSetupFeeWaived && paidDeviceQuantity === 0
+          ? 0
+          : primaryQuotePlan.setup_fee_sek,
       )
     : 0;
-  const quoteSetupSubtotal = quoteMatchesCurrentSubscription
+  const quoteSetupSubtotal = quotePricingMatchesCurrentSubscription
     ? currentSubscription?.setup_fee_sek ?? calculatedQuoteSetupSubtotal
     : calculatedQuoteSetupSubtotal;
   const quoteStartupTotal =
-    quoteMatchesCurrentSubscription && currentSubscription?.total_amount_sek !== null
+    quotePricingMatchesCurrentSubscription &&
+    currentSubscription?.total_amount_sek !== null
       ? Math.round((currentSubscription?.total_amount_sek || 0) / 100)
       : primaryQuotePlan
         ? quoteSetupSubtotal + quoteDeviceSubtotal + quoteShippingSubtotal
@@ -1876,6 +2074,7 @@ export default function CustomerDetailPage({
       (device) => (device.playlists?.[0]?.count || 0) === 0,
     )?.device_code,
   });
+  const sectionHelp = getCustomerSectionHelp(activeSection, communicationView);
 
   return (
     <div>
@@ -1895,7 +2094,7 @@ export default function CustomerDetailPage({
             <h1 className="admin-title">{customer.name}</h1>
             <p className="admin-subtitle">
               Manage the customer journey from request and quote to material,
-              billing, device allocation, and audit trail.
+              billing, device allocation, and the customer journal.
             </p>
           </div>
 
@@ -1931,6 +2130,48 @@ export default function CustomerDetailPage({
         ))}
       </section>
 
+      <details className="admin-customer-section-help" open>
+        <summary>
+          <span>
+            <small>Admin help</small>
+            <strong>Simple help for this page</strong>
+          </span>
+          <em>Show or hide help</em>
+        </summary>
+        <div className="admin-customer-section-help-body">
+          <div className="admin-customer-section-help-purpose">
+            <h2>{sectionHelp.title}</h2>
+            <p>{sectionHelp.purpose}</p>
+          </div>
+          <div className="admin-customer-section-help-columns">
+            <div>
+              <h3>Steps to follow</h3>
+              <ol>
+                {sectionHelp.steps.map((step) => (
+                  <li key={step}>{step}</li>
+                ))}
+              </ol>
+            </div>
+            <div>
+              <h3>What each button does</h3>
+              <dl>
+                {sectionHelp.actions.map((action) => (
+                  <div key={action.label}>
+                    <dt>{action.label}</dt>
+                    <dd>{action.effect}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+          </div>
+          {sectionHelp.caution ? (
+            <p className="admin-customer-section-help-caution">
+              <strong>Before you continue:</strong> {sectionHelp.caution}
+            </p>
+          ) : null}
+        </div>
+      </details>
+
       {recommendedAction && (
         <section
           className={`admin-customer-next-step admin-customer-next-step-${recommendedAction.priority}`}
@@ -1964,13 +2205,21 @@ export default function CustomerDetailPage({
       <div className="admin-card admin-customer-overview-panel">
         <div className="admin-compact-heading">
           <h2 className="admin-card-title admin-customer-overview-title">Customer overview</h2>
-          <button
-            type="button"
-            className="admin-button-primary"
-            onClick={() => setIsEditingCustomer((current) => !current)}
-          >
-            {isEditingCustomer ? "Close edit" : "Edit customer details"}
-          </button>
+          <div className="admin-customer-overview-heading-actions">
+            <Link
+              href={`/admin/customers/${customerId}?section=history`}
+              className="admin-button-secondary"
+            >
+              Open customer journal
+            </Link>
+            <button
+              type="button"
+              className="admin-button-primary"
+              onClick={() => setIsEditingCustomer((current) => !current)}
+            >
+              {isEditingCustomer ? "Close edit" : "Edit customer details"}
+            </button>
+          </div>
         </div>
 
         <div className="admin-compact-info-grid admin-customer-overview-info-grid">
@@ -2006,13 +2255,6 @@ export default function CustomerDetailPage({
           <InfoRow label="Customer ID" value={customer.id} />
         </div>
 
-        {customer.notes && (
-          <div className="admin-compact-note admin-customer-overview-note">
-            <strong>Internal notes</strong>
-            <p>{customer.notes}</p>
-          </div>
-        )}
-
         {isEditingCustomer && (
           <div className="admin-edit-panel admin-customer-overview-edit-panel">
             <div className="admin-customer-overview-edit-grid">
@@ -2040,15 +2282,6 @@ export default function CustomerDetailPage({
               <Input label="City" value={editCity} onChange={setEditCity} />
               <Input label="Country" value={editCountry} onChange={setEditCountry} />
             </div>
-            <label className="admin-customer-overview-field admin-customer-overview-field-spaced">
-              Internal notes
-              <textarea
-                value={editNotes}
-                onChange={(event) => setEditNotes(event.target.value)}
-                rows={3}
-                className="admin-customer-overview-control"
-              />
-            </label>
             <label className="admin-customer-overview-field admin-customer-overview-field-spaced">
               Reason for this customer detail change *
               <textarea
@@ -2267,6 +2500,38 @@ export default function CustomerDetailPage({
 
               <details className="admin-customer-quote-advanced">
                 <summary>Adjust discount or email message</summary>
+                <label className="admin-customer-onboarding-field">
+                  <span>
+                    <input
+                      type="checkbox"
+                      checked={quoteSetupFeeWaived}
+                      disabled={paidDeviceQuantity > 0}
+                      onChange={(event) => {
+                        setQuoteSetupFeeWaived(event.target.checked);
+                        if (!event.target.checked) {
+                          setQuoteSetupFeeWaiverReason("");
+                        }
+                      }}
+                    />{" "}
+                    Waive the 499 kr administrative charge for this new client
+                  </span>
+                </label>
+
+                {quoteSetupFeeWaived && (
+                  <label className="admin-customer-onboarding-field">
+                    Waiver reason (required for audit)
+                    <input
+                      type="text"
+                      value={quoteSetupFeeWaiverReason}
+                      onChange={(event) =>
+                        setQuoteSetupFeeWaiverReason(event.target.value)
+                      }
+                      placeholder="For example: introductory campaign approved by admin"
+                      className="admin-customer-onboarding-control"
+                    />
+                  </label>
+                )}
+
                 <div className="admin-customer-quote-discount-grid">
                   <label className="admin-customer-onboarding-field">
                     Introductory discount %
@@ -2309,7 +2574,9 @@ export default function CustomerDetailPage({
 
                 <p className="admin-customer-quote-discount-note">
                   A discount reduces only the monthly subscription for the chosen
-                  period. Setup, devices, and shipping are unchanged.
+                  period. The new-client waiver removes only the 499 kr base
+                  administrative charge; extra-screen setup, devices, and shipping
+                  are unchanged.
                 </p>
 
                 <label className="admin-customer-onboarding-field">
@@ -2381,7 +2648,10 @@ export default function CustomerDetailPage({
                     </div>
                   ))}
                   <div className="admin-customer-quote-preview-row">
-                    <span>Setup fee incl. VAT</span>
+                    <span>
+                      Setup fee incl. VAT
+                      {quoteSetupFeeWaived ? " (499 kr base waived)" : ""}
+                    </span>
                     <strong>{formatSek(quoteSetupSubtotal)}</strong>
                   </div>
                   <div className="admin-customer-quote-preview-row">
@@ -2416,6 +2686,9 @@ export default function CustomerDetailPage({
                       {primaryQuotePlan.trial_days} days. Discount duration:{" "}
                       {quoteDiscountMonths} months. Monthly VAT included:{" "}
                       {formatSek(quoteMonthlyVat.vat)}.
+                      {quoteSetupFeeWaived
+                        ? ` Administrative-charge waiver: ${quoteSetupFeeWaiverReason || "reason required"}.`
+                        : ""}
                     </p>
                   </details>
                 </div>
@@ -2429,7 +2702,7 @@ export default function CustomerDetailPage({
         </div>
 
         <details className="admin-customer-technical-details">
-          <summary>Technical and audit details</summary>
+          <summary>Payment, account, and work details</summary>
           <div className="admin-table-wrap admin-customer-onboarding-table-wrap">
           <table className="admin-data-table">
             <thead>
@@ -2515,7 +2788,7 @@ export default function CustomerDetailPage({
           id="customer-operations"
           open={Boolean(selectedOperationId)}
         >
-          <summary>Advanced account, production, and billing actions</summary>
+          <summary>More account and payment actions</summary>
         <div className="admin-operation-panel admin-customer-operation-panel">
           <div className="admin-operation-header">
             <div>
@@ -3223,7 +3496,7 @@ export default function CustomerDetailPage({
 
         {everydayCustomerOperations.length > 0 && (
           <details className="admin-billing-actions">
-            <summary>Customer-requested billing actions</summary>
+            <summary>Payment changes requested by customer</summary>
             <p className="admin-muted">
               Choose an action only after confirming the customer request. You
               will review its effect and record a reason before anything changes.
@@ -3299,6 +3572,11 @@ export default function CustomerDetailPage({
                       Setup:{" "}
                       {formatSek(subscription.setup_fee_sek) || "Not recorded"}
                     </p>
+                    {subscription.setup_fee_waived && (
+                      <p>
+                        Base administrative charge waived: {subscription.setup_fee_waiver_reason}
+                      </p>
+                    )}
                     <p>
                       Devices total:{" "}
                       {formatSek(subscription.hardware_fee_sek) || "Not recorded"}
@@ -3331,7 +3609,7 @@ export default function CustomerDetailPage({
                   </div>
                 </div>
                 <details className="admin-customer-order-technical">
-                  <summary>Stripe and audit references</summary>
+                  <summary>Payment details and history</summary>
                   <dl>
                     <div>
                       <dt>Checkout</dt>
@@ -3401,52 +3679,158 @@ export default function CustomerDetailPage({
       )}
 
       {/* ==============================
-          History
+          Journal and history
       ============================== */}
       {activeSection === "history" && (
-      <div className="admin-card admin-customer-history-panel">
-        <h2 className="admin-card-title admin-customer-history-title">History</h2>
-        <p className="admin-muted admin-customer-history-intro">
-          A searchable change trail for customer data, orders, displays,
-          uploaded material, payment events, and admin actions.
-        </p>
-
-        {auditEvents.length === 0 ? (
-          <p className="admin-muted admin-customer-history-empty">No history events yet.</p>
-        ) : (
-          <div className="admin-scroll-region admin-customer-history-list">
-            {auditEvents.map((event) => (
-              <div
-                key={event.id}
-                className="admin-customer-history-event"
-              >
-                <div className="admin-customer-history-event-header">
-                  <div>
-                    <p className="admin-customer-history-event-title">
-                      {event.event_type.replace(/_/g, " ")}
-                    </p>
-                    <p className="admin-customer-history-event-meta">
-                      {new Date(event.created_at).toLocaleString("sv-SE")} |{" "}
-                      {event.actor_type}
-                      {event.actor_id ? ` | ${event.actor_id}` : ""}
-                    </p>
-                  </div>
-                </div>
-                <p className="admin-customer-history-event-description">
-                  {event.event_description}
-                </p>
-                <details className="admin-customer-history-metadata">
-                  <summary>
-                    Metadata
-                  </summary>
-                  <pre>
-                    {JSON.stringify(event.metadata, null, 2)}
-                  </pre>
-                </details>
-              </div>
-            ))}
+      <div className="admin-customer-journal-page">
+        <section className="admin-card admin-customer-journal-composer">
+          <div className="admin-customer-journal-heading">
+            <div>
+              <p className="admin-operation-kicker">Customer journal</p>
+              <h2 className="admin-card-title">Add journal entry</h2>
+              <p className="admin-muted">
+                Record investigations, customer questions, troubleshooting,
+                decisions, and follow-ups in one chronological place.
+              </p>
+            </div>
+            <span>{journalEntries.length} entries</span>
           </div>
-        )}
+
+          <div className="admin-customer-journal-form-grid">
+            <label>
+              Category
+              <select
+                value={journalCategory}
+                onChange={(event) =>
+                  setJournalCategory(event.target.value as JournalCategory)
+                }
+              >
+                {journalCategories.map((category) => (
+                  <option key={category} value={category}>
+                    {journalCategoryLabel(category)}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Short title (optional)
+              <input
+                value={journalTitle}
+                onChange={(event) => setJournalTitle(event.target.value)}
+                maxLength={120}
+                placeholder="Example: Reception display loses connection"
+              />
+            </label>
+          </div>
+          <label className="admin-customer-journal-note-field">
+            Journal note
+            <textarea
+              value={journalNote}
+              onChange={(event) => setJournalNote(event.target.value)}
+              rows={4}
+              maxLength={4000}
+              placeholder="Write what happened, what was checked, what you answered, and the next follow-up."
+            />
+          </label>
+          <div className="admin-customer-journal-form-actions">
+            <small>
+              Operational reasons entered elsewhere, including stock allocation,
+              are added here automatically.
+            </small>
+            <button
+              type="button"
+              className="admin-button-primary"
+              onClick={saveJournalEntry}
+              disabled={saving || journalNote.trim().length < 5}
+            >
+              {saving ? "Saving..." : "Save journal entry"}
+            </button>
+          </div>
+        </section>
+
+        <section className="admin-card admin-customer-journal-panel">
+          <div className="admin-customer-journal-heading">
+            <div>
+              <h2 className="admin-card-title">Journal</h2>
+              <p className="admin-muted">
+                Manual entries and notes from customer actions are shown newest first.
+              </p>
+            </div>
+            <input
+              type="search"
+              value={journalSearch}
+              onChange={(event) => setJournalSearch(event.target.value)}
+              placeholder="Search journal"
+              aria-label="Search customer journal"
+            />
+          </div>
+
+          {visibleJournalEntries.length === 0 ? (
+            <p className="admin-muted admin-customer-history-empty">
+              {journalEntries.length
+                ? "No journal entries match this search."
+                : "No customer notes have been recorded yet."}
+            </p>
+          ) : (
+            <div className="admin-customer-journal-list">
+              {visibleJournalEntries.map((entry) => (
+                <article key={entry.id} className="admin-customer-journal-entry">
+                  <div className="admin-customer-journal-entry-meta">
+                    <span className={`admin-customer-journal-category admin-customer-journal-category-${entry.category}`}>
+                      {journalCategoryLabel(entry.category)}
+                    </span>
+                    <span>{entry.source}</span>
+                    <time dateTime={entry.createdAt}>
+                      {formatDateTime(entry.createdAt)}
+                    </time>
+                  </div>
+                  <h3>{entry.title}</h3>
+                  <p>{entry.body}</p>
+                  {entry.actorLabel && <small>Recorded by {entry.actorLabel}</small>}
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
+
+        <details className="admin-card admin-customer-history-panel">
+          <summary className="admin-customer-history-summary">
+            <span>
+              <strong>Full system and payment history</strong>
+              <small>Extra details for troubleshooting</small>
+            </span>
+            <span>{auditEvents.length} events</span>
+          </summary>
+          {auditEvents.length === 0 ? (
+            <p className="admin-muted admin-customer-history-empty">No history events yet.</p>
+          ) : (
+            <div className="admin-scroll-region admin-customer-history-list">
+              {auditEvents.map((event) => (
+                <div key={event.id} className="admin-customer-history-event">
+                  <div className="admin-customer-history-event-header">
+                    <div>
+                      <p className="admin-customer-history-event-title">
+                        {event.event_type.replace(/_/g, " ")}
+                      </p>
+                      <p className="admin-customer-history-event-meta">
+                        {new Date(event.created_at).toLocaleString("sv-SE")} |{" "}
+                        {event.actor_type}
+                        {event.actor_id ? ` | ${event.actor_id}` : ""}
+                      </p>
+                    </div>
+                  </div>
+                  <p className="admin-customer-history-event-description">
+                    {event.event_description}
+                  </p>
+                  <details className="admin-customer-history-metadata">
+                    <summary>Metadata</summary>
+                    <pre>{JSON.stringify(event.metadata, null, 2)}</pre>
+                  </details>
+                </div>
+              ))}
+            </div>
+          )}
+        </details>
       </div>
       )}
 
@@ -3505,7 +3889,7 @@ export default function CustomerDetailPage({
               href={`/admin/devices/new?customerId=${customer.id}`}
               className="admin-button-primary"
             >
-              Create display endpoint
+              Create customer display
             </Link>
           ) : (
             <span
@@ -3513,7 +3897,7 @@ export default function CustomerDetailPage({
               className="admin-button-primary admin-button-disabled"
               title="A paid available display slot is required."
             >
-              Create display endpoint
+              Create customer display
             </span>
           )}
           <Link href="/admin/inventory" className="admin-button-secondary">
@@ -3586,6 +3970,10 @@ export default function CustomerDetailPage({
                 rows={3}
                 className="admin-customer-stock-control"
               />
+              <small>
+                Saved as allocation evidence and shown automatically in the
+                customer journal.
+              </small>
             </label>
           </div>
 

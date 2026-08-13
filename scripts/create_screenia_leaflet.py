@@ -20,6 +20,7 @@ from reportlab.graphics.shapes import Drawing
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "output" / "pdf" / "screenia-a4-leaflet-two-sided-sv.pdf"
+SINGLE_OUT = ROOT / "output" / "pdf" / "screenia-a4-leaflet-sv.pdf"
 ASSETS = ROOT / "public"
 
 # Finished page: A4 trim size plus 3 mm bleed on all sides.
@@ -117,11 +118,11 @@ def logo(c, x, y, width):
     c.drawImage(str(image), x, y, width, width * ratio, mask="auto")
 
 
-def top_brand(c, page):
+def top_brand(c, page, total_pages=2):
     logo(c, BLEED + SAFE, H - BLEED - SAFE - 12 * mm, 37 * mm)
     c.setFont("Screenia-Medium", 6.7)
     c.setFillColor(MUTED)
-    c.drawRightString(W - BLEED - SAFE, H - BLEED - SAFE - 5 * mm, f"SCREENIA  |  {page}/2")
+    c.drawRightString(W - BLEED - SAFE, H - BLEED - SAFE - 5 * mm, f"SCREENIA  |  {page}/{total_pages}")
 
 
 def check(c, x, y, color=GREEN):
@@ -336,10 +337,10 @@ def package_row(c, x, y, width, height, name, resolution, label, tone, descripti
             current_y = bullet(c, item, bx, current_y, col_w, size=5.65, leading=6.9, bullet_color=tone)
 
 
-def back(c):
+def back(c, page=2, total_pages=2):
     c.setFillColor(PALE)
     c.rect(0, 0, W, H, fill=1, stroke=0)
-    top_brand(c, 2)
+    top_brand(c, page, total_pages)
     x0 = BLEED + SAFE
     content_w = TRIM_W - 2 * SAFE
     top = H - BLEED - SAFE - 23 * mm
@@ -360,19 +361,19 @@ def back(c):
             "Standard", "FULL HD 1080P", "STARTPAKET", BLUE,
             "För mindre skärmar och standardinnehåll i Full HD.",
             [["Uppspelning i Full HD (1080p)", "Rekommenderas för skärmar under 55 tum", "Passar kampanjer, erbjudanden och informationsskärmar"], ["Planeringshjälp, layoutdesign och överenskomna ändringar ingår i startavgiften", "3 veckors kostnadsfri provperiod", "Ingen bindningstid"]],
-            ASSETS / "brand" / "screenia-standard-device.png", "2 397 kr", "1 599 start + 699 enhet + 99 frakt", "249 kr/mån efter provperiod",
+            ASSETS / "brand" / "screenia-standard-device.png", "1 297 kr", "499 admin + 699 enhet + 99 frakt", "249 kr/mån efter provperiod",
         ),
         (
             "Premium", "ÄKTA 4K 3840 x 2160", "REKOMMENDERAS", YELLOW,
             "För större skärmar och extra skarpt innehåll i 4K.",
             [["Uppspelning i äkta 4K (3840 x 2160)", "Rekommenderas för skärmar från 55 tum", "Skarpare text, menyer och detaljerade bilder"], ["Planeringshjälp, layoutdesign och överenskomna ändringar ingår i startavgiften", "3 veckors kostnadsfri provperiod", "Ingen bindningstid"]],
-            ASSETS / "brand" / "screenia-premium-device.png", "2 797 kr", "1 599 start + 1 099 enhet + 99 frakt", "349 kr/mån efter provperiod",
+            ASSETS / "brand" / "screenia-premium-device.png", "1 697 kr", "499 admin + 1 099 enhet + 99 frakt", "349 kr/mån efter provperiod",
         ),
         (
             "Premium Plus", "ÄKTA 4K + EGEN VIDEO", "NYHET", PLUS,
             "För verksamheter som vill kombinera extra skarp 4K-visning med egna videoklipp.",
             [["Alla funktioner som ingår i Premium", "Uppspelning i äkta 4K (3840 x 2160)", "Ladda upp egna MP4- och WEBM-videor via kundportalen", "Screenia granskar materialet före publicering"], ["Planeringshjälp, layoutdesign och överenskomna ändringar ingår i startavgiften", "3 veckors kostnadsfri provperiod", "Ingen bindningstid"]],
-            ASSETS / "brand" / "screenia-premium-device.png", "2 797 kr", "1 599 start + 1 099 enhet + 99 frakt", "399 kr/mån efter provperiod",
+            ASSETS / "brand" / "screenia-premium-device.png", "1 697 kr", "499 admin + 1 099 enhet + 99 frakt", "399 kr/mån efter provperiod",
         ),
     ]
     for index, package in enumerate(packages):
@@ -386,7 +387,7 @@ def back(c):
     c.setFont("Screenia-Bold", 10.8)
     c.setFillColor(NAVY)
     c.drawString(x0 + 5 * mm, info_y + 28 * mm, "Tydliga kostnader när du växer.")
-    draw_lines(c, "Startavgift 1 599 kr täcker upp till 3 skärmar. För fler skärmar tillkommer 249 kr per skärm i uppstart. Frakt är 99 kr för upp till 3 enheter, sedan 29 kr per extra enhet.", x0 + 5 * mm, info_y + 20.5 * mm, split - 10 * mm, size=6.15, color=MUTED, leading=7.6)
+    draw_lines(c, "Administrativ startavgift 499 kr täcker upp till 3 skärmar. För fler skärmar tillkommer 249 kr per skärm i uppstart. Frakt är 99 kr för upp till 3 enheter, sedan 29 kr per extra enhet.", x0 + 5 * mm, info_y + 20.5 * mm, split - 10 * mm, size=6.15, color=MUTED, leading=7.6)
     c.setFont("Screenia-Medium", 6.0)
     c.setFillColor(BLUE)
     c.drawString(x0 + 5 * mm, info_y + 6 * mm, "Månadsabonnemanget börjar först efter den kostnadsfria provperioden.")
@@ -441,6 +442,14 @@ def main():
     back(c)
     c.save()
     print(OUT)
+
+    single = canvas.Canvas(str(SINGLE_OUT), pagesize=(W, H), pageCompression=1)
+    single.setTitle("Screenia - Paket och priser")
+    single.setAuthor("Screenia")
+    single.setSubject("Print-ready one-sided A4 price guide with 3 mm bleed")
+    back(single, page=1, total_pages=1)
+    single.save()
+    print(SINGLE_OUT)
 
 
 if __name__ == "__main__":

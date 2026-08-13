@@ -1,3 +1,4 @@
+export const BASE_SETUP_FEE_SEK = 499;
 export const INCLUDED_SETUP_SCREEN_COUNT = 3;
 export const ADDITIONAL_SETUP_FEE_PER_SCREEN_SEK = 249;
 
@@ -13,7 +14,7 @@ export function additionalSetupScreenCount(
 
 export function calculateSetupFeeSek(
   screenQuantity: number,
-  baseSetupFeeSek = 1599,
+  baseSetupFeeSek = BASE_SETUP_FEE_SEK,
   includedScreenCount = INCLUDED_SETUP_SCREEN_COUNT,
   additionalSetupFeeSek = ADDITIONAL_SETUP_FEE_PER_SCREEN_SEK,
 ) {
@@ -29,7 +30,7 @@ export function calculateSetupFeeSek(
 export function calculateIncrementalSetupFeeSek(
   existingPaidScreenQuantity: number,
   addedScreenQuantity: number,
-  baseSetupFeeSek = 1599,
+  baseSetupFeeSek = BASE_SETUP_FEE_SEK,
   includedScreenCount = INCLUDED_SETUP_SCREEN_COUNT,
   additionalSetupFeeSek = ADDITIONAL_SETUP_FEE_PER_SCREEN_SEK,
 ) {
@@ -70,4 +71,45 @@ export function incrementalAdditionalSetupScreenCount(
     additionalSetupScreenCount(existingQuantity + addedQuantity, includedScreenCount) -
       additionalSetupScreenCount(existingQuantity, includedScreenCount),
   );
+}
+
+export function calculateQuotedSetupFee({
+  existingPaidScreenQuantity,
+  addedScreenQuantity,
+  baseSetupFeeSek = BASE_SETUP_FEE_SEK,
+  includedScreenCount = INCLUDED_SETUP_SCREEN_COUNT,
+  additionalSetupFeeSek = ADDITIONAL_SETUP_FEE_PER_SCREEN_SEK,
+  waiveBaseSetupFee = false,
+}: {
+  existingPaidScreenQuantity: number;
+  addedScreenQuantity: number;
+  baseSetupFeeSek?: number;
+  includedScreenCount?: number;
+  additionalSetupFeeSek?: number;
+  waiveBaseSetupFee?: boolean;
+}) {
+  const existingQuantity = Math.max(0, Math.floor(existingPaidScreenQuantity));
+  const addedQuantity = Math.max(0, Math.floor(addedScreenQuantity));
+  const setupFeeWaived =
+    waiveBaseSetupFee && existingQuantity === 0 && addedQuantity > 0;
+  const effectiveBaseSetupFeeSek = setupFeeWaived ? 0 : baseSetupFeeSek;
+  const additionalSetupScreens = incrementalAdditionalSetupScreenCount(
+    existingQuantity,
+    addedQuantity,
+    includedScreenCount,
+  );
+
+  return {
+    setupFeeSek: calculateIncrementalSetupFeeSek(
+      existingQuantity,
+      addedQuantity,
+      effectiveBaseSetupFeeSek,
+      includedScreenCount,
+      additionalSetupFeeSek,
+    ),
+    baseSetupFeeChargedSek:
+      existingQuantity === 0 && addedQuantity > 0 ? effectiveBaseSetupFeeSek : 0,
+    additionalSetupScreens,
+    setupFeeWaived,
+  };
 }

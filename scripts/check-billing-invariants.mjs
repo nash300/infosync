@@ -13,13 +13,17 @@ const landingRequestSource = read("src/app/api/onboarding-requests/route.ts");
 const setupFeeSource = read("src/lib/pricing/setup-fee.ts");
 const shippingFeeSource = read("src/lib/pricing/shipping-fee.ts");
 const prepareOnboardingSource = read("src/app/api/admin/prepare-onboarding/route.ts");
+const liveCheckoutReadinessSource = read("src/lib/server/live-checkout-readiness.ts");
 const videoEntitlementSource = read("src/lib/pricing/plan-entitlements.ts");
 const videoUploadRouteSource = read("src/app/api/account/video-upload/route.ts");
 const premiumPlusMigrationSource = read("supabase/migrations/202607270000_premium_plus_video_plan.sql");
 const pricingMigrationSource = read("supabase/migrations/202607210000_setup_fee_quantity_rule.sql");
+const administrativeChargeMigrationSource = read(
+  "supabase/migrations/202608120000_administrative_charge_499.sql",
+);
 const shippingMigrationSource = read("supabase/migrations/202607210100_tiered_shipping_rule.sql");
 
-const setupFeeForScreens = (screenQuantity, baseSetupFeeSek = 1599) =>
+const setupFeeForScreens = (screenQuantity, baseSetupFeeSek = 499) =>
   screenQuantity > 0
     ? baseSetupFeeSek + Math.max(0, screenQuantity - 3) * 249
     : 0;
@@ -37,30 +41,30 @@ const shippingFeeForDevices = (deviceQuantity, baseShippingFeeSek = 99) =>
 const expectedPlans = [
   {
     code: "standard_fhd",
-    setupFeeSek: 1599,
+    setupFeeSek: 499,
     hardwareFeeSek: 699,
     shippingFeeSek: 99,
     monthlyFeeSek: 249,
     trialDays: 21,
-    firstPaymentSek: 2397,
+    firstPaymentSek: 1297,
   },
   {
     code: "premium_4k",
-    setupFeeSek: 1599,
+    setupFeeSek: 499,
     hardwareFeeSek: 1099,
     shippingFeeSek: 99,
     monthlyFeeSek: 349,
     trialDays: 21,
-    firstPaymentSek: 2797,
+    firstPaymentSek: 1697,
   },
   {
     code: "premium_plus_4k",
-    setupFeeSek: 1599,
+    setupFeeSek: 499,
     hardwareFeeSek: 1099,
     shippingFeeSek: 99,
     monthlyFeeSek: 399,
     trialDays: 21,
-    firstPaymentSek: 2797,
+    firstPaymentSek: 1697,
   },
 ];
 
@@ -83,10 +87,10 @@ for (const plan of expectedPlans) {
 }
 
 const mixedSelection = {
-  setupFeeSek: 1599,
+  setupFeeSek: 499,
   standardQuantity: 1,
   premiumQuantity: 2,
-  firstPaymentSek: 4595,
+  firstPaymentSek: 3495,
   monthlyFeeSek: 947,
 };
 const calculatedMixedFirstPayment =
@@ -110,10 +114,10 @@ if (calculatedMixedFirstPayment !== mixedSelection.firstPaymentSek) {
 
 const fourScreenSelection = {
   screenQuantity: 4,
-  setupFeeSek: 1848,
+  setupFeeSek: 748,
   hardwareFeeSek: 699 * 4,
   shippingFeeSek: 99 + 29,
-  firstPaymentSek: 4772,
+  firstPaymentSek: 3672,
 };
 const calculatedFourScreenFirstPayment =
   setupFeeForScreens(fourScreenSelection.screenQuantity) +
@@ -134,7 +138,7 @@ const threeTierSelection = {
   standardQuantity: 1,
   premiumQuantity: 1,
   premiumPlusQuantity: 1,
-  firstPaymentSek: 4595,
+  firstPaymentSek: 3495,
   monthlyFeeSek: 997,
 };
 const calculatedThreeTierFirstPayment =
@@ -178,6 +182,14 @@ if (fourthScreenAddonFirstPayment !== 1047) {
   );
 }
 
+const waivedNewClientFirstPayment =
+  setupFeeForScreens(1, 0) + 699 + shippingFeeForDevices(1);
+if (waivedNewClientFirstPayment !== 798) {
+  failures.push(
+    `selected new client waiver: first Standard payment should be 798 SEK, calculated ${waivedNewClientFirstPayment} SEK`,
+  );
+}
+
 const checkoutMarkers = [
   [
     'mode: isExistingCustomerAddOn ? "payment" : "subscription"',
@@ -198,6 +210,7 @@ const checkoutMarkers = [
   ["stripe_additional_setup_price_id", "Checkout must use the dedicated additional-screen Stripe price"],
   ["quantity: additionalSetupScreens", "Stripe must invoice the exact additional-screen quantity"],
   ["additional_setup_screen_count: additionalSetupScreens", "Orders must store the additional-screen count"],
+  ["setup_fee_waived: setupFeeWaived", "Stripe checkout must preserve the selected new-client waiver"],
   ["item.discountedHardwareFeeSek * item.quantity", "First-payment calculation must include device quantity"],
   ["calculateShippingFeeSek(", "Checkout must calculate order-wide tiered shipping"],
   ["quantity: additionalShippingDevices", "Stripe must invoice the exact additional-shipping quantity"],
@@ -226,8 +239,10 @@ requireSource(landingRequestSource, "Array.isArray(body.quoteItems)", "Landing r
 requireSource(landingRequestSource, "requested_quote_items: requestedQuoteItems", "Landing requests must store every selected package line");
 requireSource(landingRequestSource, "calculateSetupFeeSek(screenQuantity, baseSetupFeeSek)", "Landing confirmation must calculate the quantity-based setup fee");
 requireSource(setupFeeSource, "calculateIncrementalSetupFeeSek", "Setup helpers must support existing-customer add-on setup pricing");
-requireSource(prepareOnboardingSource, "calculateIncrementalSetupFeeSek(", "Admin quote preparation must calculate marginal setup for existing customers");
+requireSource(prepareOnboardingSource, "calculateQuotedSetupFee({", "Admin quote preparation must calculate default, waived, and add-on setup scenarios");
 requireSource(checkoutSource, "Number(quotedOrder.setup_fee_sek)", "Stripe checkout must use the prepared quote setup amount");
+requireSource(setupFeeSource, "BASE_SETUP_FEE_SEK = 499", "The default administrative charge must be 499 SEK");
+requireSource(liveCheckoutReadinessSource, "base administrative/setup fee must be 499 SEK", "Launch readiness must block pricing plans that drift from the 499 SEK base charge");
 requireSource(setupFeeSource, "INCLUDED_SETUP_SCREEN_COUNT = 3", "Setup fee must include the first three screens");
 requireSource(setupFeeSource, "ADDITIONAL_SETUP_FEE_PER_SCREEN_SEK = 249", "Each screen after the third must add 249 SEK");
 requireSource(shippingFeeSource, "INCLUDED_SHIPPING_DEVICE_COUNT = 3", "Base shipping must include the first three devices");
@@ -235,6 +250,9 @@ requireSource(shippingFeeSource, "BASE_SHIPPING_FEE_SEK = 99", "Base shipping mu
 requireSource(shippingFeeSource, "ADDITIONAL_SHIPPING_FEE_PER_DEVICE_SEK = 29", "Each device after the third must add 29 SEK shipping");
 requireSource(pricingMigrationSource, "stripe_additional_setup_price_id text", "Supabase must store the shared additional-screen Stripe price reference");
 requireSource(pricingMigrationSource, "additional_setup_screen_count integer", "Supabase orders must store the additional-screen count");
+requireSource(administrativeChargeMigrationSource, "setup_fee_sek = 499", "Supabase active plans must be migrated to the 499 SEK base charge");
+requireSource(administrativeChargeMigrationSource, "setup_fee_waived boolean", "Supabase orders must record selected new-client waivers");
+requireSource(administrativeChargeMigrationSource, "setup_fee_waiver_reason text", "Supabase orders must retain the waiver audit reason");
 requireSource(shippingMigrationSource, "stripe_additional_shipping_price_id text", "Supabase must store the shared additional-shipping Stripe price reference");
 requireSource(shippingMigrationSource, "additional_shipping_device_count integer", "Supabase orders must store the additional-shipping device count");
 requireSource(
@@ -285,5 +303,6 @@ for (const plan of expectedPlans) {
 console.log(`mixed 1 FHD + 2 4K: first ${mixedSelection.firstPaymentSek} SEK, then ${mixedSelection.monthlyFeeSek} SEK/month (one setup fee)`);
 console.log(`one of every plan: first ${threeTierSelection.firstPaymentSek} SEK, then ${threeTierSelection.monthlyFeeSek} SEK/month (one setup fee)`);
 console.log(`four Standard FHD screens: first ${fourScreenSelection.firstPaymentSek} SEK including ${fourScreenSelection.setupFeeSek} SEK setup`);
+console.log("selected new Standard client with base waiver: first 798 SEK including 0 SEK setup");
 console.log("existing customer add-on after three paid screens: first 1047 SEK including 249 SEK setup");
 console.log("Billing invariant check passed.");

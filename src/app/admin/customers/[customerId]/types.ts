@@ -64,6 +64,8 @@ export type CustomerSubscription = {
   status: string;
   setup_fee_sek: number | null;
   setup_fee_paid: boolean | null;
+  setup_fee_waived: boolean | null;
+  setup_fee_waiver_reason: string | null;
   hardware_fee_sek: number | null;
   shipping_fee_sek: number | null;
   base_shipping_fee_sek?: number | null;

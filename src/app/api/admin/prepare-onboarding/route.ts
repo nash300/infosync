@@ -9,8 +9,7 @@ import { includedVatFromGross } from "@/lib/pricing/vat";
 import {
   ADDITIONAL_SETUP_FEE_PER_SCREEN_SEK,
   INCLUDED_SETUP_SCREEN_COUNT,
-  calculateIncrementalSetupFeeSek,
-  incrementalAdditionalSetupScreenCount,
+  calculateQuotedSetupFee,
 } from "@/lib/pricing/setup-fee";
 import {
   ADDITIONAL_SHIPPING_FEE_PER_DEVICE_SEK,
@@ -84,6 +83,8 @@ export async function POST(request: Request) {
   const customerId = String(body.customerId || "");
   const pricingPlanCode = String(body.pricingPlanCode || "");
   const quoteNotes = String(body.quoteNotes || "").trim();
+  const waiveSetupFee = body.waiveSetupFee === true;
+  const setupFeeWaiverReason = String(body.setupFeeWaiverReason || "").trim();
   const rawQuoteItems: QuoteItemInput[] = Array.isArray(body.quoteItems)
     ? body.quoteItems
     : [];
@@ -240,20 +241,31 @@ export async function POST(request: Request) {
         sum + Math.max(0, Number(subscription.screen_quantity) || 0),
       0,
     );
-  const setupFeeSek = calculateIncrementalSetupFeeSek(
+  if (waiveSetupFee && existingPaidScreenQuantity > 0) {
+    return NextResponse.json(
+      { error: "The administrative-charge waiver is only available for new clients." },
+      { status: 400 },
+    );
+  }
+
+  if (waiveSetupFee && setupFeeWaiverReason.length < 3) {
+    return NextResponse.json(
+      { error: "Enter a reason before waiving the administrative charge." },
+      { status: 400 },
+    );
+  }
+
+  const quotedSetupFee = calculateQuotedSetupFee({
     existingPaidScreenQuantity,
-    screenQuantity,
+    addedScreenQuantity: screenQuantity,
     baseSetupFeeSek,
-    setupIncludedScreens,
+    includedScreenCount: setupIncludedScreens,
     additionalSetupFeeSek,
-  );
-  const additionalSetupScreens = incrementalAdditionalSetupScreenCount(
-    existingPaidScreenQuantity,
-    screenQuantity,
-    setupIncludedScreens,
-  );
-  const baseSetupChargedSek =
-    existingPaidScreenQuantity <= 0 && screenQuantity > 0 ? baseSetupFeeSek : 0;
+    waiveBaseSetupFee: waiveSetupFee,
+  });
+  const setupFeeSek = quotedSetupFee.setupFeeSek;
+  const additionalSetupScreens = quotedSetupFee.additionalSetupScreens;
+  const baseSetupChargedSek = quotedSetupFee.baseSetupFeeChargedSek;
   const orderType =
     existingPaidScreenQuantity > 0 ? "existing_customer_add_on" : "new_setup";
   const firstPaymentGrossSek =
@@ -281,6 +293,10 @@ export async function POST(request: Request) {
     currency,
     setup_fee_sek: setupFeeSek,
     base_setup_fee_sek: baseSetupChargedSek,
+    setup_fee_waived: quotedSetupFee.setupFeeWaived,
+    setup_fee_waiver_reason: quotedSetupFee.setupFeeWaived
+      ? setupFeeWaiverReason
+      : null,
     setup_included_screens: setupIncludedScreens,
     additional_setup_fee_per_screen_sek: additionalSetupFeeSek,
     additional_setup_screen_count: additionalSetupScreens,
@@ -305,6 +321,7 @@ export async function POST(request: Request) {
       ...item,
       orderType,
       existingPaidScreenQuantity,
+      setupFeeWaived: quotedSetupFee.setupFeeWaived,
     })),
   };
 
@@ -358,6 +375,9 @@ export async function POST(request: Request) {
     existingPaidScreenQuantity > 0
       ? `Add-on setup charged only for marginal setup: ${formatSek(setupFeeSek)}`
       : "",
+    quotedSetupFee.setupFeeWaived
+      ? `Base administrative charge waived: ${setupFeeWaiverReason}`
+      : "",
     `Quote items: ${quoteItemDetails
       .map((item) => `${item.quantity} x ${item.name} ${item.resolution}`)
       .join(", ")}`,
@@ -401,6 +421,10 @@ export async function POST(request: Request) {
       pricingPlanCode: plan.code,
       expiresAt: expiresAt.toISOString(),
       actionSource: "admin_request_quote_workflow",
+      setupFeeWaived: quotedSetupFee.setupFeeWaived,
+      setupFeeWaiverReason: quotedSetupFee.setupFeeWaived
+        ? setupFeeWaiverReason
+        : null,
     },
     ipAddress,
     userAgent,
@@ -483,11 +507,15 @@ export async function POST(request: Request) {
   const safeCustomerName = escapeHtml(customer.name);
   const safeQuoteNotes = quoteNotes ? escapeHtml(quoteNotes) : "";
   const setupExplanationText =
-    existingPaidScreenQuantity > 0
+    quotedSetupFee.setupFeeWaived
+      ? `Den ordinarie administrativa grundavgiften ${formatSek(baseSetupFeeSek)} är borttagen i denna offert${additionalSetupScreens > 0 ? `; ${additionalSetupScreens} extra skärm${additionalSetupScreens === 1 ? "" : "ar"} kostar ${formatSek(additionalSetupFeeSek)} per skärm i uppstart` : ""}.`
+      : existingPaidScreenQuantity > 0
       ? `Tidigare betalda skärmar/enheter: ${existingPaidScreenQuantity}. Denna offert debiterar endast marginalkostnad för setup av nya extra skärmar: ${formatSek(setupFeeSek)}.`
       : `Grundavgiften ${formatSek(baseSetupFeeSek)} täcker upp till ${setupIncludedScreens} skärmar${additionalSetupScreens > 0 ? `; ${additionalSetupScreens} extra skärm${additionalSetupScreens === 1 ? "" : "ar"} kostar ${formatSek(additionalSetupFeeSek)} per skärm` : ""}.`;
   const setupExplanationHtml =
-    existingPaidScreenQuantity > 0
+    quotedSetupFee.setupFeeWaived
+      ? `Den ordinarie administrativa grundavgiften ${formatSek(baseSetupFeeSek)} &auml;r borttagen i denna offert${additionalSetupScreens > 0 ? `; ${additionalSetupScreens} extra sk&auml;rm${additionalSetupScreens === 1 ? "" : "ar"} &times; ${formatSek(additionalSetupFeeSek)} tillkommer i uppstart` : ""}.`
+      : existingPaidScreenQuantity > 0
       ? `Tidigare betalda sk&auml;rmar/enheter: ${existingPaidScreenQuantity}. Denna offert debiterar endast marginalkostnad f&ouml;r setup av nya extra sk&auml;rmar: ${formatSek(setupFeeSek)}.`
       : `Grundavgiften ${formatSek(baseSetupFeeSek)} t&auml;cker upp till ${setupIncludedScreens} sk&auml;rmar${additionalSetupScreens > 0 ? `; ${additionalSetupScreens} extra sk&auml;rm${additionalSetupScreens === 1 ? "" : "ar"} &times; ${formatSek(additionalSetupFeeSek)}` : ""}.`;
   const quotePackageSummary = quoteItemDetails

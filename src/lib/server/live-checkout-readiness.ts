@@ -2326,8 +2326,8 @@ async function pricingReady(supabaseAdmin: SupabaseClient): Promise<CheckResult>
     if (plan.tax_behavior !== "inclusive") {
       planIssues.push(`${label}: tax_behavior is not inclusive`);
     }
-    if (Number(plan.setup_fee_sek || 0) <= 0) {
-      planIssues.push(`${label}: setup fee is missing`);
+    if (Number(plan.setup_fee_sek || 0) !== 499) {
+      planIssues.push(`${label}: base administrative/setup fee must be 499 SEK`);
     }
     if (Number(plan.setup_included_screens || 0) !== 3) {
       planIssues.push(`${label}: setup must include exactly 3 screens`);

@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase/client";
 import { showAdminNotification } from "@/lib/admin/notifications";
+import { matchesCustomerFilter } from "@/lib/admin/customer-filters";
 
 type Customer = {
   id: string;
@@ -14,6 +15,7 @@ type Customer = {
   phone: string | null;
   status: string | null;
   payment_status: string | null;
+  service_access_status: string | null;
   city: string | null;
   created_at: string | null;
   updated_at: string | null;
@@ -45,6 +47,7 @@ const statusFilters = [
   { value: "active", label: "Active" },
   { value: "suspended", label: "Suspended" },
   { value: "billing_issue", label: "Billing issues" },
+  { value: "ready_to_activate", label: "Ready for final activation" },
   { value: "closed", label: "Cancelled or refunded" },
 ];
 
@@ -106,6 +109,7 @@ function CustomersContent() {
         phone,
         status,
         payment_status,
+        service_access_status,
         city,
         created_at,
         updated_at,
@@ -130,6 +134,7 @@ function CustomersContent() {
         phone,
         status,
         payment_status,
+        service_access_status,
         city,
         created_at,
         updated_at,
@@ -154,6 +159,7 @@ function CustomersContent() {
         phone,
         status,
         payment_status,
+        service_access_status,
         city,
         created_at,
         updated_at,
@@ -169,6 +175,7 @@ function CustomersContent() {
         phone,
         status,
         payment_status,
+        service_access_status,
         city,
         created_at,
         updated_at,
@@ -219,6 +226,7 @@ function CustomersContent() {
           phone: customer.phone ?? null,
           status: customer.status ?? null,
           payment_status: customer.payment_status ?? null,
+          service_access_status: customer.service_access_status ?? null,
           city: customer.city ?? null,
           created_at: customer.created_at ?? null,
           updated_at: customer.updated_at ?? null,
@@ -294,37 +302,20 @@ function CustomersContent() {
         new Date(left.created_at || 0).getTime(),
     )[0];
 
-  const matchesCustomerFilter = (customer: Customer, filter: string) => {
-    const deviceCount = getDeviceCount(customer);
-    if (filter === "all") return true;
-    if (filter === "setup_pending") {
-      return ["invited", "accepted_terms", "completed_profile"].includes(
-        customer.status || "",
-      );
-    }
-    if (filter === "material_pending") {
-      return ["paid", "content_pending"].includes(customer.status || "");
-    }
-    if (filter === "needs_device") {
-      return ["content_received", "active"].includes(customer.status || "") && deviceCount === 0;
-    }
-    if (filter === "needs_playlist") {
-      return (
-        ["content_received", "active"].includes(customer.status || "") &&
-        hasDeviceWithoutPlaylist(customer)
-      );
-    }
-    if (filter === "billing_issue") {
-      return ["failed", "disputed"].includes(customer.payment_status || "");
-    }
-    if (filter === "closed") {
-      return ["cancelled", "refunded"].includes(customer.status || "");
-    }
-    return customer.status === filter;
-  };
+  const matchesFilter = (customer: Customer, filter: string) =>
+    matchesCustomerFilter(
+      {
+        status: customer.status,
+        paymentStatus: customer.payment_status,
+        serviceAccessStatus: customer.service_access_status,
+        deviceCount: getDeviceCount(customer),
+        hasDeviceWithoutPlaylist: hasDeviceWithoutPlaylist(customer),
+      },
+      filter,
+    );
 
   const getFilterCount = (filter: string) =>
-    customers.filter((customer) => matchesCustomerFilter(customer, filter)).length;
+    customers.filter((customer) => matchesFilter(customer, filter)).length;
 
   const getStatusClass = (status: string | null) => {
     if (status === "active") return "admin-customer-status-active";
@@ -370,7 +361,7 @@ function CustomersContent() {
       const value = search.trim().toLowerCase();
       const subscription = latestSubscription(customer);
       return (
-        matchesCustomerFilter(customer, statusFilter) &&
+        matchesFilter(customer, statusFilter) &&
         (!value ||
           customer.name.toLowerCase().includes(value) ||
           customer.customer_number?.toLowerCase().includes(value) ||

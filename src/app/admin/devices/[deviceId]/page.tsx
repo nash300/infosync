@@ -220,7 +220,8 @@ export default function AdminDevicePage({
     }
 
     showAdminNotification("success", "Display deleted.");
-    window.location.href = "/admin/devices";
+    router.replace("/admin/devices");
+    router.refresh();
   };
 
   const toggleDeviceActive = async (reason: string) => {

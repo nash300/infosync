@@ -9,6 +9,58 @@ import {
   type CustomerWorkflowAction,
 } from "@/lib/admin/customer-workflow";
 
+const attentionCategories = [
+  {
+    category: "billing_issue",
+    href: "/admin/customers?filter=billing_issue",
+    title: "Billing issues",
+    description: "Payment or service-access problems requiring a decision.",
+    tone: "danger",
+  },
+  {
+    category: "new_request",
+    href: "/admin/customers?filter=new_request",
+    title: "New requests",
+    description: "New inquiries that need review and a quote.",
+    tone: "warning",
+  },
+  {
+    category: "setup_pending",
+    href: "/admin/customers?filter=setup_pending",
+    title: "Setup pending",
+    description: "Customers completing details, terms, or payment.",
+    tone: "info",
+  },
+  {
+    category: "material_pending",
+    href: "/admin/customers?filter=material_pending",
+    title: "Material pending",
+    description: "Paid customers whose material still needs review.",
+    tone: "warning",
+  },
+  {
+    category: "needs_device",
+    href: "/admin/customers?filter=needs_device",
+    title: "Device allocation",
+    description: "Content-ready customers without assigned hardware.",
+    tone: "warning",
+  },
+  {
+    category: "needs_playlist",
+    href: "/admin/customers?filter=needs_playlist",
+    title: "Playlist content",
+    description: "Assigned displays that do not have playable content.",
+    tone: "danger",
+  },
+  {
+    category: "ready_to_activate",
+    href: "/admin/customers?filter=ready_to_activate",
+    title: "Final activation",
+    description: "Prepared displays waiting for the final service check.",
+    tone: "info",
+  },
+] as const;
+
 type AdminCustomer = {
   id: string;
   name: string;
@@ -89,12 +141,6 @@ export default function AdminHomePage() {
   const contentReceivedCount = customers.filter(
     (customer) => customer.status === "content_received",
   ).length;
-  const setupPendingCustomerCount = customers.filter(
-    (customer) =>
-      customer.status === "invited" ||
-      customer.status === "accepted_terms" ||
-      customer.status === "completed_profile",
-  ).length;
   const suspendedCustomerCount = customers.filter(
     (customer) => customer.status === "suspended",
   ).length;
@@ -119,17 +165,11 @@ export default function AdminHomePage() {
       customer.status || "",
     ),
   ).length;
-  const attentionCount =
-    newRequestCount +
-    paidCustomerCount +
-    contentPendingCount +
-    needsDisplayCount +
-    needsPlaylistCount;
   const setupCompletion =
     managedCustomerCount === 0
       ? 0
       : Math.round((readyCustomerCount / managedCustomerCount) * 100);
-  const customerWorkQueue = customers
+  const customerActionItems = customers
     .map((customer) => {
       const firstDeviceWithoutPlaylist = customer.devices?.find(
         (device) => (device.playlists?.[0]?.count || 0) === 0,
@@ -157,8 +197,29 @@ export default function AdminHomePage() {
       if (priorityDifference !== 0) return priorityDifference;
 
       return dateValue(left.customer.created_at) - dateValue(right.customer.created_at);
-    })
-    .slice(0, 8);
+    });
+  const customerWorkQueue = customerActionItems.slice(0, 8);
+  const attentionCategoryCounts = customerActionItems.reduce<
+    Record<CustomerWorkflowAction["category"], number>
+  >(
+    (counts, item) => ({
+      ...counts,
+      [item.action.category]: counts[item.action.category] + 1,
+    }),
+    {
+      billing_issue: 0,
+      new_request: 0,
+      setup_pending: 0,
+      material_pending: 0,
+      needs_device: 0,
+      needs_playlist: 0,
+      ready_to_activate: 0,
+    },
+  );
+  const activeAttentionCategories = attentionCategories.filter(
+    (item) => attentionCategoryCounts[item.category] > 0,
+  );
+  const attentionCount = customerActionItems.length;
 
   const loadStats = async () => {
     setLoading(true);
@@ -267,7 +328,7 @@ export default function AdminHomePage() {
         <div>
           <h1 className="admin-title">Overview</h1>
           <p className="admin-subtitle">
-            Start with the first task below. The list is already ordered by urgency.
+            Review everything requiring action in one prioritized list.
           </p>
         </div>
 
@@ -283,24 +344,60 @@ export default function AdminHomePage() {
         </div>
       </div>
 
-      <section className="admin-card admin-work-queue">
+      <section
+        className="admin-card admin-work-queue admin-attention-center"
+        aria-labelledby="attention-heading"
+      >
         <div className="admin-work-queue-header">
           <div>
-            <p className="admin-operation-kicker">Your work list</p>
-            <h2 className="admin-card-title">What to do next</h2>
+            <p className="admin-operation-kicker">Attention</p>
+            <h2 id="attention-heading" className="admin-card-title">
+              Needs attention
+            </h2>
             <p className="admin-muted">
-              Open the first item and continue from the recommended step.
+              Start with the first customer. Tasks are ordered by urgency and waiting time.
             </p>
           </div>
           <div className="admin-work-queue-commands">
+            <span className="admin-attention-total">
+              {loading ? "..." : attentionCount} active
+            </span>
             <Link href="/admin/customers" className="admin-button-primary">
               View all customers
             </Link>
           </div>
         </div>
 
+        {!loading && activeAttentionCategories.length > 0 && (
+          <div className="admin-attention-summary" aria-label="Attention categories">
+            {activeAttentionCategories.map((item) => (
+              <ActionCard
+                key={item.category}
+                href={item.href}
+                title={item.title}
+                description={item.description}
+                count={attentionCategoryCounts[item.category]}
+                tone={item.tone}
+                loading={false}
+              />
+            ))}
+          </div>
+        )}
+
+        {!loading && customerWorkQueue.length > 0 && (
+          <div className="admin-attention-list-heading">
+            <div>
+              <strong>Prioritized customer tasks</strong>
+              <span>Open a task to continue at the correct workflow step.</span>
+            </div>
+            <span>
+              Showing {customerWorkQueue.length} of {attentionCount}
+            </span>
+          </div>
+        )}
+
         {loading ? (
-          <p className="admin-muted admin-work-queue-empty">Loading work queue...</p>
+          <p className="admin-muted admin-work-queue-empty">Loading attention list...</p>
         ) : customerWorkQueue.length ? (
           <div className="admin-work-queue-list">
             {customerWorkQueue.map(({ customer, action }) => (
@@ -330,63 +427,9 @@ export default function AdminHomePage() {
         ) : (
           <div className="admin-work-queue-empty">
             <strong>No active customer tasks</strong>
-            <span>New requests and delivery exceptions will appear here.</span>
+            <span>New requests, billing issues, and delivery work will appear here.</span>
           </div>
         )}
-      </section>
-
-      <section className="admin-dashboard-attention" aria-labelledby="attention-heading">
-        <div className="admin-section-heading-row">
-          <div>
-            <p className="admin-operation-kicker">Attention</p>
-            <h2 id="attention-heading" className="admin-card-title">
-              Items waiting for action
-            </h2>
-          </div>
-          <p className="admin-muted">Select a card to open the filtered customer list.</p>
-        </div>
-        <div className="admin-action-grid">
-        <ActionCard
-          href="/admin/customers?filter=new_request"
-          title="New requests"
-          description="Review new inquiries and package requests."
-          count={newRequestCount}
-          tone="warning"
-          loading={loading}
-        />
-        <ActionCard
-          href="/admin/customers?filter=setup_pending"
-          title="Setup links sent"
-          description="Waiting for details or payment."
-          count={setupPendingCustomerCount}
-          tone="info"
-          loading={loading}
-        />
-        <ActionCard
-          href="/admin/customers?filter=material_pending"
-          title="Material pending"
-          description="Paid customers who still need screen material."
-          count={paidCustomerCount + contentPendingCount}
-          tone="warning"
-          loading={loading}
-        />
-        <ActionCard
-          href="/admin/customers?filter=needs_device"
-          title="Ready for device allocation"
-          description="Material received without customer device allocation."
-          count={needsDisplayCount}
-          tone="warning"
-          loading={loading}
-        />
-        <ActionCard
-          href="/admin/customers?filter=needs_playlist"
-          title="Needs playlist content"
-          description="Assigned display endpoints with no playable material."
-          count={needsPlaylistCount}
-          tone="danger"
-          loading={loading}
-        />
-        </div>
       </section>
 
       <div className="admin-dashboard-kpis">
@@ -476,7 +519,7 @@ export default function AdminHomePage() {
           <h2 className="admin-card-title admin-dashboard-panel-title">Material review</h2>
           <div className="admin-status-list">
             <StatusRow label="New material" value={newMaterialCount} tone="warning" />
-            <StatusRow label="Total attention" value={attentionCount + newMaterialCount} tone="info" />
+            <StatusRow label="Customer tasks" value={attentionCount} tone="info" />
           </div>
         </section>
 

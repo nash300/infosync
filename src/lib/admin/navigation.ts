@@ -54,6 +54,12 @@ export const adminNavItems = [
     description: "Reserved workspace for future Screenia training material.",
   },
   {
+    href: "/admin/services",
+    label: "Services",
+    icon: "SV",
+    description: "Open Screenia's payment, hosting, database, email, domain, and code services.",
+  },
+  {
     href: "/admin/troubleshooting",
     label: "Troubleshooting",
     icon: "TS",
@@ -80,7 +86,12 @@ export const adminNavGroups = [
   {
     title: "Business",
     defaultOpen: false,
-    hrefs: ["/admin/pricing", "/admin/site-content", "/admin/training"],
+    hrefs: [
+      "/admin/pricing",
+      "/admin/site-content",
+      "/admin/training",
+      "/admin/services",
+    ],
   },
   {
     title: "More tools",

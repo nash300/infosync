@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function AdminSignOutButton() {
+  const router = useRouter();
   const [signingOut, setSigningOut] = useState(false);
 
   const signOut = async () => {
@@ -10,7 +12,8 @@ export default function AdminSignOutButton() {
     try {
       await fetch("/api/auth/logout", { method: "POST" });
     } finally {
-      window.location.assign("/admin-login");
+      router.replace("/admin-login");
+      router.refresh();
     }
   };
 

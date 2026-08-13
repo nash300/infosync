@@ -93,7 +93,7 @@ export default function NewDevicePage() {
     <div>
       {/* Page Header */}
       <div className="admin-page-header">
-        <h1 className="admin-title">Create display endpoint</h1>
+        <h1 className="admin-title">Create customer display</h1>
         <p className="admin-subtitle">
           Create the customer screen URL and playlist target. Physical boxes,
           serial numbers, warranty, and repairs stay in Hardware stock.
@@ -183,7 +183,7 @@ export default function NewDevicePage() {
           disabled={saving || !reason.trim()}
           className="admin-button-primary admin-device-create-submit disabled:opacity-50"
         >
-          {saving ? "Creating..." : "Create display endpoint"}
+          {saving ? "Creating..." : "Create customer display"}
         </button>
       </div>
     </div>

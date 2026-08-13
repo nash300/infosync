@@ -15,10 +15,33 @@ export type CustomerWorkflowAction = {
   description: string;
   href: string;
   priority: "urgent" | "high" | "normal";
+  category:
+    | "billing_issue"
+    | "new_request"
+    | "setup_pending"
+    | "material_pending"
+    | "needs_device"
+    | "needs_playlist"
+    | "ready_to_activate";
 };
 
-const terminalStatuses = new Set(["cancelled", "refunded"]);
+const terminalStatuses = new Set(["canceled", "cancelled", "refunded"]);
 const billingExceptions = new Set(["failed", "payment_failed", "disputed"]);
+
+export function isTerminalCustomerWorkflow({
+  status,
+  paymentStatus,
+  serviceAccessStatus,
+}: Pick<
+  CustomerWorkflowSnapshot,
+  "status" | "paymentStatus" | "serviceAccessStatus"
+>) {
+  return (
+    terminalStatuses.has(status || "") ||
+    terminalStatuses.has(paymentStatus || "") ||
+    terminalStatuses.has(serviceAccessStatus || "")
+  );
+}
 
 export function getCustomerWorkflowAction(
   customer: CustomerWorkflowSnapshot,
@@ -28,11 +51,7 @@ export function getCustomerWorkflowAction(
   const accessStatus = customer.serviceAccessStatus || "";
   const customerHref = `/admin/customers/${customer.id}`;
 
-  if (
-    terminalStatuses.has(status) ||
-    terminalStatuses.has(paymentStatus) ||
-    terminalStatuses.has(accessStatus)
-  ) {
+  if (isTerminalCustomerWorkflow(customer)) {
     return null;
   }
 
@@ -48,6 +67,7 @@ export function getCustomerWorkflowAction(
       description: "Review Stripe status and decide whether service access should change.",
       href: `${customerHref}?section=orders`,
       priority: "urgent",
+      category: "billing_issue",
     };
   }
 
@@ -59,6 +79,7 @@ export function getCustomerWorkflowAction(
       description: "Confirm the request, choose the package, and send one setup link.",
       href: `${customerHref}?section=onboarding`,
       priority: "high",
+      category: "new_request",
     };
   }
 
@@ -70,6 +91,7 @@ export function getCustomerWorkflowAction(
       description: "See what the customer has completed and whether follow-up is needed.",
       href: `${customerHref}?section=onboarding`,
       priority: "normal",
+      category: "setup_pending",
     };
   }
 
@@ -81,6 +103,7 @@ export function getCustomerWorkflowAction(
       description: "Check uploads and messages before display preparation starts.",
       href: `${customerHref}?section=communication&view=uploads`,
       priority: "high",
+      category: "material_pending",
     };
   }
 
@@ -92,6 +115,7 @@ export function getCustomerWorkflowAction(
       description: "Allocate an in-stock device and confirm the installation details.",
       href: `${customerHref}?section=devices`,
       priority: "high",
+      category: "needs_device",
     };
   }
 
@@ -106,6 +130,7 @@ export function getCustomerWorkflowAction(
       description: "Prepare and verify playable content on the assigned display.",
       href: `/admin/devices/${customer.firstDeviceWithoutPlaylistCode}?section=media`,
       priority: "high",
+      category: "needs_playlist",
     };
   }
 
@@ -117,6 +142,7 @@ export function getCustomerWorkflowAction(
       description: "Confirm the assigned display is ready, then complete activation.",
       href: `${customerHref}?section=overview`,
       priority: "normal",
+      category: "ready_to_activate",
     };
   }
 

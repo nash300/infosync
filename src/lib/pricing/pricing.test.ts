@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  BASE_SETUP_FEE_SEK,
   calculateIncrementalSetupFeeSek,
+  calculateQuotedSetupFee,
   calculateSetupFeeSek,
 } from "./setup-fee";
 import { calculateShippingFeeSek } from "./shipping-fee";
@@ -10,10 +12,10 @@ import { includedVatFromGross } from "./vat";
 describe("setup pricing scenarios", () => {
   it.each([
     [0, 0],
-    [1, 1599],
-    [3, 1599],
-    [4, 1848],
-    [5.9, 2097],
+    [1, 499],
+    [3, 499],
+    [4, 748],
+    [5.9, 997],
   ])("prices %s screens at %s SEK", (quantity, expected) => {
     expect(calculateSetupFeeSek(quantity)).toBe(expected);
   });
@@ -23,6 +25,55 @@ describe("setup pricing scenarios", () => {
     expect(calculateIncrementalSetupFeeSek(3, 1)).toBe(249);
     expect(calculateIncrementalSetupFeeSek(4, 2)).toBe(498);
     expect(calculateIncrementalSetupFeeSek(4, 0)).toBe(0);
+  });
+
+  it("uses 499 SEK as the default base administrative charge", () => {
+    expect(BASE_SETUP_FEE_SEK).toBe(499);
+  });
+
+  it("waives the base charge for a selected new client", () => {
+    expect(
+      calculateQuotedSetupFee({
+        existingPaidScreenQuantity: 0,
+        addedScreenQuantity: 1,
+        waiveBaseSetupFee: true,
+      }),
+    ).toEqual({
+      setupFeeSek: 0,
+      baseSetupFeeChargedSek: 0,
+      additionalSetupScreens: 0,
+      setupFeeWaived: true,
+    });
+  });
+
+  it("keeps extra-screen setup charges when the base charge is waived", () => {
+    expect(
+      calculateQuotedSetupFee({
+        existingPaidScreenQuantity: 0,
+        addedScreenQuantity: 5,
+        waiveBaseSetupFee: true,
+      }),
+    ).toMatchObject({
+      setupFeeSek: 498,
+      baseSetupFeeChargedSek: 0,
+      additionalSetupScreens: 2,
+      setupFeeWaived: true,
+    });
+  });
+
+  it("does not apply the new-client waiver to an existing customer add-on", () => {
+    expect(
+      calculateQuotedSetupFee({
+        existingPaidScreenQuantity: 3,
+        addedScreenQuantity: 1,
+        waiveBaseSetupFee: true,
+      }),
+    ).toMatchObject({
+      setupFeeSek: 249,
+      baseSetupFeeChargedSek: 0,
+      additionalSetupScreens: 1,
+      setupFeeWaived: false,
+    });
   });
 });
 

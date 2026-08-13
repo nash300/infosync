@@ -204,6 +204,8 @@ export const normalizeOrder = (row: Partial<OrderRow>): OrderRow => ({
   stripe_payment_status: row.stripe_payment_status ?? null,
   screen_quantity: row.screen_quantity ?? null,
   setup_fee_sek: row.setup_fee_sek ?? null,
+  setup_fee_waived: row.setup_fee_waived ?? false,
+  setup_fee_waiver_reason: row.setup_fee_waiver_reason ?? null,
   hardware_fee_sek: row.hardware_fee_sek ?? null,
   shipping_fee_sek: row.shipping_fee_sek ?? null,
   monthly_fee_sek: row.monthly_fee_sek ?? null,

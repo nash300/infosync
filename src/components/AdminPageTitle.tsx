@@ -18,6 +18,7 @@ const titles: Record<string, string> = {
   "/admin/legal-documents": "Document Editor",
   "/admin/email-events": "Email Delivery",
   "/admin/training": "Training Catalog",
+  "/admin/services": "External Services",
   "/admin/troubleshooting": "Troubleshooting",
 };
 
@@ -29,7 +30,7 @@ const sectionTitles: Record<string, string> = {
   uploads: "Uploads",
   orders: "Orders & Billing",
   devices: "Device Allocation",
-  history: "Audit Trail",
+  history: "Customer Journal",
   details: "Details",
   preview: "Preview",
   media: "Media",

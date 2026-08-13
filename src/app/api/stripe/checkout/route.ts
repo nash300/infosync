@@ -211,7 +211,7 @@ export async function POST(request: Request) {
     const { data: quotedOrder, error: quotedOrderError } = await supabaseAdmin
       .from("customer_subscriptions")
       .select(
-        "id, order_number, screen_quantity, setup_fee_sek, base_setup_fee_sek, setup_included_screens, additional_setup_fee_per_screen_sek, additional_setup_screen_count, shipping_fee_sek, base_shipping_fee_sek, shipping_included_devices, additional_shipping_fee_per_device_sek, additional_shipping_device_count, device_discount_percent, device_discount_months, quote_items, pricing_plan_id, pricing_plans(*)",
+        "id, order_number, screen_quantity, setup_fee_sek, base_setup_fee_sek, setup_fee_waived, setup_fee_waiver_reason, setup_included_screens, additional_setup_fee_per_screen_sek, additional_setup_screen_count, shipping_fee_sek, base_shipping_fee_sek, shipping_included_devices, additional_shipping_fee_per_device_sek, additional_shipping_device_count, device_discount_percent, device_discount_months, quote_items, pricing_plan_id, pricing_plans(*)",
       )
       .eq("customer_id", customerId)
       .in("status", ["quote_prepared", "quote_sent", "checkout_started"])
@@ -411,6 +411,10 @@ export async function POST(request: Request) {
           setupIncludedScreens,
           additionalSetupFeeSek,
         );
+    const setupFeeWaived = quotedOrder?.setup_fee_waived === true;
+    const setupFeeWaiverReason = setupFeeWaived
+      ? String(quotedOrder?.setup_fee_waiver_reason || "")
+      : null;
     const shippingIncludedDevices =
       Number(quotedOrder?.shipping_included_devices) ||
       plan.shipping_included_devices ||
@@ -453,6 +457,8 @@ export async function POST(request: Request) {
         currency,
         setup_fee_sek: setupFeeSek,
         base_setup_fee_sek: baseSetupFeeSek,
+        setup_fee_waived: setupFeeWaived,
+        setup_fee_waiver_reason: setupFeeWaiverReason,
         setup_included_screens: setupIncludedScreens,
         additional_setup_fee_per_screen_sek: additionalSetupFeeSek,
         additional_setup_screen_count: additionalSetupScreens,
@@ -651,30 +657,33 @@ export async function POST(request: Request) {
     const setupLineItem =
       baseSetupFeeSek > 0
         ? staticPriceLineItem({
-        priceId: plan.stripe_setup_price_id,
-        expectedAmountSek: baseSetupFeeSek,
-        actualAmountSek: baseSetupFeeSek,
-        quantity: 1,
-      }) || {
-        price_data: {
-          currency,
-          unit_amount: toOre(baseSetupFeeSek),
-          tax_behavior: priceTaxBehavior,
-          product_data: {
-            name: `${plan.name} start- och konfigurationsavgift (upp till ${setupIncludedScreens} skärmar)`,
-            description:
-              "Grundavgift för start och konfiguration. Återbetalas inte när setupen har startat.",
-            images: [setupImage],
-          },
-        },
-        quantity: 1,
-      } : null;
+            priceId: plan.stripe_setup_price_id,
+            expectedAmountSek: plan.setup_fee_sek,
+            actualAmountSek: baseSetupFeeSek,
+            quantity: 1,
+          }) || {
+            price_data: {
+              currency,
+              unit_amount: toOre(baseSetupFeeSek),
+              tax_behavior: priceTaxBehavior,
+              product_data: {
+                name: `${plan.name} start- och konfigurationsavgift (upp till ${setupIncludedScreens} skärmar)`,
+                description:
+                  "Grundavgift för start och konfiguration. Återbetalas inte när setupen har startat.",
+                images: [setupImage],
+              },
+            },
+            quantity: 1,
+          }
+        : null;
 
     const additionalSetupLineItem =
       additionalSetupScreens > 0
         ? staticPriceLineItem({
             priceId: plan.stripe_additional_setup_price_id,
-            expectedAmountSek: additionalSetupFeeSek,
+            expectedAmountSek:
+              plan.additional_setup_fee_sek ||
+              ADDITIONAL_SETUP_FEE_PER_SCREEN_SEK,
             actualAmountSek: additionalSetupFeeSek,
             quantity: additionalSetupScreens,
           }) || {
@@ -878,6 +887,7 @@ export async function POST(request: Request) {
                 device_discount_percent: String(deviceDiscountPercent),
                 device_discount_months: String(deviceDiscountMonths),
                 stripe_discount_coupon_id: coupon?.id || "",
+                setup_fee_waived: String(setupFeeWaived),
               },
             },
           }),
@@ -898,6 +908,7 @@ export async function POST(request: Request) {
         device_discount_percent: String(deviceDiscountPercent),
         device_discount_months: String(deviceDiscountMonths),
         stripe_discount_coupon_id: coupon?.id || "",
+        setup_fee_waived: String(setupFeeWaived),
         checkout_kind: isExistingCustomerAddOn
           ? "existing_customer_add_on"
           : "new_subscription",

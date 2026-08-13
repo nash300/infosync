@@ -72,6 +72,8 @@ function AdminOrdersContent() {
         stripe_payment_status,
         screen_quantity,
         setup_fee_sek,
+        setup_fee_waived,
+        setup_fee_waiver_reason,
         hardware_fee_sek,
         shipping_fee_sek,
         monthly_fee_sek,
@@ -744,7 +746,10 @@ function AdminOrdersContent() {
                 )}
 
                 <div className="admin-order-money">
-                  <span>Setup {formatSek(order.setup_fee_sek)}</span>
+                  <span>
+                    Setup {formatSek(order.setup_fee_sek)}
+                    {order.setup_fee_waived ? " (499 kr base waived)" : ""}
+                  </span>
                   <span>Device {formatSek(order.hardware_fee_sek)}</span>
                   <span>Shipping {formatSek(order.shipping_fee_sek)}</span>
                   <span>Monthly {formatSek(order.monthly_fee_sek)}</span>
@@ -753,6 +758,11 @@ function AdminOrdersContent() {
 
                 {order.quote_notes && (
                   <p className="admin-order-note">{order.quote_notes}</p>
+                )}
+                {order.setup_fee_waived && (
+                  <p className="admin-order-note">
+                    Administrative-charge waiver: {order.setup_fee_waiver_reason}
+                  </p>
                 )}
                 </div>
               </details>
@@ -788,4 +798,3 @@ function AdminOrdersContent() {
     </div>
   );
 }
-

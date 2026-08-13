@@ -104,7 +104,7 @@ if (
 
 for (const plan of plans) {
   if (
-    plan.setup_fee_sek !== 1599 ||
+    plan.setup_fee_sek !== 499 ||
     plan.setup_included_screens !== 3 ||
     plan.additional_setup_fee_sek !== 249 ||
     plan.shipping_fee_sek !== 99 ||
@@ -116,7 +116,7 @@ for (const plan of plans) {
   }
 
   const priceChecks = [
-    ["setup", plan.stripe_setup_price_id, 159900, false],
+    ["setup", plan.stripe_setup_price_id, 49900, false],
     [
       "hardware",
       plan.stripe_hardware_price_id,
@@ -148,5 +148,5 @@ for (const plan of plans) {
 }
 
 console.log(
-  `Pricing services verified: 3 plans, shared 249 SEK setup addition ${sharedAdditionalPriceId}, shared 29 SEK shipping addition ${sharedAdditionalShippingPriceId}, inclusive moms, and correct one-time/monthly Stripe behavior.`,
+  `Pricing services verified: 3 plans with 499 SEK base administrative charge, shared 249 SEK setup addition ${sharedAdditionalPriceId}, shared 29 SEK shipping addition ${sharedAdditionalShippingPriceId}, inclusive moms, and correct one-time/monthly Stripe behavior.`,
 );

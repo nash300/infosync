@@ -92,6 +92,8 @@ export const normalizeSubscription = (
   status: row.status || "pending",
   setup_fee_sek: row.setup_fee_sek ?? null,
   setup_fee_paid: row.setup_fee_paid ?? null,
+  setup_fee_waived: row.setup_fee_waived ?? false,
+  setup_fee_waiver_reason: row.setup_fee_waiver_reason ?? null,
   hardware_fee_sek: row.hardware_fee_sek ?? null,
   shipping_fee_sek: row.shipping_fee_sek ?? null,
   base_shipping_fee_sek: row.base_shipping_fee_sek ?? null,

@@ -81,7 +81,7 @@ export default function DevicesPage() {
         </div>
 
         <Link href="/admin/devices/new" className="admin-button-primary">
-          Create display endpoint
+          Create customer display
         </Link>
       </div>
 

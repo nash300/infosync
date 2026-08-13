@@ -49,7 +49,7 @@ if (!plans?.length) throw new Error("No active pricing plans were found.");
 
 for (const plan of plans) {
   if (
-    plan.setup_fee_sek !== 1599 ||
+    plan.setup_fee_sek !== 499 ||
     plan.setup_included_screens !== 3 ||
     plan.additional_setup_fee_sek !== 249 ||
     plan.shipping_fee_sek !== 99 ||
@@ -177,31 +177,70 @@ if (!sharedPriceId) {
   sharedPriceId = price.id;
 }
 
+const basePriceIdsByPlan = new Map();
+
 for (const plan of plans) {
-  if (plan.stripe_setup_price_id) {
-    const basePrice = await stripe.prices.retrieve(plan.stripe_setup_price_id, {
+  let basePriceId = plan.stripe_setup_price_id;
+  let baseProductId = null;
+
+  if (basePriceId) {
+    const basePrice = await stripe.prices.retrieve(basePriceId, {
       expand: ["product"],
     });
-    if (
-      basePrice.unit_amount !== 159900 ||
-      basePrice.currency !== "sek" ||
-      basePrice.tax_behavior !== "inclusive" ||
-      basePrice.recurring
-    ) {
-      throw new Error(`Base setup Stripe price mismatch for ${plan.code}.`);
-    }
     if (
       basePrice.product &&
       typeof basePrice.product !== "string" &&
       !basePrice.product.deleted
     ) {
-      await stripe.products.update(basePrice.product.id, {
-        name: `Screenia ${plan.name} ${plan.resolution} - start och konfiguration (upp till 3 skärmar)`,
-        description: "Grundavgift för start och konfiguration av upp till tre skärmar.",
-        active: true,
-      });
+      baseProductId = basePrice.product.id;
+    }
+    if (
+      !basePrice.active ||
+      basePrice.unit_amount !== 49900 ||
+      basePrice.currency !== "sek" ||
+      basePrice.tax_behavior !== "inclusive" ||
+      basePrice.recurring
+    ) {
+      basePriceId = null;
     }
   }
+
+  if (!baseProductId) {
+    const baseProduct = await stripe.products.create({
+      name: `Screenia ${plan.name} ${plan.resolution} - administrativ startavgift`,
+      description: "Administrativ grundavgift för start och konfiguration av upp till tre skärmar.",
+      metadata: {
+        business_rule: "base_administrative_charge",
+        pricing_plan_code: plan.code,
+        included_screens: "3",
+      },
+    });
+    baseProductId = baseProduct.id;
+  } else {
+    await stripe.products.update(baseProductId, {
+      name: `Screenia ${plan.name} ${plan.resolution} - administrativ startavgift`,
+      description: "Administrativ grundavgift för start och konfiguration av upp till tre skärmar.",
+      active: true,
+    });
+  }
+
+  if (!basePriceId) {
+    const basePrice = await stripe.prices.create({
+      currency: "sek",
+      unit_amount: 49900,
+      tax_behavior: "inclusive",
+      product: baseProductId,
+      metadata: {
+        business_rule: "base_administrative_charge",
+        pricing_plan_code: plan.code,
+        included_screens: "3",
+      },
+    });
+    basePriceId = basePrice.id;
+  }
+
+  basePriceIdsByPlan.set(plan.id, basePriceId);
+
   if (plan.stripe_shipping_price_id) {
     const shippingPrice = await stripe.prices.retrieve(
       plan.stripe_shipping_price_id,
@@ -229,6 +268,14 @@ for (const plan of plans) {
   }
 }
 
+for (const plan of plans) {
+  const { error: basePriceUpdateError } = await supabase
+    .from("pricing_plans")
+    .update({ stripe_setup_price_id: basePriceIdsByPlan.get(plan.id) })
+    .eq("id", plan.id);
+  if (basePriceUpdateError) throw basePriceUpdateError;
+}
+
 const { error: updateError } = await supabase
   .from("pricing_plans")
   .update({
@@ -242,5 +289,5 @@ const { error: updateError } = await supabase
 if (updateError) throw updateError;
 
 console.log(
-  `Synced shared Stripe test prices for 249 SEK additional-screen setup (${sharedPriceId}) and 29 SEK additional-device shipping (${sharedShippingPriceId}) across ${plans.length} active plans.`,
+  `Synced 499 SEK base administrative prices, shared 249 SEK additional-screen setup (${sharedPriceId}), and shared 29 SEK additional-device shipping (${sharedShippingPriceId}) across ${plans.length} active plans.`,
 );

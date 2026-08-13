@@ -19,6 +19,8 @@ type AccountingExportRow = {
   screen_quantity: number | null;
   setup_fee_sek: number | null;
   base_setup_fee_sek: number | null;
+  setup_fee_waived: boolean | null;
+  setup_fee_waiver_reason: string | null;
   setup_included_screens: number | null;
   additional_setup_fee_per_screen_sek: number | null;
   additional_setup_screen_count: number | null;
@@ -145,6 +147,8 @@ const headers = [
   "screen_quantity",
   "setup_fee_sek",
   "base_setup_fee_sek",
+  "setup_fee_waived",
+  "setup_fee_waiver_reason",
   "setup_included_screens",
   "additional_setup_fee_per_screen_sek",
   "additional_setup_screen_count",
@@ -221,6 +225,8 @@ export async function GET(request: Request) {
         screen_quantity,
         setup_fee_sek,
         base_setup_fee_sek,
+        setup_fee_waived,
+        setup_fee_waiver_reason,
         setup_included_screens,
         additional_setup_fee_per_screen_sek,
         additional_setup_screen_count,
@@ -296,6 +302,8 @@ export async function GET(request: Request) {
         row.screen_quantity,
         sekValue(row.setup_fee_sek),
         sekValue(row.base_setup_fee_sek),
+        row.setup_fee_waived,
+        row.setup_fee_waiver_reason,
         row.setup_included_screens,
         sekValue(row.additional_setup_fee_per_screen_sek),
         row.additional_setup_screen_count,

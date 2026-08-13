@@ -7,6 +7,8 @@ export type OrderRow = {
   stripe_payment_status: string | null;
   screen_quantity: number | null;
   setup_fee_sek: number | null;
+  setup_fee_waived: boolean | null;
+  setup_fee_waiver_reason: string | null;
   hardware_fee_sek: number | null;
   shipping_fee_sek: number | null;
   monthly_fee_sek: number | null;

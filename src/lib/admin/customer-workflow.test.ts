@@ -14,6 +14,7 @@ const baseCustomer = {
 
 describe("admin customer workflow scenarios", () => {
   it.each([
+    ["active", "canceled", "active"],
     ["cancelled", "paid", "active"],
     ["active", "refunded", "active"],
     ["active", "paid", "cancelled"],
@@ -37,24 +38,29 @@ describe("admin customer workflow scenarios", () => {
     expect(action).toMatchObject({
       stage: 3,
       priority: "urgent",
+      category: "billing_issue",
       href: "/admin/customers/customer-1?section=orders",
     });
   });
 
   it.each([
-    ["new_request", 1, "high"],
-    ["invited", 2, "normal"],
-    ["paid", 4, "high"],
-  ] as const)("routes %s to stage %s", (status, stage, priority) => {
+    ["new_request", 1, "high", "new_request"],
+    ["invited", 2, "normal", "setup_pending"],
+    ["paid", 4, "high", "material_pending"],
+  ] as const)("routes %s to stage %s", (status, stage, priority, category) => {
     expect(
       getCustomerWorkflowAction({ ...baseCustomer, status }),
-    ).toMatchObject({ stage, priority });
+    ).toMatchObject({ stage, priority, category });
   });
 
   it("routes an active customer without a device to allocation", () => {
     expect(
       getCustomerWorkflowAction({ ...baseCustomer, deviceCount: 0 }),
-    ).toMatchObject({ stage: 5, href: "/admin/customers/customer-1?section=devices" });
+    ).toMatchObject({
+      stage: 5,
+      category: "needs_device",
+      href: "/admin/customers/customer-1?section=devices",
+    });
   });
 
   it("routes an assigned device without a playlist to publishing", () => {
@@ -63,6 +69,22 @@ describe("admin customer workflow scenarios", () => {
         ...baseCustomer,
         firstDeviceWithoutPlaylistCode: "ABC123",
       }),
-    ).toMatchObject({ stage: 6, href: "/admin/devices/ABC123?section=media" });
+    ).toMatchObject({
+      stage: 6,
+      category: "needs_playlist",
+      href: "/admin/devices/ABC123?section=media",
+    });
+  });
+
+  it("identifies a content-ready customer that only needs final activation", () => {
+    expect(
+      getCustomerWorkflowAction({
+        ...baseCustomer,
+        status: "content_received",
+      }),
+    ).toMatchObject({
+      category: "ready_to_activate",
+      title: "Verify display and activate service",
+    });
   });
 });

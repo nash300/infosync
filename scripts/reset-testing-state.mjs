@@ -116,15 +116,24 @@ async function deleteCustomersAndAuthUsers() {
   }
 
   let deletedAuthUsers = 0;
+  let missingAuthUsers = 0;
   for (const userId of authUserIds) {
     const { error: deleteError } = await supabase.auth.admin.deleteUser(userId);
     if (deleteError) {
+      if (/user not found/i.test(deleteError.message)) {
+        missingAuthUsers += 1;
+        continue;
+      }
       throw new Error(`Could not delete customer auth user ${userId}: ${deleteError.message}`);
     }
     deletedAuthUsers += 1;
   }
 
-  return { customers: customerDeleteError ? 0 : count ?? 0, authUsers: deletedAuthUsers };
+  return {
+    customers: customerDeleteError ? 0 : count ?? 0,
+    authUsers: deletedAuthUsers,
+    missingAuthUsers,
+  };
 }
 
 async function listStoragePaths(bucket, prefix = "") {
