@@ -12,7 +12,8 @@ legal review.
 | Stripe | Checkout, subscriptions, invoices, refunds, disputes, and billing portal | Billing contact, organisation number where sent, payment status, Stripe customer/subscription/invoice/payment identifiers | Stripe account business details, VAT/tax settings, webhook endpoint, DPA/data processing terms |
 | Resend | Transactional email delivery | Recipient email, message subject/body, delivery status, support/onboarding/request email content | Verified `screenia.se` domain, sender identity, suppression/bounce handling, DPA/data processing terms |
 | Vercel | Hosting, deployment, logs, and edge/runtime infrastructure | Request metadata, IP/user-agent in logs, application runtime data needed to serve Screenia | Production domain, environment separation, team access, logging settings, DPA/data processing terms |
-| Loopia | Domain, DNS, and business email services | Domain/contact/account details, email account metadata, email content if mailbox is used | Domain ownership, DNS records, mailbox security, DPA/data processing terms |
+| Loopia | Domain registration and DNS management | Domain ownership, account/contact details, and DNS records | Domain ownership, DNS access controls, account security, DPA/data processing terms |
+| Zoho Mail | Business mailbox for `service@screenia.se` | Customer and supplier email addresses, message content, attachments, and delivery metadata | Mailbox access, MFA, retention, forwarding rules, and DPA/data processing terms |
 
 ## Launch Checklist
 
@@ -21,7 +22,7 @@ legal review.
 - Accept or download each provider's data processing terms before live customer
   data is processed.
 - Confirm where customer data is stored or routed, especially for Supabase,
-  Stripe, Vercel logs, Resend delivery events, and Loopia mailboxes.
+  Stripe, Vercel logs, Resend delivery events, and the Zoho Mail mailbox.
 - Keep billing receipts and DPA evidence with business records.
 - Update the public privacy policy whenever a provider, purpose, or data
   category changes.

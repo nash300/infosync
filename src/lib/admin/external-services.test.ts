@@ -10,7 +10,7 @@ describe("admin external services", () => {
       "Supabase",
       "Resend",
       "Loopia",
-      "Gmail",
+      "Zoho Mail",
       "GitHub",
     ]);
   });
@@ -29,6 +29,19 @@ describe("admin external services", () => {
     });
   });
 
+  it("separates the Zoho customer mailbox from Loopia domain management", () => {
+    const zoho = adminExternalServices.find(
+      (service) => service.name === "Zoho Mail",
+    );
+    const loopia = adminExternalServices.find(
+      (service) => service.name === "Loopia",
+    );
+
+    expect(zoho?.description).toContain("service@screenia.se");
+    expect(loopia?.category).toBe("Domain and DNS");
+    expect(adminExternalServices.some((service) => service.name === "Gmail")).toBe(false);
+  });
+
   it("targets the configured Screenia projects where direct links are available", () => {
     expect(
       adminExternalServices.find((service) => service.name === "Vercel")?.href,
@@ -39,5 +52,8 @@ describe("admin external services", () => {
     expect(
       adminExternalServices.find((service) => service.name === "GitHub")?.href,
     ).toBe("https://github.com/nash300/screenia");
+    expect(
+      adminExternalServices.find((service) => service.name === "Zoho Mail")?.href,
+    ).toContain("mail.zoho.eu");
   });
 });

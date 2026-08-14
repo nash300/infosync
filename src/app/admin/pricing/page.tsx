@@ -118,26 +118,37 @@ export default function PricingPage() {
 
   const loadPlans = useCallback(async () => {
     setLoading(true);
-    const response = await fetch("/api/admin/pricing-plans", {
-      cache: "no-store",
-    });
-    const data = await response.json().catch(() => ({}));
+    setNotice(null);
+    try {
+      const response = await fetch("/api/admin/pricing-plans", {
+        cache: "no-store",
+      });
+      const data = await response.json().catch(() => ({}));
 
-    if (!response.ok) {
+      if (!response.ok) {
+        setNotice({
+          type: "error",
+          message: data.error || "Could not load pricing plans.",
+        });
+        return;
+      }
+
+      const loadedPlans = (data.plans || []) as PricingPlan[];
+      setPlans(loadedPlans);
+      setForms(
+        Object.fromEntries(loadedPlans.map((plan) => [plan.id, toForm(plan)])),
+      );
+    } catch {
+      setPlans([]);
+      setForms({});
       setNotice({
         type: "error",
-        message: data.error || "Could not load pricing plans.",
+        message:
+          "Could not reach the pricing service. Refresh the page or restart the local server after a production build.",
       });
+    } finally {
       setLoading(false);
-      return;
     }
-
-    const loadedPlans = (data.plans || []) as PricingPlan[];
-    setPlans(loadedPlans);
-    setForms(
-      Object.fromEntries(loadedPlans.map((plan) => [plan.id, toForm(plan)])),
-    );
-    setLoading(false);
   }, []);
 
   useEffect(() => {

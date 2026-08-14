@@ -59,8 +59,8 @@ export default function AdminTrainingPage() {
           </p>
           <p>
             Click path: landing pricing form, admin Customer work, customer
-            profile, Request & quote, Gmail quote check, onboarding link, Stripe
-            Checkout, Gmail activation email, customer password setup, customer
+            profile, Request & quote, Zoho Mail quote check, onboarding link, Stripe
+            Checkout, Zoho Mail activation email, customer password setup, customer
             portal, Device allocation, display endpoint.
           </p>
           <p>

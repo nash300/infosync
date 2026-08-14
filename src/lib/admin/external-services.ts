@@ -56,24 +56,24 @@ export const adminExternalServices: AdminExternalService[] = [
   {
     name: "Loopia",
     shortLabel: "LO",
-    category: "Domain and mailbox",
+    category: "Domain and DNS",
     description:
-      "Manages the screenia.se domain, DNS records, and Screenia email accounts.",
+      "Manages ownership of the screenia.se domain and the DNS records that connect Screenia's services.",
     example:
-      "Update a DNS record for Vercel or manage an address such as service@screenia.se.",
+      "Update a Vercel domain record or the MX and TXT records used by Zoho Mail and Resend.",
     href: "https://customerzone.loopia.se/",
     actionLabel: "Open Loopia",
   },
   {
-    name: "Gmail",
-    shortLabel: "GM",
-    category: "Inbox",
+    name: "Zoho Mail",
+    shortLabel: "ZO",
+    category: "Customer mailbox",
     description:
-      "Provides the inbox used to inspect real customer-facing messages during email testing.",
+      "Hosts the service@screenia.se inbox and sent mail used for direct customer communication.",
     example:
-      "Confirm that an onboarding email arrived, looks correct, and did not land in Spam.",
-    href: "https://mail.google.com/",
-    actionLabel: "Open Gmail",
+      "Read a customer's reply about an order, answer it, and keep the conversation in the Screenia mailbox.",
+    href: "https://mail.zoho.eu/zm/#mail/folder/inbox",
+    actionLabel: "Open Zoho Mail",
   },
   {
     name: "GitHub",

@@ -8,7 +8,7 @@ This document is the versioned technical reference for daily administration and 
 - Supabase: authentication, application data, storage, row-level access, and audit records.
 - Stripe: checkout, subscriptions, invoices, tax calculation, refunds, and payment evidence.
 - Resend and Zoho: transactional delivery and the `service@screenia.se` customer mailbox.
-- Loopia: `screenia.se`, DNS, and mailbox/domain administration.
+- Loopia: `screenia.se` domain ownership and DNS administration.
 
 Never place API keys, passwords, signing secrets, or customer card data in this document, source control, admin notes, or email.
 
