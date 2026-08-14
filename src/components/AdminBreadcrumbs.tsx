@@ -17,7 +17,6 @@ const labels: Record<string, string> = {
   "legal-documents": "Document editor",
   subscriptions: "Subscriptions",
   "email-events": "Email delivery",
-  training: "Training",
   services: "Services",
   troubleshooting: "Troubleshooting",
   new: "New",

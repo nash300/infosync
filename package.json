@@ -25,13 +25,13 @@
     "release:check": "npm run lint && npm run text:check && npm run style:check && npm run billing:check && npm run admin-framework:check && npm run build"
   },
   "dependencies": {
-    "@supabase/ssr": "^0.10.2",
-    "@supabase/supabase-js": "^2.105.1",
+    "@supabase/ssr": "0.10.2",
+    "@supabase/supabase-js": "2.105.1",
     "@vercel/analytics": "^2.0.1",
     "next": "^16.3.0",
     "react": "19.2.4",
     "react-dom": "19.2.4",
-    "stripe": "^22.1.0",
+    "stripe": "22.1.0",
     "svix": "^1.96.1"
   },
   "devDependencies": {

@@ -17,7 +17,6 @@ const titles: Record<string, string> = {
   "/admin/example-gallery": "Example Gallery",
   "/admin/legal-documents": "Document Editor",
   "/admin/email-events": "Email Delivery",
-  "/admin/training": "Training Catalog",
   "/admin/services": "External Services",
   "/admin/troubleshooting": "Troubleshooting",
 };

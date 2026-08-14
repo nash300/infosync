@@ -7,7 +7,6 @@ const exists = (file) => fs.existsSync(path.join(root, file));
 
 const navigation = read("src/lib/admin/navigation.ts");
 const layout = read("src/app/admin/layout.tsx");
-const training = read("src/app/admin/training/page.tsx");
 const troubleshooting = read("src/app/admin/troubleshooting/page.tsx");
 const emailEvidence = read("src/app/admin/email-events/page.tsx");
 const adminApiRoot = path.join(root, "src/app/api/admin");
@@ -27,16 +26,11 @@ if (navigation.includes('href: "/admin/email-events"')) {
 if (!navigation.includes('href: "/admin/troubleshooting"')) {
   problems.push("Troubleshooting is missing from admin navigation.");
 }
+if (navigation.includes('href: "/admin/training"')) {
+  problems.push("The removed Training feature must not appear in admin navigation.");
+}
 if (layout.includes("AdminContextGuide") || layout.includes("admin-page-with-guide")) {
   problems.push("The global page guide must remain removed.");
-}
-if (
-  !training.includes("Scenario playbook") ||
-  !training.includes("Restaurant orders 2 Premium 4K and 1 Standard FHD screen") ||
-  !training.includes("Evidence: customer row with mixed quote items") ||
-  training.includes("help-catalog")
-) {
-  problems.push("Training catalog must remain a compact scenario playbook workspace.");
 }
 if (!troubleshooting.includes('href="/admin/email-events"')) {
   problems.push("Troubleshooting must link to email evidence.");
@@ -65,6 +59,7 @@ for (const route of adminApiRoutes) {
 
 for (const removedFile of [
   "src/app/admin/launch-readiness/page.tsx",
+  "src/app/admin/training/page.tsx",
   "src/components/AdminContextGuide.tsx",
   "src/lib/admin/help-catalog.ts",
   "src/lib/admin/operation-scenarios.ts",
@@ -77,4 +72,4 @@ if (problems.length) {
   process.exit(1);
 }
 
-console.log("Admin surface check passed: shared API authentication, simplified navigation, scenario training workspace, hidden email diagnostics, and no page guide.");
+console.log("Admin surface check passed: shared API authentication, simplified navigation, removed Training feature, hidden email diagnostics, and no page guide.");

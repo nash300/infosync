@@ -23,8 +23,7 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-The Training catalog is reserved for future learning material. Email delivery
-evidence is available through the admin Troubleshooting page and is intentionally
+Email delivery evidence is available through the admin Troubleshooting page and is intentionally
 kept outside the daily workflow navigation. Internal operating and readiness
 references are stored in `docs/admin-operations-guide.md` and
 `docs/deployment-readiness.md`. Before a reviewed deployment, run:

@@ -48,12 +48,6 @@ export const adminNavItems = [
     description: "Public pages, images, examples, and documents.",
   },
   {
-    href: "/admin/training",
-    label: "Training",
-    icon: "TR",
-    description: "Reserved workspace for future Screenia training material.",
-  },
-  {
     href: "/admin/services",
     label: "Services",
     icon: "SV",
@@ -89,7 +83,6 @@ export const adminNavGroups = [
     hrefs: [
       "/admin/pricing",
       "/admin/site-content",
-      "/admin/training",
       "/admin/services",
     ],
   },
