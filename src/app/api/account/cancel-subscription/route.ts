@@ -74,7 +74,7 @@ async function recordCustomerCancellationSyncFailure(
     return NextResponse.json(
       {
         error:
-          "Stripe accepted the cancellation, but Screenia could not sync your account or store urgent failure evidence. Contact support.",
+          "Avslutet registrerades hos betalningstjänsten, men kontot kunde inte uppdateras. Kontakta Screenia.",
       },
       { status: 500 },
     );
@@ -85,7 +85,7 @@ function cancellationSyncErrorResponse() {
   return NextResponse.json(
     {
       error:
-        "Stripe accepted the cancellation, but Screenia could not fully update your account. Screenia has been notified to review it.",
+        "Avslutet registrerades hos betalningstjänsten, men kontot kunde inte uppdateras helt. Screenia har fått information om problemet.",
     },
     { status: 500 },
   );
@@ -101,7 +101,7 @@ export async function POST(request: Request) {
 
   if (!customer.stripe_subscription_id) {
     return NextResponse.json(
-      { error: "No active subscription is connected to this account." },
+      { error: "Inget aktivt abonnemang är kopplat till kontot." },
       { status: 400 },
     );
   }

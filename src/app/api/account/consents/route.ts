@@ -121,7 +121,7 @@ export async function PATCH(request: Request) {
   if (error || !updatedCustomer) {
     console.error("Update customer consent error:", error);
     return NextResponse.json(
-      { error: "Could not update consent settings." },
+      { error: "Samtyckena kunde inte sparas. Försök igen." },
       { status: 500 },
     );
   }
@@ -191,7 +191,7 @@ export async function PATCH(request: Request) {
     return NextResponse.json(
       {
         error:
-          "Consent settings were not saved because Screenia could not store the required consent evidence.",
+          "Samtyckena sparades inte eftersom bekräftelsen inte kunde dokumenteras. Försök igen eller kontakta Screenia.",
       },
       { status: 500 },
     );

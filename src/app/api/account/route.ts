@@ -6,6 +6,7 @@ import {
   supabaseAdmin,
 } from "@/lib/server/customer-account";
 import { customerCanUploadVideos } from "@/lib/pricing/plan-entitlements";
+import { latestLegalDocuments } from "@/lib/legal/latest-documents";
 
 type CustomerMessageRow = {
   id: string;
@@ -246,7 +247,7 @@ export async function GET() {
     displayAssets: displayAssetsWithUrls,
     previewDecisions: previewDecisions || [],
     agreements: agreements || [],
-    legalDocuments: legalDocuments || [],
+    legalDocuments: latestLegalDocuments(legalDocuments || []),
     subscriptionAdjustments: subscriptionAdjustments || [],
     videoUploadEnabled,
     devicePauses,

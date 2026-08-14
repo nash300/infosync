@@ -112,6 +112,48 @@ const lifecycleAuditContracts = [
     ],
   },
   {
+    stage: "billing portal access",
+    route: "src/app/api/account/billing-portal/route.ts",
+    events: ["billing_portal_session_created", "billing_portal_session_failed"],
+  },
+  {
+    stage: "individual device pause",
+    route: "src/app/api/account/pause-device/route.ts",
+    events: ["customer_device_subscription_paused"],
+  },
+  {
+    stage: "individual device cancellation",
+    route: "src/app/api/account/cancel-devices/route.ts",
+    events: ["customer_device_subscription_cancel_scheduled"],
+  },
+  {
+    stage: "customer consent settings",
+    route: "src/app/api/account/consents/route.ts",
+    events: ["customer_consent_settings_updated", "customer_consent_evidence_failed"],
+  },
+  {
+    stage: "preview approval and changes",
+    route: "src/app/api/account/preview-decision/route.ts",
+    events: [
+      "customer_preview_approved",
+      "customer_preview_changes_requested",
+      "customer_preview_decision_audit_failed",
+    ],
+  },
+  {
+    stage: "display material upload",
+    route: "src/app/api/account/display-assets/route.ts",
+    events: [
+      "customer_display_material_uploaded",
+      "customer_display_material_notification_failed",
+    ],
+  },
+  {
+    stage: "Premium Plus video upload",
+    route: "src/app/api/account/video-upload/route.ts",
+    events: ["customer_video_uploaded", "customer_video_notification_failed"],
+  },
+  {
     stage: "refund",
     route: [
       "src/app/api/admin/customers/[customerId]/refund/route.ts",

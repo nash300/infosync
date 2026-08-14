@@ -70,7 +70,11 @@ export function validateDisplayAssetRequest(
     return { error: `Du kan ladda upp högst ${MAX_DISPLAY_FILES} filer åt gången.` };
   }
 
-  const totalBytes = files.reduce((sum, file) => sum + Number(file.size || 0), 0);
+  const effectiveFileSize = (file: DisplayFileInput) => {
+    const encodedData = String(file.data || "").trim();
+    return encodedData ? decodeBase64File(file).byteLength : Number(file.size || 0);
+  };
+  const totalBytes = files.reduce((sum, file) => sum + effectiveFileSize(file), 0);
 
   if (totalBytes > MAX_DISPLAY_TOTAL_BYTES) {
     return { error: "Filerna får tillsammans vara högst 15 MB." };
@@ -79,7 +83,7 @@ export function validateDisplayAssetRequest(
   for (const file of files) {
     const fileName = sanitizeFileName(String(file.name || ""));
     const contentType = String(file.type || "");
-    const fileSize = Number(file.size || 0);
+    const fileSize = effectiveFileSize(file);
     const category = normalizeCategory(file.category);
     const maxBytes =
       category === "logo" ? MAX_LOGO_FILE_BYTES : MAX_DISPLAY_FILE_BYTES;

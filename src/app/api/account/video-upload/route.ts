@@ -11,10 +11,9 @@ import { customerCanUploadVideos } from "@/lib/pricing/plan-entitlements";
 import { getRequestIp, recordAuditEvent } from "@/lib/server/audit";
 import { createAdminNotification } from "@/lib/server/admin-notifications";
 import { DISPLAY_ASSET_BUCKET } from "@/lib/server/display-assets";
+import { validateCustomerVideo } from "./video-validation";
 
-const MAX_CUSTOMER_VIDEO_BYTES = 100 * 1024 * 1024;
 const MAX_DESCRIPTION_LENGTH = 1200;
-const allowedVideoTypes = new Set(["video/mp4", "video/webm"]);
 
 type VideoUploadBody = {
   action?: string;
@@ -24,28 +23,6 @@ type VideoUploadBody = {
   storagePath?: string;
   description?: string;
 };
-
-function validateVideo({
-  fileName,
-  contentType,
-  fileSize,
-}: {
-  fileName: string;
-  contentType: string;
-  fileSize: number;
-}) {
-  if (!fileName) return "Videofilen saknar ett giltigt filnamn.";
-  if (!allowedVideoTypes.has(contentType)) {
-    return "Endast MP4- och WEBM-videor kan laddas upp.";
-  }
-  if (!Number.isFinite(fileSize) || fileSize <= 0) {
-    return "Videofilen är tom eller har en ogiltig storlek.";
-  }
-  if (fileSize > MAX_CUSTOMER_VIDEO_BYTES) {
-    return "Videofilen får vara högst 100 MB.";
-  }
-  return null;
-}
 
 async function loadVideoEntitlement(customerId: string) {
   const { data, error } = await supabaseAdmin
@@ -96,7 +73,7 @@ export async function POST(request: Request) {
   const fileName = sanitizeFileName(String(body.fileName || ""));
   const contentType = String(body.contentType || "");
   const fileSize = Number(body.fileSize || 0);
-  const validationError = validateVideo({ fileName, contentType, fileSize });
+  const validationError = validateCustomerVideo({ fileName, contentType, fileSize });
 
   if (validationError) {
     return NextResponse.json({ error: validationError }, { status: 400 });
@@ -159,7 +136,7 @@ export async function POST(request: Request) {
       storedObject.metadata?.contentType ||
       contentType,
   );
-  const storedValidationError = validateVideo({
+  const storedValidationError = validateCustomerVideo({
     fileName,
     contentType: storedType,
     fileSize: storedSize,

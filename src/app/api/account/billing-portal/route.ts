@@ -24,14 +24,17 @@ export async function POST(request: Request) {
 
   if (!customer.stripe_customer_id) {
     return NextResponse.json(
-      { error: "No Stripe customer is connected to this account." },
+      { error: "Ingen betalningsprofil är kopplad till kontot ännu." },
       { status: 400 },
     );
   }
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL;
   if (!appUrl) {
-    return NextResponse.json({ error: "App URL is not configured." }, { status: 500 });
+    return NextResponse.json(
+      { error: "Betalningsportalen är inte tillgänglig just nu." },
+      { status: 500 },
+    );
   }
 
   let session: Stripe.BillingPortal.Session;
@@ -83,7 +86,7 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           error:
-            "Could not open the billing portal and Screenia could not store failure evidence. Contact support.",
+            "Betalningsportalen kunde inte öppnas. Kontakta Screenia så hjälper vi dig.",
         },
         { status: 500 },
       );
@@ -118,7 +121,7 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         error:
-          "Billing portal session was created, but Screenia could not store access evidence. Contact support.",
+          "Betalningsportalen kunde inte öppnas säkert. Kontakta Screenia så hjälper vi dig.",
       },
       { status: 500 },
     );

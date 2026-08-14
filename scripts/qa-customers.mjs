@@ -38,16 +38,16 @@ const scenarios = [
   { key: "device_without_playlist", label: "Device allocated, playlist missing", customer: "content_received", payment: "paid", access: "active", order: "active", fulfillment: "preview_approved", inventory: "assigned", production: "ready", preview: "approved", devices: "one", accepted: true },
   { key: "active_display", label: "Active service with playable display", customer: "active", payment: "paid", access: "active", order: "active", fulfillment: "active", inventory: "assigned", production: "completed", preview: "approved", devices: "all", playlist: true, account: true, accepted: true },
   { key: "trial_active", label: "Active customer inside free trial", customer: "active", payment: "paid", access: "active", order: "active", fulfillment: "active", inventory: "assigned", production: "completed", preview: "approved", devices: "all", playlist: true, account: true, trial: true, accepted: true },
-  { key: "payment_failed", label: "Recurring payment failed", customer: "suspended", payment: "failed", access: "payment_failed", inactive: "payment_failed", order: "payment_failed", fulfillment: "paused", inventory: "assigned", production: "completed", preview: "approved", devices: "one", accepted: true },
-  { key: "paused", label: "Subscription temporarily paused", customer: "active", payment: "paid", access: "paused", inactive: "paused", order: "active", fulfillment: "paused", inventory: "assigned", production: "completed", preview: "approved", devices: "one", playlist: true, paused: true, accepted: true },
-  { key: "cancel_scheduled", label: "Cancellation scheduled for period end", customer: "active", payment: "paid", access: "active_until_period_end", order: "active", fulfillment: "active", inventory: "assigned", production: "completed", preview: "approved", devices: "one", playlist: true, cancelAtPeriodEnd: true, accepted: true },
-  { key: "cancelled", label: "Cancelled and closed customer", customer: "cancelled", payment: "cancelled", access: "cancelled", inactive: "customer_cancelled", order: "cancelled", fulfillment: "cancelled", inventory: "returned", production: "not_started", preview: "not_started", cancelled: true, accepted: true },
-  { key: "refunded_before_layout", label: "Full refund before layout work", customer: "refunded", payment: "refunded", access: "refunded", inactive: "refunded_before_production", order: "refunded", fulfillment: "cancelled", inventory: "returned", production: "not_started", preview: "not_started", refund: "full", cancelled: true, accepted: true },
-  { key: "post_layout_refund", label: "Partial refund request after layout started", customer: "active", payment: "paid", access: "active", order: "active", fulfillment: "in_production", inventory: "reserved", production: "layout_started", preview: "changes_requested", refund: "partial", layoutStarted: true, accepted: true },
-  { key: "payment_disputed", label: "Payment dispute under review", customer: "suspended", payment: "disputed", access: "payment_disputed", inactive: "payment_disputed", order: "disputed", fulfillment: "paused", inventory: "reserved", production: "paused", preview: "pending", accepted: true },
-  { key: "ready_to_ship", label: "Device prepared and ready to ship", customer: "active", payment: "paid", access: "active", order: "active", fulfillment: "ready_to_ship", inventory: "assigned", production: "completed", preview: "approved", devices: "all", accepted: true },
-  { key: "shipped", label: "Order shipped with tracking", customer: "active", payment: "paid", access: "active", order: "active", fulfillment: "shipped", inventory: "shipped", production: "completed", preview: "approved", devices: "all", tracking: true, accepted: true },
-  { key: "discount_and_support", label: "Active discount with customer support history", customer: "active", payment: "paid", access: "active", order: "active", fulfillment: "active", inventory: "assigned", production: "completed", preview: "approved", devices: "one", playlist: true, discount: true, support: true, accepted: true },
+  { key: "payment_failed", label: "Recurring payment failed", customer: "suspended", payment: "failed", access: "payment_failed", inactive: "payment_failed", order: "payment_failed", fulfillment: "paused", inventory: "assigned", production: "completed", preview: "approved", devices: "one", account: true, accepted: true },
+  { key: "paused", label: "Subscription temporarily paused", customer: "active", payment: "paid", access: "paused", inactive: "paused", order: "active", fulfillment: "paused", inventory: "assigned", production: "completed", preview: "approved", devices: "one", playlist: true, paused: true, account: true, accepted: true },
+  { key: "cancel_scheduled", label: "Cancellation scheduled for period end", customer: "active", payment: "paid", access: "active_until_period_end", order: "active", fulfillment: "active", inventory: "assigned", production: "completed", preview: "approved", devices: "one", playlist: true, cancelAtPeriodEnd: true, account: true, accepted: true },
+  { key: "cancelled", label: "Cancelled and closed customer", customer: "cancelled", payment: "cancelled", access: "cancelled", inactive: "customer_cancelled", order: "cancelled", fulfillment: "cancelled", inventory: "returned", production: "not_started", preview: "not_started", cancelled: true, account: true, accepted: true },
+  { key: "refunded_before_layout", label: "Full refund before layout work", customer: "refunded", payment: "refunded", access: "refunded", inactive: "refunded_before_production", order: "refunded", fulfillment: "cancelled", inventory: "returned", production: "not_started", preview: "not_started", refund: "full", cancelled: true, account: true, accepted: true },
+  { key: "post_layout_refund", label: "Partial refund request after layout started", customer: "active", payment: "paid", access: "active", order: "active", fulfillment: "in_production", inventory: "reserved", production: "layout_started", preview: "changes_requested", refund: "partial", layoutStarted: true, account: true, accepted: true },
+  { key: "payment_disputed", label: "Payment dispute under review", customer: "suspended", payment: "disputed", access: "payment_disputed", inactive: "payment_disputed", order: "disputed", fulfillment: "paused", inventory: "reserved", production: "paused", preview: "pending", account: true, accepted: true },
+  { key: "ready_to_ship", label: "Device prepared and ready to ship", customer: "active", payment: "paid", access: "active", order: "active", fulfillment: "ready_to_ship", inventory: "assigned", production: "completed", preview: "approved", devices: "all", account: true, accepted: true },
+  { key: "shipped", label: "Order shipped with tracking", customer: "active", payment: "paid", access: "active", order: "active", fulfillment: "shipped", inventory: "shipped", production: "completed", preview: "approved", devices: "all", tracking: true, account: true, accepted: true },
+  { key: "discount_and_support", label: "Active discount with customer support history", customer: "active", payment: "paid", access: "active", order: "active", fulfillment: "active", inventory: "assigned", production: "completed", preview: "approved", devices: "one", playlist: true, discount: true, support: true, account: true, accepted: true },
 ];
 
 const cities = ["Stockholm", "Gothenburg", "Malmo", "Uppsala", "Vasteras"];
@@ -725,7 +725,7 @@ async function verifyFixtures() {
   const { data: subscriptions, error: subscriptionError } = ids.length
     ? await supabase
         .from("customer_subscriptions")
-        .select("id,customer_id,order_number,setup_fee_sek,total_amount_sek,tax_amount_sek,device_discount_amount_sek,quote_items,created_at,updated_at")
+        .select("id,customer_id,order_number,setup_fee_sek,shipping_fee_sek,total_amount_sek,tax_amount_sek,device_discount_amount_sek,quote_items,created_at,updated_at")
         .in("customer_id", ids)
     : { data: [], error: null };
   if (subscriptionError) {
@@ -846,8 +846,12 @@ async function verifyFixtures() {
       .filter(([key, value]) => key !== "qaAuthAccounts" && value !== 0)
       .map(([key, value]) => [key, `expected 0, received ${value}`]),
   );
-  if (invariants.qaAuthAccounts !== 10) {
-    failures.push(["qaAuthAccounts", `expected 10, received ${invariants.qaAuthAccounts}`]);
+  const expectedAuthAccounts = scenarios.filter((scenario) => scenario.account).length * 5;
+  if (invariants.qaAuthAccounts !== expectedAuthAccounts) {
+    failures.push([
+      "qaAuthAccounts",
+      `expected ${expectedAuthAccounts}, received ${invariants.qaAuthAccounts}`,
+    ]);
   }
 
   return { counts, statusCounts, invariants, failures };

@@ -77,19 +77,19 @@ export async function POST(request: Request) {
   const userAgent = request.headers.get("user-agent");
 
   if (!validDecisions.has(decision)) {
-    return NextResponse.json({ error: "Invalid preview decision." }, { status: 400 });
+    return NextResponse.json({ error: "Välj om förhandsvisningen ska godkännas eller ändras." }, { status: 400 });
   }
 
   if (!previewUrl) {
     return NextResponse.json(
-      { error: "There is no preview available for this account yet." },
+      { error: "Det finns ingen förhandsvisning att granska ännu." },
       { status: 400 },
     );
   }
 
   if (decision === "changes_requested" && feedback.length < 5) {
     return NextResponse.json(
-      { error: "Please describe the change you want Screenia to make." },
+      { error: "Beskriv vad du vill att Screenia ska ändra." },
       { status: 400 },
     );
   }
@@ -105,7 +105,7 @@ export async function POST(request: Request) {
   if (subscriptionLookupError) {
     console.error("Preview decision subscription lookup error:", subscriptionLookupError);
     return NextResponse.json(
-      { error: "Could not check the preview fulfillment status." },
+      { error: "Förhandsvisningens orderstatus kunde inte kontrolleras." },
       { status: 500 },
     );
   }
@@ -127,7 +127,7 @@ export async function POST(request: Request) {
   if (decisionError || !previewDecision) {
     console.error("Preview decision insert error:", decisionError);
     return NextResponse.json(
-      { error: "Could not save your preview response." },
+      { error: "Ditt svar på förhandsvisningen kunde inte sparas." },
       { status: 500 },
     );
   }
@@ -158,7 +158,7 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json(
-      { error: "Could not update the preview status." },
+      { error: "Förhandsvisningens status kunde inte uppdateras." },
       { status: 500 },
     );
   }
@@ -212,14 +212,14 @@ export async function POST(request: Request) {
         return NextResponse.json(
           {
             error:
-              "Preview response was not saved and Screenia could not create an internal admin alert. Contact support.",
+              "Svaret sparades inte och Screenia kunde inte registrera problemet. Kontakta Screenia.",
           },
           { status: 500 },
         );
       }
 
       return NextResponse.json(
-        { error: "Could not update the preview fulfillment status." },
+        { error: "Förhandsvisningens orderstatus kunde inte uppdateras." },
         { status: 500 },
       );
     }
@@ -294,7 +294,7 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           error:
-            "Preview response was not saved and Screenia could not create an internal admin alert. Contact support.",
+            "Svaret sparades inte och Screenia kunde inte registrera problemet. Kontakta Screenia.",
         },
         { status: 500 },
       );
@@ -303,7 +303,7 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         error:
-          "Preview response was not saved because Screenia could not store the required audit evidence.",
+          "Svaret sparades inte eftersom händelsen inte kunde dokumenteras. Försök igen eller kontakta Screenia.",
       },
       { status: 500 },
     );
@@ -380,7 +380,7 @@ export async function POST(request: Request) {
       return NextResponse.json(
         {
           error:
-            "Preview response was not saved and Screenia could not store internal failure evidence. Contact support.",
+            "Svaret sparades inte och problemet kunde inte dokumenteras. Kontakta Screenia.",
         },
         { status: 500 },
       );
@@ -389,7 +389,7 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         error:
-          "Preview response was not saved because Screenia could not create the admin review notification.",
+          "Svaret sparades inte eftersom Screenia inte kunde skapa en intern granskningsuppgift.",
       },
       { status: 500 },
     );

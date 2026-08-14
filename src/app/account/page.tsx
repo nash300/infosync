@@ -18,6 +18,8 @@ import {
   trialStatus,
 } from "./account-billing-utils";
 import type { AccountData, MaterialUploadItem } from "./account-types";
+import { fetchAccountData } from "./account-loader";
+import { accountRequest } from "./account-request";
 
 type AccountSection = "overview" | "setup" | "material" | "messages" | "billing" | "legal";
 
@@ -203,6 +205,7 @@ function journeySteps(data: AccountData) {
 export default function AccountPage() {
   const [data, setData] = useState<AccountData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
   const [activeSection, setActiveSection] = useState<AccountSection>(
     getInitialAccountSection,
   );
@@ -329,6 +332,12 @@ export default function AccountPage() {
   const activeTemporaryDiscount = data?.subscriptionAdjustments.find(
     (adjustment) => adjustment.customer_subscription_id === activeSubscription?.id,
   );
+  const subscriptionEnded =
+    ["cancelled", "refunded"].includes(data?.customer.status || "") ||
+    ["cancelled", "refunded"].includes(activeSubscription?.status || "");
+  const subscriptionCancellationScheduled = Boolean(
+    activeSubscription?.cancel_at_period_end,
+  );
   const quotedItems = activeSubscription?.quote_items || [];
   const screenQuantity = Math.max(1, activeSubscription?.screen_quantity || 1);
   const hardwareSubtotalSek = activeSubscription
@@ -411,7 +420,46 @@ export default function AccountPage() {
         subscription.stripe_payment_status === "past_due" ||
         subscription.fulfillment_status === "payment_failed",
     );
-  const visibleCustomerStatus = paymentFailed ? "payment_failed" : data?.customer.status || null;
+  const paymentDisputed =
+    data?.customer.payment_status === "disputed" ||
+    data?.customer.service_access_status === "payment_disputed" ||
+    billableSubscriptions.some(
+      (subscription) =>
+        subscription.status === "disputed" ||
+        subscription.stripe_payment_status === "disputed",
+    ) ||
+    data?.subscriptions.some(
+      (subscription) =>
+        subscription.status === "disputed" ||
+        subscription.stripe_payment_status === "disputed",
+    );
+  const serviceAccessStatus = data?.customer.service_access_status || null;
+  const visibleCustomerStatus = paymentFailed
+    ? "payment_failed"
+    : paymentDisputed
+      ? "payment_disputed"
+      : serviceAccessStatus && !["active", "inactive"].includes(serviceAccessStatus)
+        ? serviceAccessStatus
+        : data?.customer.status || null;
+  const subscriptionPauseLocked =
+    subscriptionPaused ||
+    subscriptionEnded ||
+    subscriptionCancellationScheduled ||
+    paymentFailed ||
+    paymentDisputed;
+  const pauseButtonLabel = pausingSubscription
+    ? "Pausar..."
+    : subscriptionPaused
+      ? "Redan pausat"
+      : subscriptionEnded
+        ? "Abonnemanget är avslutat"
+        : subscriptionCancellationScheduled
+          ? "Avslut är redan planerat"
+          : paymentFailed
+            ? "Åtgärda betalningen först"
+            : paymentDisputed
+              ? "Betalningen granskas"
+              : "Pausa abonnemang";
   const pauseResumeDate = addMonths(new Date(), pauseDurationMonths);
   const discountedMonthlyPaymentSek = activeTemporaryDiscount
     ? monthlyPaymentSek * (1 - activeTemporaryDiscount.percent_off / 100)
@@ -426,15 +474,24 @@ export default function AccountPage() {
   );
 
   const loadAccount = useCallback(async () => {
-    const response = await fetch("/api/account");
-    if (response.status === 401) {
-      router.push("/login");
-      return;
-    }
+    setLoadError("");
 
-    const nextData = await response.json();
-    setData(nextData);
-    setLoading(false);
+    try {
+      const result = await fetchAccountData();
+      if (result.unauthorized) {
+        router.push("/login");
+        return;
+      }
+      setData(result.data);
+    } catch (error) {
+      console.error("Failed to load customer account", error);
+      setLoadError(
+        "Vi kunde inte hämta kontot just nu. Kontrollera anslutningen och försök igen.",
+      );
+      setNotice("Kontot kunde inte uppdateras. Försök igen om en stund.");
+    } finally {
+      setLoading(false);
+    }
   }, [router]);
 
   useEffect(() => {
@@ -622,7 +679,7 @@ export default function AccountPage() {
   };
 
   const uploadPremiumPlusVideo = async (file: File) => {
-    const createResponse = await fetch("/api/account/video-upload", {
+    const createResponse = await accountRequest("/api/account/video-upload", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -648,7 +705,7 @@ export default function AccountPage() {
       throw new Error("Videofilen kunde inte överföras.");
     }
 
-    const completeResponse = await fetch("/api/account/video-upload", {
+    const completeResponse = await accountRequest("/api/account/video-upload", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -673,37 +730,48 @@ export default function AccountPage() {
     setExportingData(true);
     setNotice("");
 
-    const response = await fetch("/api/account/export");
+    try {
+      const response = await accountRequest("/api/account/export");
 
-    if (!response.ok) {
-      setNotice("Kunde inte skapa dataexporten. Kontakta Screenia om problemet kvarstår.");
+      if (!response.ok) {
+        const result = await response.json().catch(() => ({}));
+        setNotice(
+          result.error ||
+            "Kunde inte skapa dataexporten. Kontakta Screenia om problemet kvarstår.",
+        );
+        return;
+      }
+
+      const blob = await response.blob();
+      const downloadUrl = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      const disposition = response.headers.get("Content-Disposition") || "";
+      const fileName =
+        disposition.match(/filename="([^"]+)"/u)?.[1] ||
+        `screenia-data-export-${new Date().toISOString().slice(0, 10)}.json`;
+
+      link.href = downloadUrl;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(downloadUrl);
+      setNotice("Dataexporten har laddats ner.");
+    } catch (error) {
+      console.error("Customer data export download failed", error);
+      setNotice(
+        "Kunde inte skapa dataexporten. Kontrollera anslutningen och försök igen.",
+      );
+    } finally {
       setExportingData(false);
-      return;
     }
-
-    const blob = await response.blob();
-    const downloadUrl = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    const disposition = response.headers.get("Content-Disposition") || "";
-    const fileName =
-      disposition.match(/filename="([^"]+)"/u)?.[1] ||
-      `screenia-data-export-${new Date().toISOString().slice(0, 10)}.json`;
-
-    link.href = downloadUrl;
-    link.download = fileName;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    URL.revokeObjectURL(downloadUrl);
-    setNotice("Dataexporten har laddats ner.");
-    setExportingData(false);
   };
 
   const saveConsentSettings = async () => {
     setSavingConsents(true);
     setNotice("");
 
-    const response = await fetch("/api/account/consents", {
+    const response = await accountRequest("/api/account/consents", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(consentDrafts),
@@ -753,7 +821,7 @@ export default function AccountPage() {
       setupFiles.map((item) => fileToPayload(item.file, item.category)),
     );
 
-    const response = await fetch("/api/account/content-setup", {
+    const response = await accountRequest("/api/account/content-setup", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -794,7 +862,7 @@ export default function AccountPage() {
     setSavingPreviewDecision(true);
     setNotice("");
 
-    const response = await fetch("/api/account/preview-decision", {
+    const response = await accountRequest("/api/account/preview-decision", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -849,7 +917,7 @@ export default function AccountPage() {
         const files = await Promise.all(
           regularFiles.map((item) => fileToPayload(item.file, item.category)),
         );
-        const response = await fetch("/api/account/display-assets", {
+        const response = await accountRequest("/api/account/display-assets", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -896,7 +964,7 @@ export default function AccountPage() {
     setSending(true);
     setNotice("");
     const files = await Promise.all(messageFiles.map((file) => fileToPayload(file)));
-    const response = await fetch("/api/account/messages", {
+    const response = await accountRequest("/api/account/messages", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -931,7 +999,7 @@ export default function AccountPage() {
 
   const openBillingPortal = async () => {
     setNotice("");
-    const response = await fetch("/api/account/billing-portal", {
+    const response = await accountRequest("/api/account/billing-portal", {
       method: "POST",
     });
     const result = await response.json();
@@ -957,7 +1025,7 @@ export default function AccountPage() {
 
     setCancelling(true);
     setNotice("");
-    const response = await fetch("/api/account/cancel-subscription", {
+    const response = await accountRequest("/api/account/cancel-subscription", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -1010,7 +1078,7 @@ export default function AccountPage() {
     setPausingSubscription(true);
     setNotice("");
 
-    const response = await fetch("/api/account/pause-subscription", {
+    const response = await accountRequest("/api/account/pause-subscription", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -1043,7 +1111,7 @@ export default function AccountPage() {
     setPausingDevice(true);
     setNotice("");
 
-    const response = await fetch("/api/account/pause-device", {
+    const response = await accountRequest("/api/account/pause-device", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -1107,7 +1175,7 @@ export default function AccountPage() {
     setCancellingDevices(true);
     setNotice("");
 
-    const response = await fetch("/api/account/cancel-devices", {
+    const response = await accountRequest("/api/account/cancel-devices", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -1147,7 +1215,7 @@ export default function AccountPage() {
     setResumingSubscription(true);
     setNotice("");
 
-    const response = await fetch("/api/account/resume-subscription", {
+    const response = await accountRequest("/api/account/resume-subscription", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -1194,7 +1262,22 @@ export default function AccountPage() {
         <AccountStatePanel
           eyebrow="Kundportal"
           title="Kunde inte ladda ditt konto"
-          text="Logga in igen eller kontakta Screenia om problemet kvarstår."
+          text={
+            loadError ||
+            "Logga in igen eller kontakta Screenia om problemet kvarstår."
+          }
+          action={
+            <button
+              type="button"
+              className="landing-button landing-button-primary"
+              onClick={() => {
+                setLoading(true);
+                void loadAccount();
+              }}
+            >
+              Försök igen
+            </button>
+          }
         />
       </AccountShell>
     );
@@ -1274,6 +1357,32 @@ export default function AccountPage() {
                   ))}
                 </div>
               </AccountCard>
+
+              {(activeSubscription?.tracking_number ||
+                activeSubscription?.tracking_url) && (
+                <AccountCard title="Leverans">
+                  <div className="account-facts">
+                    <Fact
+                      label="Leveransstatus"
+                      value={statusLabel(activeSubscription.fulfillment_status)}
+                    />
+                    <Fact
+                      label="Spårningsnummer"
+                      value={activeSubscription.tracking_number || "-"}
+                    />
+                  </div>
+                  {activeSubscription.tracking_url && (
+                    <a
+                      className="landing-button landing-button-primary"
+                      href={activeSubscription.tracking_url}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Spåra leveransen
+                    </a>
+                  )}
+                </AccountCard>
+              )}
 
               <AccountCard title="Setup och avbokning">
                 <div
@@ -1888,6 +1997,18 @@ export default function AccountPage() {
                   </div>
                 </AccountCard>
               )}
+              {paymentDisputed && (
+                <AccountCard title="Betalning granskas">
+                  <div className="account-payment-alert">
+                    <strong>En betalning har bestridits.</strong>
+                    <p>
+                      Skärmtjänsten är tillfälligt stoppad medan betalningen granskas.
+                      Kontakta Screenia om du inte känner igen bestridandet eller vill
+                      veta vad som händer härnäst.
+                    </p>
+                  </div>
+                </AccountCard>
+              )}
               <section className="account-grid">
                 <AccountCard title="Abonnemang">
                   {activeSubscription ? (
@@ -2041,6 +2162,7 @@ export default function AccountPage() {
                     value={cancellationReason}
                     onChange={(event) => setCancellationReason(event.target.value)}
                     className="account-input"
+                    disabled={subscriptionEnded || subscriptionCancellationScheduled}
                   >
                     {cancellationReasons.map((reason) => (
                       <option key={reason.value} value={reason.value}>
@@ -2055,13 +2177,22 @@ export default function AccountPage() {
                     rows={5}
                     maxLength={1200}
                     className="account-input"
+                    disabled={subscriptionEnded || subscriptionCancellationScheduled}
                   />
                   <button
                     className="landing-button landing-button-secondary"
-                    disabled={cancelling}
+                    disabled={
+                      cancelling || subscriptionEnded || subscriptionCancellationScheduled
+                    }
                     onClick={requestCancellation}
                   >
-                    {cancelling ? "Avslutar..." : "Avsluta abonnemang"}
+                    {cancelling
+                      ? "Avslutar..."
+                      : subscriptionEnded
+                        ? "Abonnemanget är avslutat"
+                        : subscriptionCancellationScheduled
+                          ? "Avslut är redan planerat"
+                          : "Avsluta abonnemang"}
                   </button>
                 </AccountCard>
 
@@ -2140,6 +2271,8 @@ export default function AccountPage() {
                       const cancellation = openDeviceCancellationByDeviceId.get(device.id);
                       const disabled =
                         cancellingDevices ||
+                        subscriptionEnded ||
+                        subscriptionCancellationScheduled ||
                         !device.is_active ||
                         Boolean(pause) ||
                         Boolean(cancellation);
@@ -2181,6 +2314,8 @@ export default function AccountPage() {
                     className="landing-button landing-button-secondary"
                     disabled={
                       cancellingDevices ||
+                      subscriptionEnded ||
+                      subscriptionCancellationScheduled ||
                       !selectedCancelDeviceIds.length ||
                       !selectedCancelSubscriptionId ||
                       !selectedCancelPlan
@@ -2249,7 +2384,9 @@ export default function AccountPage() {
                           value={selectedPauseDeviceId}
                           onChange={(event) => setSelectedPauseDeviceId(event.target.value)}
                           className="account-input"
-                          disabled={pausingDevice || !data.devices.length}
+                          disabled={
+                            pausingDevice || subscriptionPauseLocked || !data.devices.length
+                          }
                         >
                           <option value="">Välj skärm</option>
                           {data.devices.map((device) => {
@@ -2282,7 +2419,11 @@ export default function AccountPage() {
                           value={selectedPauseSubscriptionId}
                           onChange={(event) => setSelectedPauseSubscriptionId(event.target.value)}
                           className="account-input"
-                          disabled={pausingDevice || billableSubscriptions.length <= 1}
+                          disabled={
+                            pausingDevice ||
+                            subscriptionPauseLocked ||
+                            billableSubscriptions.length <= 1
+                          }
                         >
                           <option value="">Välj abonnemangsdel</option>
                           {billableSubscriptions.map((subscription) => (
@@ -2301,7 +2442,7 @@ export default function AccountPage() {
                               setSelectedPausePricingPlanCode(event.target.value)
                             }
                             className="account-input"
-                            disabled={pausingDevice}
+                            disabled={pausingDevice || subscriptionPauseLocked}
                           >
                             <option value="">Välj teknisk nivå</option>
                             {selectedPausePlanOptions.map((option) => (
@@ -2321,6 +2462,7 @@ export default function AccountPage() {
                       className="landing-button landing-button-primary"
                       disabled={
                         pausingDevice ||
+                        subscriptionPauseLocked ||
                         !selectedPauseDeviceId ||
                         !selectedPauseSubscriptionId ||
                         !selectedPausePlan
@@ -2338,7 +2480,7 @@ export default function AccountPage() {
                         setPauseDurationMonths(Number(event.target.value))
                       }
                       className="account-input"
-                      disabled={subscriptionPaused || pausingSubscription}
+                      disabled={subscriptionPauseLocked || pausingSubscription}
                     >
                       {pauseDurationOptions.map((option) => (
                         <option key={option.value} value={option.value}>
@@ -2354,19 +2496,17 @@ export default function AccountPage() {
                     rows={4}
                     maxLength={300}
                     className="account-input"
-                    disabled={subscriptionPaused || pausingSubscription}
+                    disabled={subscriptionPauseLocked || pausingSubscription}
                   />
                   <button
                     type="button"
                     className="landing-button landing-button-secondary"
-                    disabled={!activeSubscription || subscriptionPaused || pausingSubscription}
+                    disabled={
+                      !activeSubscription || subscriptionPauseLocked || pausingSubscription
+                    }
                     onClick={requestPause}
                   >
-                    {pausingSubscription
-                      ? "Pausar..."
-                      : subscriptionPaused
-                        ? "Redan pausat"
-                        : "Pausa abonnemang"}
+                    {pauseButtonLabel}
                   </button>
                   {subscriptionPaused && (
                     <button
@@ -2867,10 +3007,12 @@ function AccountStatePanel({
   eyebrow,
   title,
   text,
+  action,
 }: {
   eyebrow: string;
   title: string;
   text: string;
+  action?: ReactNode;
 }) {
   return (
     <section className="account-state-panel">
@@ -2878,6 +3020,7 @@ function AccountStatePanel({
       <p className="landing-eyebrow">{eyebrow}</p>
       <h1>{title}</h1>
       <p>{text}</p>
+      {action}
     </section>
   );
 }
