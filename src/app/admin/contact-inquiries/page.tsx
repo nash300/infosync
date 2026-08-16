@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { showAdminNotification } from "@/lib/admin/notifications";
+import { buildContactInquiryConversation } from "@/lib/communication/contact-inquiry-conversation";
 
 type InquiryStatus = "new" | "open" | "replied" | "closed";
 type EmailStatus =
@@ -285,28 +286,65 @@ export default function AdminContactInquiriesPage() {
                   <div><dt>Confirmation</dt><dd><span className={`admin-contact-email admin-contact-email-${inquiry.confirmation_email_status}`}>{inquiry.confirmation_email_status}</span></dd></div>
                 </dl>
 
-                <div className="admin-contact-original">
-                  <span>Visitor&apos;s original question</span>
-                  <p>{inquiry.message}</p>
-                </div>
+                <section
+                  className="admin-contact-conversation"
+                  aria-label={`Conversation for ${inquiry.case_number}`}
+                >
+                  <header className="admin-contact-conversation-heading">
+                    <div>
+                      <h3>Conversation</h3>
+                      <p>
+                        Read from top to bottom. The visitor&apos;s question and
+                        every Screenia reply are kept together.
+                      </p>
+                    </div>
+                    <span>
+                      {inquiry.contact_inquiry_replies.length === 0
+                        ? "No reply yet"
+                        : `${inquiry.contact_inquiry_replies.length} ${
+                            inquiry.contact_inquiry_replies.length === 1
+                              ? "reply"
+                              : "replies"
+                          }`}
+                    </span>
+                  </header>
 
-                {inquiry.contact_inquiry_replies.length > 0 && (
-                  <div className="admin-contact-thread">
-                    <h3>Reply history</h3>
-                    {inquiry.contact_inquiry_replies.map((reply) => (
-                      <article key={reply.id}>
+                  <div className="admin-contact-conversation-list">
+                    {buildContactInquiryConversation({
+                      inquiryId: inquiry.id,
+                      message: inquiry.message,
+                      createdAt: inquiry.created_at,
+                      replies: inquiry.contact_inquiry_replies.map((reply) => ({
+                        id: reply.id,
+                        message: reply.message,
+                        emailStatus: reply.email_status,
+                        createdAt: reply.created_at,
+                      })),
+                    }).map((item) => (
+                      <article
+                        key={item.id}
+                        className={`admin-contact-conversation-message admin-contact-conversation-message-${item.sender}`}
+                      >
                         <header>
-                          <strong>Screenia reply</strong>
-                          <span>{formatDateTime(reply.created_at)}</span>
-                          <span className={`admin-contact-email admin-contact-email-${reply.email_status}`}>
-                            Email {reply.email_status}
-                          </span>
+                          <strong>
+                            {item.sender === "visitor"
+                              ? inquiry.name
+                              : "Screenia"}
+                          </strong>
+                          <span>{formatDateTime(item.createdAt)}</span>
+                          {item.emailStatus && (
+                            <span
+                              className={`admin-contact-email admin-contact-email-${item.emailStatus}`}
+                            >
+                              Email {item.emailStatus}
+                            </span>
+                          )}
                         </header>
-                        <p>{reply.message}</p>
+                        <p>{item.message}</p>
                       </article>
                     ))}
                   </div>
-                )}
+                </section>
 
                 {inquiry.status !== "closed" && (
                   <div className="admin-contact-reply">

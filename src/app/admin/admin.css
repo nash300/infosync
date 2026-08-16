@@ -336,7 +336,8 @@
 }
 
 .admin-contact-status-replied,
-.admin-contact-email-sent {
+.admin-contact-email-sent,
+.admin-contact-email-delivered {
   border-color: #8ed5bd;
   background: #e9f8f2;
   color: #086b4d;
@@ -348,7 +349,9 @@
   color: #53667e;
 }
 
-.admin-contact-email-failed {
+.admin-contact-email-failed,
+.admin-contact-email-bounced,
+.admin-contact-email-complained {
   border-color: #eea3ae;
   background: #fff0f2;
   color: #9c2337;
@@ -394,44 +397,67 @@
   color: #155ee8;
 }
 
-.admin-contact-original {
-  border-left: 4px solid #2f7df6;
-  background: #f4f8fe;
-  padding: 1rem 1.1rem;
-}
-
-.admin-contact-original > span {
-  color: #155ee8;
-  font-size: 0.7rem;
-  font-weight: 900;
-  text-transform: uppercase;
-}
-
-.admin-contact-original p,
-.admin-contact-thread article p {
-  margin: 0.55rem 0 0;
-  color: #20354f;
-  line-height: 1.65;
-  white-space: pre-wrap;
-}
-
-.admin-contact-thread {
+.admin-contact-conversation {
   display: grid;
-  gap: 0;
+  gap: 1rem;
+  border: 1px solid #d8e2ef;
+  border-radius: 10px;
+  background: #f7f9fc;
+  padding: 1rem;
 }
 
-.admin-contact-thread h3 {
-  margin: 0 0 0.65rem;
+.admin-contact-conversation-heading {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.admin-contact-conversation-heading h3 {
+  margin: 0;
   color: #10264a;
-  font-size: 0.85rem;
+  font-size: 0.95rem;
 }
 
-.admin-contact-thread article {
-  border-top: 1px solid #dfe7f1;
-  padding: 0.9rem 0;
+.admin-contact-conversation-heading p {
+  margin: 0.25rem 0 0;
+  color: #65788d;
+  font-size: 0.75rem;
+  line-height: 1.5;
 }
 
-.admin-contact-thread article header {
+.admin-contact-conversation-heading > span {
+  flex: 0 0 auto;
+  border: 1px solid #c7d5e6;
+  border-radius: 999px;
+  background: #fff;
+  padding: 0.3rem 0.65rem;
+  color: #53667e;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.admin-contact-conversation-list {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.admin-contact-conversation-message {
+  width: min(88%, 46rem);
+  border: 1px solid #cedae8;
+  border-radius: 12px 12px 12px 3px;
+  background: #fff;
+  padding: 0.9rem 1rem;
+}
+
+.admin-contact-conversation-message-screenia {
+  justify-self: end;
+  border-color: #a8c9fb;
+  border-radius: 12px 12px 3px 12px;
+  background: #eaf3ff;
+}
+
+.admin-contact-conversation-message header {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem 0.8rem;
@@ -440,9 +466,16 @@
   font-size: 0.72rem;
 }
 
-.admin-contact-thread article header strong {
+.admin-contact-conversation-message header strong {
   color: #10264a;
   font-size: 0.8rem;
+}
+
+.admin-contact-conversation-message p {
+  margin: 0.55rem 0 0;
+  color: #20354f;
+  line-height: 1.65;
+  white-space: pre-wrap;
 }
 
 .admin-contact-reply {
@@ -537,6 +570,14 @@
   .admin-contact-reply-actions {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .admin-contact-conversation-heading {
+    flex-direction: column;
+  }
+
+  .admin-contact-conversation-message {
+    width: 100%;
   }
 }
 
