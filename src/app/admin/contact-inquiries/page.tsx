@@ -16,9 +16,13 @@ type EmailStatus =
 type InquiryReply = {
   id: string;
   admin_user_id: string | null;
+  sender_role: "visitor" | "admin";
+  sender_email: string | null;
   message: string;
   email_id: string | null;
-  email_status: EmailStatus;
+  email_status: EmailStatus | null;
+  inbound_email_id: string | null;
+  inbound_message_id: string | null;
   created_at: string;
 };
 
@@ -294,8 +298,8 @@ export default function AdminContactInquiriesPage() {
                     <div>
                       <h3>Conversation</h3>
                       <p>
-                        Read from top to bottom. The visitor&apos;s question and
-                        every Screenia reply are kept together.
+                        Read from top to bottom. Client replies and Screenia
+                        replies are kept together.
                       </p>
                     </div>
                     <span>
@@ -316,6 +320,7 @@ export default function AdminContactInquiriesPage() {
                       createdAt: inquiry.created_at,
                       replies: inquiry.contact_inquiry_replies.map((reply) => ({
                         id: reply.id,
+                        senderRole: reply.sender_role,
                         message: reply.message,
                         emailStatus: reply.email_status,
                         createdAt: reply.created_at,

@@ -1,7 +1,8 @@
 export type ContactInquiryReply = {
   id: string;
+  senderRole: "visitor" | "admin";
   message: string;
-  emailStatus: string;
+  emailStatus: string | null;
   createdAt: string;
 };
 
@@ -36,7 +37,7 @@ export function buildContactInquiryConversation({
     },
     ...replies.map((reply) => ({
       id: `reply:${reply.id}`,
-      sender: "screenia" as const,
+      sender: reply.senderRole === "visitor" ? ("visitor" as const) : ("screenia" as const),
       message: reply.message,
       createdAt: reply.createdAt,
       emailStatus: reply.emailStatus,

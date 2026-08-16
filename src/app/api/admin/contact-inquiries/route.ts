@@ -6,8 +6,8 @@ import { NextResponse } from "next/server";
 import { createAdminNotification } from "@/lib/server/admin-notifications";
 import { getRequestIp, recordAuditEvent } from "@/lib/server/audit";
 import {
-  CLIENT_COMMUNICATION_FROM_EMAIL,
   escapeHtml,
+  getContactInquiryReplyAddress,
   renderBrandedEmail,
   sendTransactionalEmail,
 } from "@/lib/server/email";
@@ -35,7 +35,7 @@ export async function GET() {
   const { data, error } = await supabaseAdmin
     .from("contact_inquiries")
     .select(
-      "id, case_number, name, email, company_name, subject, message, status, privacy_accepted_at, confirmation_email_id, confirmation_email_status, admin_notification_email_id, admin_notification_email_status, first_opened_at, closed_at, created_at, updated_at, contact_inquiry_replies(id, admin_user_id, message, email_id, email_status, created_at)",
+      "id, case_number, name, email, company_name, subject, message, status, privacy_accepted_at, confirmation_email_id, confirmation_email_status, admin_notification_email_id, admin_notification_email_status, first_opened_at, closed_at, created_at, updated_at, contact_inquiry_replies(id, admin_user_id, sender_role, sender_email, message, email_id, email_status, inbound_email_id, inbound_message_id, created_at)",
     )
     .order("created_at", { ascending: false });
 
@@ -125,7 +125,7 @@ export async function POST(request: Request) {
   const emailResult = await sendTransactionalEmail({
     to: inquiry.email,
     subject: `Svar från Screenia – ${inquiry.case_number}: ${inquiry.subject}`,
-    replyTo: CLIENT_COMMUNICATION_FROM_EMAIL,
+    replyTo: getContactInquiryReplyAddress(inquiry.case_number),
     text: `Hej ${inquiry.name},\n\nVårt svar:\n${reply}\n\nDin ursprungliga fråga:\n${inquiry.message}\n\nÄrendenummer: ${inquiry.case_number}\nÄmne: ${inquiry.subject}\nSvarat: ${sentAt}\n\nDu kan svara direkt på detta mejl.\n\nVänliga hälsningar,\nScreenia`,
     html: renderBrandedEmail({
       eyebrow: `Svar på ärende ${inquiry.case_number}`,
@@ -143,7 +143,7 @@ export async function POST(request: Request) {
           <p style="margin:0 0 12px; color:#526579;">${htmlLines(inquiry.message)}</p>
           <p style="margin:0; color:#65788d; font-size:13px;"><strong>Ärende:</strong> ${escapeHtml(inquiry.case_number)} &nbsp; <strong>Ämne:</strong> ${escapeHtml(inquiry.subject)}</p>
         </div>
-        <p style="margin:22px 0 0; color:#526579;">Du kan svara direkt på detta mejl. Svaret går till service@screenia.se.</p>
+        <p style="margin:22px 0 0; color:#526579;">Du kan svara direkt på detta mejl. Ditt svar sparas i samma ärende hos Screenia.</p>
       `,
     }),
   });

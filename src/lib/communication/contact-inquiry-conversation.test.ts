@@ -10,12 +10,14 @@ describe("buildContactInquiryConversation", () => {
       replies: [
         {
           id: "reply-2",
+          senderRole: "visitor",
           message: "Here is the next step.",
-          emailStatus: "delivered",
+          emailStatus: null,
           createdAt: "2026-08-16T10:10:00Z",
         },
         {
           id: "reply-1",
+          senderRole: "admin",
           message: "Yes, we can help.",
           emailStatus: "sent",
           createdAt: "2026-08-16T10:05:00Z",
@@ -26,14 +28,14 @@ describe("buildContactInquiryConversation", () => {
     expect(conversation.map((item) => item.sender)).toEqual([
       "visitor",
       "screenia",
-      "screenia",
+      "visitor",
     ]);
     expect(conversation.map((item) => item.message)).toEqual([
       "Can you help me?",
       "Yes, we can help.",
       "Here is the next step.",
     ]);
-    expect(conversation[2].emailStatus).toBe("delivered");
+    expect(conversation[2].emailStatus).toBeNull();
   });
 
   it("still creates a conversation when no reply has been sent", () => {

@@ -41,7 +41,9 @@ to `.env.local` and to your production environment:
 
 ```bash
 RESEND_API_KEY=your_resend_api_key
+RESEND_RECEIVING_API_KEY=your_full_access_resend_key
 RESEND_FROM_EMAIL=Screenia <service@screenia.se>
+SCREENIA_INBOUND_REPLY_DOMAIN=reply.screenia.se
 RESEND_NEWSLETTER_FROM_EMAIL=Screenia <info@screenia.se>
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 STRIPE_AUTOMATIC_TAX_ENABLED=false

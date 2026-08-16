@@ -3,6 +3,11 @@ import { createClient } from "@supabase/supabase-js";
 import { Webhook } from "svix";
 import { recordAuditEvent } from "@/lib/server/audit";
 import { createAdminNotification } from "@/lib/server/admin-notifications";
+import {
+  processInboundContactReply,
+  type InboundContactEmailEvent,
+  type ReceivedEmailContent,
+} from "@/lib/server/contact-inquiry-inbound";
 
 export const dynamic = "force-dynamic";
 
@@ -16,9 +21,11 @@ type ResendWebhookPayload = {
   created_at?: string;
   data?: {
     email_id?: string;
+    created_at?: string;
     to?: string | string[];
     from?: string;
     subject?: string;
+    message_id?: string;
     reason?: string;
     bounce?: { message?: string; type?: string };
   };
@@ -73,6 +80,120 @@ function conversationEmailStatus(eventType: string) {
   if (eventType === "email.failed") return "failed";
   if (eventType === "email.sent") return "sent";
   return null;
+}
+
+async function retrieveReceivedEmail(
+  emailId: string,
+): Promise<ReceivedEmailContent> {
+  const apiKey =
+    process.env.RESEND_RECEIVING_API_KEY?.trim() ||
+    process.env.RESEND_API_KEY?.trim() ||
+    "";
+  if (!apiKey) {
+    throw new Error("RESEND_RECEIVING_API_KEY is not configured.");
+  }
+
+  const response = await fetch(
+    `https://api.resend.com/emails/receiving/${encodeURIComponent(emailId)}`,
+    { headers: { Authorization: `Bearer ${apiKey}` }, cache: "no-store" },
+  );
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(
+      `Resend could not return inbound email content (${response.status}).`,
+    );
+  }
+
+  return {
+    text: typeof body.text === "string" ? body.text : null,
+    html: typeof body.html === "string" ? body.html : null,
+    createdAt:
+      typeof body.created_at === "string" ? body.created_at : null,
+  };
+}
+
+async function processReceivedContactEmail(event: ResendWebhookPayload) {
+  const data = event.data;
+  if (!data?.email_id || !data.from) {
+    throw new Error("Inbound email event is missing its email id or sender.");
+  }
+
+  const inboundEvent: InboundContactEmailEvent = {
+    emailId: data.email_id,
+    messageId: data.message_id || null,
+    from: data.from,
+    to: Array.isArray(data.to) ? data.to : data.to ? [data.to] : [],
+    subject: data.subject || "",
+    createdAt: data.created_at || event.created_at || new Date().toISOString(),
+  };
+
+  return processInboundContactReply(inboundEvent, {
+    async findInquiry(caseNumber) {
+      const { data: inquiry, error } = await supabaseAdmin
+        .from("contact_inquiries")
+        .select("id, case_number, email, name")
+        .eq("case_number", caseNumber)
+        .maybeSingle();
+      if (error) throw error;
+      return inquiry
+        ? {
+            id: inquiry.id,
+            caseNumber: inquiry.case_number,
+            email: inquiry.email,
+            name: inquiry.name,
+          }
+        : null;
+    },
+    retrieveEmail: retrieveReceivedEmail,
+    async saveReply(input) {
+      const { data: saved, error } = await supabaseAdmin
+        .from("contact_inquiry_replies")
+        .insert({
+          inquiry_id: input.inquiryId,
+          admin_user_id: null,
+          sender_role: "visitor",
+          sender_email: input.senderEmail,
+          message: input.message,
+          email_id: null,
+          email_status: null,
+          inbound_email_id: input.inboundEmailId,
+          inbound_message_id: input.inboundMessageId,
+          created_at: input.createdAt,
+        })
+        .select("id")
+        .single();
+
+      if (error?.code === "23505") {
+        const { data: existing, error: existingError } = await supabaseAdmin
+          .from("contact_inquiry_replies")
+          .select("id")
+          .eq("inbound_email_id", input.inboundEmailId)
+          .single();
+        if (existingError || !existing) throw existingError || error;
+        return { id: existing.id, duplicate: true };
+      }
+      if (error || !saved) throw error || new Error("Inbound reply was not saved.");
+      return { id: saved.id, duplicate: false };
+    },
+    async reopenInquiry(inquiryId) {
+      const { error } = await supabaseAdmin
+        .from("contact_inquiries")
+        .update({ status: "open", closed_at: null, closed_by: null })
+        .eq("id", inquiryId);
+      if (error) throw error;
+    },
+    async notify(input) {
+      await createAdminNotification(supabaseAdmin, input);
+    },
+    async audit(input) {
+      await recordAuditEvent(supabaseAdmin, {
+        actorType: "system",
+        eventType: input.eventType,
+        eventDescription: input.eventDescription,
+        metadata: input.metadata,
+      });
+    },
+  });
 }
 
 async function synchronizeCustomerSupportEmailState(
@@ -350,7 +471,7 @@ export async function POST(request: Request) {
   const eventType = String(event.type || "unknown");
   const eventStatus = actionStatus(eventType);
   const recipientEmail = firstEmail(event.data?.to);
-  const { data: inserted, error: insertError } = await supabaseAdmin
+  let { data: inserted, error: insertError } = await supabaseAdmin
     .from("resend_delivery_events")
     .insert({
       svix_id: svixId,
@@ -365,8 +486,18 @@ export async function POST(request: Request) {
     .select("id")
     .single();
 
-  if (insertError?.code === "23505") {
+  if (insertError?.code === "23505" && eventType !== "email.received") {
     return NextResponse.json({ received: true, duplicate: true });
+  }
+
+  if (insertError?.code === "23505") {
+    const existingResult = await supabaseAdmin
+      .from("resend_delivery_events")
+      .select("id")
+      .eq("svix_id", svixId)
+      .maybeSingle();
+    inserted = existingResult.data;
+    insertError = existingResult.error;
   }
 
   if (insertError || !inserted) {
@@ -382,6 +513,62 @@ export async function POST(request: Request) {
       { error: "Could not store Resend event." },
       { status: 500 },
     );
+  }
+
+  if (eventType === "email.received") {
+    try {
+      const inboundResult = await processReceivedContactEmail(event);
+      await recordAuditEvent(supabaseAdmin, {
+        actorType: "system",
+        eventType: "resend_inbound_email_processed",
+        eventDescription: "A verified Resend inbound email event was processed.",
+        metadata: {
+          eventId: inserted.id,
+          svixId,
+          resendEmailId: event.data?.email_id || null,
+          recipientEmail,
+          ...inboundResult,
+        },
+      });
+      return NextResponse.json({ received: true, inbound: inboundResult });
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Unknown inbound email error.";
+      console.error("Inbound contact email processing failed:", error);
+      await supabaseAdmin
+        .from("resend_delivery_events")
+        .update({ event_status: "action_required" })
+        .eq("id", inserted.id);
+      await Promise.all([
+        createAdminNotification(supabaseAdmin, {
+          eventType: "visitor_contact_reply_processing_failed",
+          title: "Incoming customer reply needs attention",
+          message: "A received email could not be added to its Screenia conversation.",
+          priority: "urgent",
+          metadata: {
+            eventId: inserted.id,
+            svixId,
+            resendEmailId: event.data?.email_id || null,
+            error: message,
+          },
+        }),
+        recordAuditEvent(supabaseAdmin, {
+          actorType: "system",
+          eventType: "resend_inbound_email_failed",
+          eventDescription: "A verified inbound email could not be processed.",
+          metadata: {
+            eventId: inserted.id,
+            svixId,
+            resendEmailId: event.data?.email_id || null,
+            error: message,
+          },
+        }),
+      ]);
+      return NextResponse.json(
+        { error: "Inbound email could not be processed." },
+        { status: 500 },
+      );
+    }
   }
 
   let contactAssociation: ContactEmailAssociation = {
