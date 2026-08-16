@@ -3874,6 +3874,63 @@
   line-height: 1.55;
 }
 
+.account-message-thread {
+  display: grid;
+  gap: 12px;
+}
+
+.account-message-thread-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.account-message-thread-header button {
+  border: 1px solid rgba(20, 87, 189, 0.24);
+  border-radius: 999px;
+  background: #ffffff;
+  padding: 7px 11px;
+  color: #1457bd;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.account-message-conversation {
+  display: grid;
+  gap: 8px;
+}
+
+.account-message-bubble {
+  max-width: min(90%, 720px);
+  border: 1px solid rgba(122, 145, 178, 0.2);
+  border-radius: 12px;
+  background: #ffffff;
+  padding: 10px 12px;
+}
+
+.account-message-bubble-admin {
+  justify-self: end;
+  border-color: rgba(20, 87, 189, 0.28);
+  background: #eaf3ff;
+}
+
+.account-message-bubble > header {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  color: rgba(12, 32, 64, 0.62);
+  font-size: 0.75rem;
+}
+
+.account-message-bubble > p {
+  margin: 8px 0 0;
+  white-space: pre-wrap;
+}
+
 .account-subscription-summary,
 .account-order-breakdown {
   grid-column: 1 / -1;

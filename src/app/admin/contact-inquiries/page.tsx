@@ -4,13 +4,20 @@ import { useEffect, useMemo, useState } from "react";
 import { showAdminNotification } from "@/lib/admin/notifications";
 
 type InquiryStatus = "new" | "open" | "replied" | "closed";
+type EmailStatus =
+  | "pending"
+  | "sent"
+  | "delivered"
+  | "failed"
+  | "bounced"
+  | "complained";
 
 type InquiryReply = {
   id: string;
   admin_user_id: string | null;
   message: string;
   email_id: string | null;
-  email_status: "pending" | "sent" | "failed";
+  email_status: EmailStatus;
   created_at: string;
 };
 
@@ -25,9 +32,9 @@ type ContactInquiry = {
   status: InquiryStatus;
   privacy_accepted_at: string;
   confirmation_email_id: string | null;
-  confirmation_email_status: "pending" | "sent" | "failed";
+  confirmation_email_status: EmailStatus;
   admin_notification_email_id: string | null;
-  admin_notification_email_status: "pending" | "sent" | "failed";
+  admin_notification_email_status: EmailStatus;
   first_opened_at: string | null;
   closed_at: string | null;
   created_at: string;

@@ -20,6 +20,7 @@ import {
 import type { AccountData, MaterialUploadItem } from "./account-types";
 import { fetchAccountData } from "./account-loader";
 import { accountRequest } from "./account-request";
+import { groupCustomerMessageThreads } from "@/lib/communication/customer-message-threads";
 
 type AccountSection = "overview" | "setup" | "material" | "messages" | "billing" | "legal";
 
@@ -1283,6 +1284,14 @@ export default function AccountPage() {
     );
   }
 
+  const accountMessageThreads = groupCustomerMessageThreads(
+    data.messages.map((message) => ({
+      ...message,
+      ticketNumber: message.ticket_number,
+      createdAt: message.created_at,
+    })),
+  );
+
   return (
     <AccountShell onSignOut={signOut}>
       <div className="account-dashboard">
@@ -1944,32 +1953,61 @@ export default function AccountPage() {
 
               <AccountCard title="Ärendehistorik och konversationer">
                 <HistoryList empty="Inga ärenden ännu.">
-                  {data.messages.map((item) => (
-                    <div key={item.id} className="account-list-item">
-                      <strong>{item.subject || "Ärende"}</strong>
-                      <span>
-                        {item.ticket_number ? `${item.ticket_number} | ` : ""}
-                        {requestTypeLabel(item.request_type)} | {priorityLabel(item.priority)} |{" "}
-                        {date(item.created_at)} | {statusLabel(item.status)}
-                      </span>
-                      {item.related_ticket_number && (
-                        <p>Uppföljning på ärende {item.related_ticket_number}</p>
-                      )}
-                      <p>{item.message}</p>
-                      {item.files.length > 0 && (
-                        <div className="account-history-links">
-                          {item.files.map((file) =>
-                            file.downloadUrl ? (
-                              <a key={file.id} href={file.downloadUrl} target="_blank" rel="noreferrer">
-                                {file.fileName}
-                              </a>
-                            ) : (
-                              <span key={file.id}>{file.fileName}</span>
-                            ),
-                          )}
+                  {accountMessageThreads.map((thread) => (
+                    <section key={thread.key} className="account-list-item account-message-thread">
+                      <header className="account-message-thread-header">
+                        <div>
+                          <strong>{thread.messages[0]?.subject || "Ärende"}</strong>
+                          <span>
+                            {thread.ticketNumber ? `${thread.ticketNumber} | ` : ""}
+                            {requestTypeLabel(thread.latestMessage.request_type)} |{" "}
+                            {priorityLabel(thread.latestMessage.priority)} |{" "}
+                            {statusLabel(thread.latestMessage.status)}
+                          </span>
                         </div>
-                      )}
-                    </div>
+                        {thread.ticketNumber && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setRelatedTicketNumber(thread.ticketNumber || "");
+                              setMessageSubject(
+                                thread.messages[0]?.subject?.replace(/^\[[^\]]+\]\s*/, "") || "",
+                              );
+                              document.getElementById("support-message")?.focus();
+                            }}
+                          >
+                            Svara i ärendet
+                          </button>
+                        )}
+                      </header>
+                      <div className="account-message-conversation">
+                        {thread.messages.map((item) => (
+                          <article
+                            key={item.id}
+                            className={`account-message-bubble account-message-bubble-${item.sender_role}`}
+                          >
+                            <header>
+                              <strong>{item.sender_role === "admin" ? "Screenia" : "Du"}</strong>
+                              <span>{date(item.created_at)}</span>
+                            </header>
+                            <p>{item.message}</p>
+                            {item.files.length > 0 && (
+                              <div className="account-history-links">
+                                {item.files.map((file) =>
+                                  file.downloadUrl ? (
+                                    <a key={file.id} href={file.downloadUrl} target="_blank" rel="noreferrer">
+                                      {file.fileName}
+                                    </a>
+                                  ) : (
+                                    <span key={file.id}>{file.fileName}</span>
+                                  ),
+                                )}
+                              </div>
+                            )}
+                          </article>
+                        ))}
+                      </div>
+                    </section>
                   ))}
                 </HistoryList>
               </AccountCard>

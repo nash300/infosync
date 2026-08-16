@@ -160,6 +160,9 @@ export async function POST(request: Request) {
     request_type: requestType,
     priority,
     related_ticket_number: relatedTicketNumber,
+    sender_role: "customer",
+    sender_user_id: user.id,
+    email_status: "not_applicable",
   };
 
   let { data: savedMessage, error: messageError } = await supabaseAdmin

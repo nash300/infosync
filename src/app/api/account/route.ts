@@ -17,6 +17,8 @@ type CustomerMessageRow = {
   subject: string | null;
   message: string;
   status: string;
+  sender_role?: "customer" | "admin" | null;
+  email_status?: string | null;
   created_at: string;
   customer_message_files?: Array<{
     id: string;
@@ -37,7 +39,7 @@ export async function GET() {
   }
 
   const messageSelectWithTickets =
-    "id, ticket_number, request_type, priority, related_ticket_number, subject, message, status, created_at, customer_message_files(id, file_name, content_type, file_size, storage_bucket, storage_path)";
+    "id, ticket_number, request_type, priority, related_ticket_number, subject, message, status, sender_role, email_status, created_at, customer_message_files(id, file_name, content_type, file_size, storage_bucket, storage_path)";
   const messageSelectFallback =
     "id, subject, message, status, created_at, customer_message_files(id, file_name, content_type, file_size, storage_bucket, storage_path)";
 
@@ -70,8 +72,7 @@ export async function GET() {
         .from("customer_messages")
         .select(messageSelectWithTickets)
         .eq("customer_id", customer.id)
-        .order("created_at", { ascending: false })
-        .limit(10),
+        .order("created_at", { ascending: true }),
       supabaseAdmin
         .from("customer_display_assets")
         .select(
@@ -129,8 +130,7 @@ export async function GET() {
       .from("customer_messages")
       .select(messageSelectFallback)
       .eq("customer_id", customer.id)
-      .order("created_at", { ascending: false })
-      .limit(10);
+      .order("created_at", { ascending: true });
     messages = (fallbackMessages.data || []) as CustomerMessageRow[];
   }
 
@@ -168,6 +168,12 @@ export async function GET() {
         subject: message.subject,
         message: message.message,
         status: message.status,
+        sender_role:
+          message.sender_role ||
+          (String(message.subject || "").includes("Reply from Screenia")
+            ? "admin"
+            : "customer"),
+        email_status: message.email_status || null,
         created_at: message.created_at,
         files,
       };

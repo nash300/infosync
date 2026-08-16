@@ -58,6 +58,52 @@ type PauseReminderEmailAssociation = {
   stripeSubscriptionId: string | null;
 };
 
+type CustomerSupportEmailAssociation = {
+  customerId: string | null;
+  messageId: string | null;
+  ticketNumber: string | null;
+};
+
+function conversationEmailStatus(eventType: string) {
+  if (["email.delivered", "email.opened", "email.clicked"].includes(eventType)) {
+    return "delivered";
+  }
+  if (eventType === "email.bounced") return "bounced";
+  if (eventType === "email.complained") return "complained";
+  if (eventType === "email.failed") return "failed";
+  if (eventType === "email.sent") return "sent";
+  return null;
+}
+
+async function synchronizeCustomerSupportEmailState(
+  resendEmailId: string | null,
+  eventType: string,
+): Promise<CustomerSupportEmailAssociation> {
+  const noAssociation = {
+    customerId: null,
+    messageId: null,
+    ticketNumber: null,
+  };
+  const nextStatus = conversationEmailStatus(eventType);
+  if (!resendEmailId || !nextStatus) return noAssociation;
+
+  const { data: message, error } = await supabaseAdmin
+    .from("customer_messages")
+    .update({ email_status: nextStatus })
+    .eq("email_id", resendEmailId)
+    .select("id, customer_id, ticket_number")
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!message) return noAssociation;
+
+  return {
+    customerId: message.customer_id,
+    messageId: message.id,
+    ticketNumber: message.ticket_number,
+  };
+}
+
 async function synchronizeBillingEmailState(
   resendEmailId: string | null,
   eventType: string,
@@ -169,7 +215,7 @@ async function synchronizePauseReminderEmailState(
 
 async function synchronizeContactInquiryEmailState(
   resendEmailId: string | null,
-  eventStatus: string,
+  eventType: string,
 ): Promise<ContactEmailAssociation> {
   const noAssociation: ContactEmailAssociation = {
     inquiryId: null,
@@ -178,7 +224,8 @@ async function synchronizeContactInquiryEmailState(
     messageRole: null,
   };
 
-  if (!resendEmailId || eventStatus !== "action_required") {
+  const nextStatus = conversationEmailStatus(eventType);
+  if (!resendEmailId || !nextStatus) {
     return noAssociation;
   }
 
@@ -201,17 +248,19 @@ async function synchronizeContactInquiryEmailState(
       throw inquiryLookupError || new Error("Linked contact inquiry was not found.");
     }
 
-    const [{ error: replyUpdateError }, { error: inquiryUpdateError }] =
-      await Promise.all([
-        supabaseAdmin
-          .from("contact_inquiry_replies")
-          .update({ email_status: "failed" })
-          .eq("id", reply.id),
-        supabaseAdmin
-          .from("contact_inquiries")
-          .update({ status: "open", closed_at: null, closed_by: null })
-          .eq("id", inquiry.id),
-      ]);
+    const { error: replyUpdateError } = await supabaseAdmin
+      .from("contact_inquiry_replies")
+      .update({ email_status: nextStatus })
+      .eq("id", reply.id);
+
+    let inquiryUpdateError = null;
+    if (["failed", "bounced", "complained"].includes(nextStatus)) {
+      const updateResult = await supabaseAdmin
+        .from("contact_inquiries")
+        .update({ status: "open", closed_at: null, closed_by: null })
+        .eq("id", inquiry.id);
+      inquiryUpdateError = updateResult.error;
+    }
 
     if (replyUpdateError || inquiryUpdateError) {
       throw replyUpdateError || inquiryUpdateError;
@@ -227,7 +276,7 @@ async function synchronizeContactInquiryEmailState(
 
   const { data: confirmation, error: confirmationError } = await supabaseAdmin
     .from("contact_inquiries")
-    .update({ confirmation_email_status: "failed" })
+    .update({ confirmation_email_status: nextStatus })
     .eq("confirmation_email_id", resendEmailId)
     .select("id, case_number")
     .maybeSingle();
@@ -244,7 +293,7 @@ async function synchronizeContactInquiryEmailState(
 
   const { data: adminNotice, error: adminNoticeError } = await supabaseAdmin
     .from("contact_inquiries")
-    .update({ admin_notification_email_status: "failed" })
+    .update({ admin_notification_email_status: nextStatus })
     .eq("admin_notification_email_id", resendEmailId)
     .select("id, case_number")
     .maybeSingle();
@@ -353,16 +402,35 @@ export async function POST(request: Request) {
     stripeSubscriptionId: null,
   };
   let pauseReminderSyncError: string | null = null;
+  let customerSupportAssociation: CustomerSupportEmailAssociation = {
+    customerId: null,
+    messageId: null,
+    ticketNumber: null,
+  };
+  let customerSupportSyncError: string | null = null;
 
   try {
     contactAssociation = await synchronizeContactInquiryEmailState(
       event.data?.email_id || null,
-      eventStatus,
+      eventType,
     );
   } catch (error) {
     contactSyncError =
       error instanceof Error ? error.message : "Unknown contact email sync error.";
     console.error("Contact inquiry email state sync error:", error);
+  }
+
+  try {
+    customerSupportAssociation = await synchronizeCustomerSupportEmailState(
+      event.data?.email_id || null,
+      eventType,
+    );
+  } catch (error) {
+    customerSupportSyncError =
+      error instanceof Error
+        ? error.message
+        : "Unknown customer support email sync error.";
+    console.error("Customer support email state sync error:", error);
   }
 
   try {
@@ -407,6 +475,8 @@ export async function POST(request: Request) {
         billingSyncError,
         ...pauseReminderAssociation,
         pauseReminderSyncError,
+        customerSupport: customerSupportAssociation,
+        customerSupportSyncError,
       },
     }),
     eventStatus === "action_required"
@@ -427,6 +497,8 @@ export async function POST(request: Request) {
             billingSyncError,
             ...pauseReminderAssociation,
             pauseReminderSyncError,
+            customerSupport: customerSupportAssociation,
+            customerSupportSyncError,
           },
         })
       : Promise.resolve(),

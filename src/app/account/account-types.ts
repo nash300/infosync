@@ -11,6 +11,8 @@ export type AccountData = {
     city: string | null;
     country: string | null;
     status: string;
+    sender_role: "customer" | "admin";
+    email_status: string | null;
     payment_status: string | null;
     stripe_customer_id: string | null;
     stripe_subscription_id: string | null;
@@ -143,6 +145,8 @@ export type AccountData = {
     subject: string | null;
     message: string;
     status: string;
+    sender_role: "customer" | "admin";
+    email_status: string | null;
     created_at: string;
     files: Array<{
       id: string;

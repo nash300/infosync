@@ -21,6 +21,11 @@ type CustomerMessageRow = {
   subject: string | null;
   message: string;
   status: string;
+  sender_role?: "customer" | "admin" | null;
+  sender_user_id?: string | null;
+  reply_to_message_id?: string | null;
+  email_id?: string | null;
+  email_status?: string | null;
   admin_note?: string | null;
   admin_note_updated_at?: string | null;
   resolved_at?: string | null;
@@ -80,7 +85,7 @@ export async function GET(request: Request) {
   }
 
   const selectWithTickets =
-    "id, ticket_number, request_type, priority, related_ticket_number, subject, message, status, admin_note, admin_note_updated_at, resolved_at, created_at, customer_message_files(id, file_name, content_type, file_size, storage_bucket, storage_path)";
+    "id, ticket_number, request_type, priority, related_ticket_number, subject, message, status, sender_role, sender_user_id, reply_to_message_id, email_id, email_status, admin_note, admin_note_updated_at, resolved_at, created_at, customer_message_files(id, file_name, content_type, file_size, storage_bucket, storage_path)";
   const selectWithTicketsNoAdminNote =
     "id, ticket_number, request_type, priority, related_ticket_number, subject, message, status, created_at, customer_message_files(id, file_name, content_type, file_size, storage_bucket, storage_path)";
   const selectFallback =
@@ -163,6 +168,19 @@ export async function GET(request: Request) {
         subject: message.subject,
         message: message.message,
         status: message.status,
+        senderRole:
+          message.sender_role ||
+          (String(message.subject || "").includes("Reply from Screenia")
+            ? "admin"
+            : "customer"),
+        senderUserId: message.sender_user_id || null,
+        replyToMessageId: message.reply_to_message_id || null,
+        emailId: message.email_id || null,
+        emailStatus:
+          message.email_status ||
+          (String(message.subject || "").includes("Reply from Screenia")
+            ? "unknown"
+            : "not_applicable"),
         adminNote: message.admin_note || null,
         adminNoteUpdatedAt: message.admin_note_updated_at || null,
         resolvedAt: message.resolved_at || null,
@@ -470,6 +488,10 @@ export async function POST(request: Request) {
       subject: replySubject,
       message: reply,
       status,
+      sender_role: "admin",
+      sender_user_id: user.id,
+      reply_to_message_id: originalMessage.id,
+      email_status: "pending",
     })
     .select("id, ticket_number, subject, status, created_at")
     .single();
@@ -614,6 +636,21 @@ Screenia`,
     });
 
     emailSent = emailResult.ok;
+    const storedEmailStatus = emailResult.ok ? "sent" : "failed";
+    const { error: emailStateError } = await supabaseAdmin
+      .from("customer_messages")
+      .update({
+        email_id: emailResult.ok ? emailResult.id || null : null,
+        email_status: storedEmailStatus,
+      })
+      .eq("id", replyMessage.id)
+      .eq("customer_id", customerId);
+
+    if (emailStateError) {
+      console.error("Customer support reply email state error:", emailStateError);
+      emailWarning =
+        "Reply email was attempted, but its delivery state could not be linked to the conversation.";
+    }
     let emailFailureNotificationError: unknown = null;
     if (!emailResult.ok) {
       emailWarning = emailResult.configured

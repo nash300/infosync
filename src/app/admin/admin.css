@@ -5870,6 +5870,53 @@ div.admin-landing-video-preview {
   white-space: pre-wrap;
 }
 
+.admin-customer-conversation {
+  display: grid;
+  gap: 0.65rem;
+  margin-top: 1rem;
+}
+
+.admin-customer-conversation-message {
+  max-width: min(88%, 760px);
+  border: 1px solid rgba(47, 125, 246, 0.16);
+  border-radius: 14px;
+  background: #f5f8fc;
+  padding: 0.8rem 0.9rem;
+}
+
+.admin-customer-conversation-message-admin {
+  justify-self: end;
+  border-color: rgba(47, 125, 246, 0.35);
+  background: #edf5ff;
+}
+
+.admin-customer-conversation-message > header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--admin-muted-text);
+  font-size: 0.75rem;
+}
+
+.admin-customer-conversation-message > header strong {
+  color: var(--admin-text);
+}
+
+.admin-customer-message-email {
+  border-radius: 999px;
+  background: rgba(47, 125, 246, 0.1);
+  padding: 0.15rem 0.45rem;
+  font-weight: 800;
+}
+
+.admin-customer-message-email-failed,
+.admin-customer-message-email-bounced,
+.admin-customer-message-email-complained {
+  background: rgba(190, 24, 58, 0.12);
+  color: #9f1239;
+}
+
 .admin-customer-message-review {
   margin-top: 1rem;
   border: 1px solid rgba(47, 125, 246, 0.14);

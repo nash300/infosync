@@ -15,6 +15,7 @@ import {
   calculateShippingFeeSek,
 } from "@/lib/pricing/shipping-fee";
 import { isValidSwedishRegistrationNumber } from "@/lib/business/sweden";
+import { groupCustomerMessageThreads } from "@/lib/communication/customer-message-threads";
 import {
   deviceCountsTowardEntitlement,
   formatSek,
@@ -1705,6 +1706,7 @@ export default function CustomerDetailPage({
   }
 
   const contextualJournalEntries: CustomerJournalEntry[] = [];
+  const messageThreads = groupCustomerMessageThreads(messages);
 
   if (customer.notes?.trim()) {
     contextualJournalEntries.push({
@@ -3047,176 +3049,176 @@ export default function CustomerDetailPage({
           <p className="admin-muted admin-customer-message-empty">No customer messages yet.</p>
         ) : (
           <div className="admin-scroll-region admin-customer-message-list">
-            {messages.map((item) => (
-              <div
-                key={item.id}
-                className="admin-customer-message-card"
-              >
-                <div className="admin-customer-message-card-header">
-                  <div>
-                    <p className="admin-customer-message-subject">
-                      {item.subject || "Message"}
-                    </p>
-                    <p className="admin-customer-message-meta">
-                      {item.ticketNumber || "No ticket"} |{" "}
-                      {item.requestType.replace(/_/g, " ")} | {item.priority}
-                      {item.relatedTicketNumber
-                        ? ` | Reply to ${item.relatedTicketNumber}`
-                        : ""}
-                    </p>
-                    <p className="admin-customer-message-timestamp">
-                      {new Date(item.createdAt).toLocaleString("sv-SE")} |{" "}
-                      {item.status}
-                    </p>
+            {messageThreads.map((thread) => {
+              const actionMessage =
+                [...thread.messages]
+                  .reverse()
+                  .find((message) => message.senderRole === "customer") ||
+                thread.latestMessage;
+
+              return (
+                <section key={thread.key} className="admin-customer-message-card">
+                  <div className="admin-customer-message-card-header">
+                    <div>
+                      <p className="admin-customer-message-subject">
+                        {actionMessage.subject || "Customer conversation"}
+                      </p>
+                      <p className="admin-customer-message-meta">
+                        {thread.ticketNumber || "No ticket"} |{" "}
+                        {actionMessage.requestType.replace(/_/g, " ")} |{" "}
+                        {actionMessage.priority} | {thread.messages.length}{" "}
+                        {thread.messages.length === 1 ? "message" : "messages"}
+                      </p>
+                      <p className="admin-customer-message-timestamp">
+                        Latest {new Date(thread.latestMessage.createdAt).toLocaleString("sv-SE")} |{" "}
+                        {thread.latestMessage.status}
+                      </p>
+                    </div>
                   </div>
-                </div>
-                <p className="admin-customer-message-body">
-                  {item.message}
-                </p>
 
-                <div className="admin-customer-message-reply admin-customer-message-reply-primary">
-                  <label className="admin-customer-message-field">
-                    Reply to customer
-                    <textarea
-                      id={`message-customer-reply-${item.id}`}
-                      name={`messageCustomerReply-${item.id}`}
-                      value={messageReplyDrafts[item.id] || ""}
-                      onChange={(event) =>
-                        setMessageReplyDrafts((current) => ({
-                          ...current,
-                          [item.id]: event.target.value,
-                        }))
-                      }
-                      rows={4}
-                      placeholder="Write the reply shown in the customer portal and sent by email."
-                      className="admin-customer-message-control"
-                    />
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => sendCustomerMessageReply(item)}
-                    disabled={saving || !(messageReplyDrafts[item.id] || "").trim()}
-                    className="admin-button-primary admin-customer-message-send-button"
-                  >
-                    {saving ? "Sending..." : "Send reply"}
-                  </button>
-                </div>
-
-                <details className="admin-customer-message-admin-details">
-                  <summary>Internal status and audit note</summary>
-                <div className="admin-customer-message-review">
-                  <div className="admin-customer-message-review-grid">
-                    <label className="admin-customer-message-field">
-                      Status
-                      <select
-                        id={`message-status-${item.id}`}
-                        name={`messageStatus-${item.id}`}
-                        value={messageDrafts[item.id]?.status || item.status}
-                        onChange={(event) =>
-                          setMessageDrafts((current) => ({
-                            ...current,
-                            [item.id]: {
-                              status: event.target.value,
-                              adminNote:
-                                current[item.id]?.adminNote || item.adminNote || "",
-                              reason: current[item.id]?.reason || "",
-                            },
-                          }))
-                        }
-                        className="admin-customer-message-control"
+                  <div className="admin-customer-conversation" aria-label={`Conversation ${thread.ticketNumber || actionMessage.id}`}>
+                    {thread.messages.map((item) => (
+                      <article
+                        key={item.id}
+                        className={`admin-customer-conversation-message admin-customer-conversation-message-${item.senderRole}`}
                       >
-                        <option value="new">New</option>
-                        <option value="customer_reply">Customer reply</option>
-                        <option value="in_progress">In progress</option>
-                        <option value="waiting_for_customer">Waiting for customer</option>
-                        <option value="resolved">Resolved</option>
-                      </select>
-                    </label>
+                        <header>
+                          <strong>{item.senderRole === "admin" ? "Screenia" : "Customer"}</strong>
+                          <span>{new Date(item.createdAt).toLocaleString("sv-SE")}</span>
+                          {item.senderRole === "admin" && (
+                            <span className={`admin-customer-message-email admin-customer-message-email-${item.emailStatus}`}>
+                              Email {item.emailStatus.replace(/_/g, " ")}
+                            </span>
+                          )}
+                        </header>
+                        <p className="admin-customer-message-body">{item.message}</p>
+                        {item.files.length > 0 && (
+                          <div className="admin-customer-message-files">
+                            {item.files.map((file) =>
+                              file.downloadUrl ? (
+                                <a key={file.id} href={file.downloadUrl} target="_blank" rel="noreferrer" className="admin-customer-message-file-link">
+                                  {file.fileName}
+                                </a>
+                              ) : (
+                                <span key={file.id} className="admin-customer-message-file-missing">
+                                  {file.fileName}
+                                </span>
+                              ),
+                            )}
+                          </div>
+                        )}
+                      </article>
+                    ))}
+                  </div>
+
+                  <div className="admin-customer-message-reply admin-customer-message-reply-primary">
                     <label className="admin-customer-message-field">
-                      Internal admin note
+                      Reply to this conversation
                       <textarea
-                        id={`message-admin-note-${item.id}`}
-                        name={`messageAdminNote-${item.id}`}
-                        value={messageDrafts[item.id]?.adminNote || ""}
-                        onChange={(event) =>
-                          setMessageDrafts((current) => ({
-                            ...current,
-                            [item.id]: {
-                              status: current[item.id]?.status || item.status,
-                              adminNote: event.target.value,
-                              reason: current[item.id]?.reason || "",
-                            },
-                          }))
-                        }
-                        rows={3}
-                        placeholder="Record troubleshooting notes or the next action."
+                        id={`message-customer-reply-${actionMessage.id}`}
+                        name={`messageCustomerReply-${actionMessage.id}`}
+                        value={messageReplyDrafts[actionMessage.id] || ""}
+                        onChange={(event) => setMessageReplyDrafts((current) => ({ ...current, [actionMessage.id]: event.target.value }))}
+                        rows={4}
+                        placeholder="Example: We found the problem. Please restart the screen and tell us if it works."
                         className="admin-customer-message-control"
                       />
                     </label>
-                  </div>
-                  <label className="admin-customer-message-field admin-customer-message-field-spaced">
-                    Reason for updating this support message review *
-                    <textarea
-                      value={messageDrafts[item.id]?.reason || ""}
-                      onChange={(event) =>
-                        setMessageDrafts((current) => ({
-                          ...current,
-                          [item.id]: {
-                            status: current[item.id]?.status || item.status,
-                            adminNote:
-                              current[item.id]?.adminNote || item.adminNote || "",
-                            reason: event.target.value,
-                          },
-                        }))
-                      }
-                      rows={2}
-                      placeholder="Example: Customer issue reviewed and assigned to support."
-                      className="admin-customer-message-control"
-                    />
-                  </label>
-                  <div className="admin-customer-message-actions">
+                    <p className="admin-muted">This saves the reply here and sends the same text to the customer by email.</p>
                     <button
                       type="button"
-                      onClick={() => updateCustomerMessage(item)}
-                      disabled={saving || !(messageDrafts[item.id]?.reason || "").trim()}
-                      className="admin-button-primary"
+                      onClick={() => sendCustomerMessageReply(actionMessage)}
+                      disabled={saving || !(messageReplyDrafts[actionMessage.id] || "").trim()}
+                      className="admin-button-primary admin-customer-message-send-button"
                     >
-                      {saving ? "Saving..." : "Save message update"}
+                      {saving ? "Sending..." : "Save and email reply"}
                     </button>
-                    {item.adminNoteUpdatedAt && (
-                      <span className="admin-customer-message-action-note">
-                        Note updated {new Date(item.adminNoteUpdatedAt).toLocaleString("sv-SE")}
-                      </span>
-                    )}
                   </div>
-                </div>
-                </details>
 
-                {item.files.length > 0 && (
-                  <div className="admin-customer-message-files">
-                    {item.files.map((file) =>
-                      file.downloadUrl ? (
-                        <a
-                          key={file.id}
-                          href={file.downloadUrl}
-                          target="_blank"
-                          className="admin-customer-message-file-link"
+                  <details className="admin-customer-message-admin-details">
+                    <summary>Change status or add an internal note</summary>
+                    <div className="admin-customer-message-review">
+                      <div className="admin-customer-message-review-grid">
+                        <label className="admin-customer-message-field">
+                          Status
+                          <select
+                            id={`message-status-${actionMessage.id}`}
+                            name={`messageStatus-${actionMessage.id}`}
+                            value={messageDrafts[actionMessage.id]?.status || actionMessage.status}
+                            onChange={(event) => setMessageDrafts((current) => ({
+                              ...current,
+                              [actionMessage.id]: {
+                                status: event.target.value,
+                                adminNote: current[actionMessage.id]?.adminNote || actionMessage.adminNote || "",
+                                reason: current[actionMessage.id]?.reason || "",
+                              },
+                            }))}
+                            className="admin-customer-message-control"
+                          >
+                            <option value="new">New</option>
+                            <option value="customer_reply">Customer reply</option>
+                            <option value="in_progress">In progress</option>
+                            <option value="waiting_for_customer">Waiting for customer</option>
+                            <option value="resolved">Resolved</option>
+                          </select>
+                        </label>
+                        <label className="admin-customer-message-field">
+                          Internal note (the customer cannot see this)
+                          <textarea
+                            id={`message-admin-note-${actionMessage.id}`}
+                            name={`messageAdminNote-${actionMessage.id}`}
+                            value={messageDrafts[actionMessage.id]?.adminNote || ""}
+                            onChange={(event) => setMessageDrafts((current) => ({
+                              ...current,
+                              [actionMessage.id]: {
+                                status: current[actionMessage.id]?.status || actionMessage.status,
+                                adminNote: event.target.value,
+                                reason: current[actionMessage.id]?.reason || "",
+                              },
+                            }))}
+                            rows={3}
+                            placeholder="Example: Asked the installer to check the network cable."
+                            className="admin-customer-message-control"
+                          />
+                        </label>
+                      </div>
+                      <label className="admin-customer-message-field admin-customer-message-field-spaced">
+                        Why are you making this change? *
+                        <textarea
+                          value={messageDrafts[actionMessage.id]?.reason || ""}
+                          onChange={(event) => setMessageDrafts((current) => ({
+                            ...current,
+                            [actionMessage.id]: {
+                              status: current[actionMessage.id]?.status || actionMessage.status,
+                              adminNote: current[actionMessage.id]?.adminNote || actionMessage.adminNote || "",
+                              reason: event.target.value,
+                            },
+                          }))}
+                          rows={2}
+                          placeholder="Example: Customer asked us to continue troubleshooting."
+                          className="admin-customer-message-control"
+                        />
+                      </label>
+                      <div className="admin-customer-message-actions">
+                        <button
+                          type="button"
+                          onClick={() => updateCustomerMessage(actionMessage)}
+                          disabled={saving || !(messageDrafts[actionMessage.id]?.reason || "").trim()}
+                          className="admin-button-primary"
                         >
-                          {file.fileName}
-                        </a>
-                      ) : (
-                        <span
-                          key={file.id}
-                          className="admin-customer-message-file-missing"
-                        >
-                          {file.fileName}
-                        </span>
-                      ),
-                    )}
-                  </div>
-                )}
-              </div>
-            ))}
+                          {saving ? "Saving..." : "Save internal update"}
+                        </button>
+                        {actionMessage.adminNoteUpdatedAt && (
+                          <span className="admin-customer-message-action-note">
+                            Note updated {new Date(actionMessage.adminNoteUpdatedAt).toLocaleString("sv-SE")}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </details>
+                </section>
+              );
+            })}
           </div>
         )}
 

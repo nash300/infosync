@@ -138,6 +138,11 @@ export type CustomerMessage = {
   subject: string | null;
   message: string;
   status: string;
+  senderRole: "customer" | "admin";
+  senderUserId: string | null;
+  replyToMessageId: string | null;
+  emailId: string | null;
+  emailStatus: string;
   adminNote: string | null;
   adminNoteUpdatedAt: string | null;
   resolvedAt: string | null;
