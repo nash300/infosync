@@ -2,10 +2,10 @@
 
 ## Result
 
-This review found and locally fixed several meaningful security weaknesses. No
-security review can guarantee that a changing internet service is 100% safe.
-The controls below reduce the verified risks, but production remains on the old
-build until the staged rollout is completed.
+This review found and fixed several meaningful security weaknesses. No security
+review can guarantee that a changing internet service is 100% safe. The
+application hardening and both production database migrations are now live and
+have been verified against the production endpoints.
 
 ## Fixed in this change
 
@@ -39,35 +39,46 @@ build until the staged rollout is completed.
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY` is intentionally public; its safety depends on
   strict RLS and grants, which the lockdown migration enforces.
 - `npm audit --audit-level=high` reports zero known dependency vulnerabilities.
-- The complete release gate passes: 40 test files, 298 tests, lint, TypeScript,
+- The complete release gate passes: 41 test files, 304 tests, lint, TypeScript,
   security checks, billing checks, framework checks, and production build.
 
-## Required production rollout order
+## Completed production rollout
 
-1. Deploy this application build and smoke-test login, password reset, contact,
-   onboarding, display playback, Stripe checkout, and both provider webhooks.
-   Until the first migration is applied, only the missing-RPC case uses the
-   previous in-memory compatibility limiter.
-2. Apply `202609030000_security_hardening.sql`. This activates the shared rate
-   limiter and strengthens the default for future display codes without
-   removing an existing public path.
-3. Apply `202609030100_private_data_api_lockdown.sql` immediately after the new
-   build is healthy. This removes the old anonymous table access.
-4. Confirm anonymous Data API queries to `customers`, `devices`, and
-   `playlists` are denied, then repeat the application smoke tests.
-
-Applying both migrations before the code deployment would interrupt the old
-onboarding/display client. Keep the sequence above and apply both migrations as
-soon as Supabase management access is available.
+1. The hardened application build was deployed and its public, authentication,
+   cron, onboarding, display, Stripe, and Resend boundaries were smoke-tested.
+2. `202609030000_security_hardening.sql` was applied. The shared rate-limit RPC
+   is present and production requests use the persistent limiter.
+3. `202609030100_private_data_api_lockdown.sql` was applied after the new build
+   was healthy.
+4. Anonymous Data API requests to `customers`, `devices`, and `playlists` now
+   return HTTP 401. The supported server APIs and homepage still respond as
+   expected.
 
 ## External settings and remaining work
 
-- Supabase currently reports that public Auth sign-up is enabled. Disable it in
-  Authentication settings because customer accounts are created through the
-  paid onboarding/invitation flow. Email confirmation is already required.
-- Match Supabase password settings to the 12-character application policy and
-  enable leaked-password protection, CAPTCHA, and MFA where the plan supports
-  them.
+- Supabase public self-sign-up is disabled; paid customer accounts continue to
+  be created through the service-role invitation flow. Email confirmation stays
+  required.
+- Supabase now requires 12-character passwords with letters and digits and
+  requires recent authentication for password changes. Leaked-password
+  protection is unavailable on the current Free plan. CAPTCHA and enforced MFA
+  require application work before they can be enabled without breaking login.
+- Supabase Auth redirects are limited to the production site and the single
+  hardened `/auth/callback` route; the localhost wildcard and unused direct
+  account redirects were removed.
+- GitHub Dependabot alerts and security updates, secret scanning, push
+  protection, CodeQL default setup, private vulnerability reporting, and main
+  branch force-push/deletion protection are enabled.
+- Vercel uses sensitive Production environment variables, standard deployment
+  protection, Git fork protection, and its platform DDoS protections. Custom
+  WAF rules are not available on the current plan.
+- Production email sending now uses a dedicated Resend key restricted to
+  `screenia.se`. The separate inbound-processing key is retained because it
+  needs different permissions. Obsolete sending keys are removed only after a
+  successful deployment and delivery check.
+- DMARC moved from monitoring-only to a staged 25% quarantine policy, with
+  aggregate reports sent to `service@screenia.se`. Review delivery and reports
+  before increasing enforcement to 100%.
 - Rotate existing short display codes during a planned maintenance window; the
   API protection is improved now, but changing them immediately could disconnect
   installed displays.
@@ -82,9 +93,9 @@ soon as Supabase management access is available.
 - Continue dependency monitoring, access-log review, key rotation, backup
   testing, and periodic external penetration testing after deployment.
 
-## Current live-site warning
+## Current live-site verification
 
-On 2026-09-03 the deployed site still redirected
-`/auth/callback?next=%2F%5Csecurity-test.invalid` to the external test domain and
-did not return the new CSP. The production issue is therefore confirmed open
-until this change is deployed.
+On 2026-09-03 production returned the hardened CSP and browser headers, rejected
+the external redirect payload, rejected anonymous access to the three sensitive
+Data API tables, and kept the supported homepage, onboarding, display, cron, and
+provider-webhook boundaries healthy.
