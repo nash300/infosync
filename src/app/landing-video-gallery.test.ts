@@ -26,4 +26,19 @@ describe("landing video gallery", () => {
       '.landing-video-rail-group[aria-hidden="true"]',
     );
   });
+
+  it("supports moving between enlarged examples without closing the viewer", () => {
+    expect(pageSource).toContain("handleExampleSwipeStart");
+    expect(pageSource).toContain("handleExampleSwipeEnd");
+    expect(pageSource).toContain("showAdjacentExample(distanceX < 0 ? 1 : -1)");
+    expect(pageSource).toContain("Visa nästa presentation");
+    expect(pageSource).toContain("Visa föregående presentation");
+  });
+
+  it("makes all subscription cards horizontally swipeable on mobile", () => {
+    expect(pageSource).toContain('aria-label="Abonnemangspaket"');
+    expect(pageSource).toContain("Svep åt sidan för att se Standard");
+    expect(landingStyles).toContain("grid-auto-flow: column");
+    expect(landingStyles).toContain("grid-auto-columns: min(82vw, 360px)");
+  });
 });

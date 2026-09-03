@@ -5962,6 +5962,10 @@
   font-size: 0.96rem;
 }
 
+.landing-price-swipe-hint {
+  display: none;
+}
+
 .landing-pricing .landing-price-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(260px, 1fr));
@@ -7216,6 +7220,7 @@
   box-shadow:
     0 44px 120px rgba(0, 5, 22, 0.72),
     0 0 0 1px rgba(255, 255, 255, 0.08);
+  touch-action: pan-y;
 }
 
 .landing-video-lightbox-portrait {
@@ -7269,6 +7274,55 @@
   outline: none;
 }
 
+.landing-video-lightbox-nav {
+  position: absolute;
+  z-index: 4;
+  top: 50%;
+  display: grid;
+  width: 46px;
+  height: 54px;
+  place-items: center;
+  border: 1px solid rgba(211, 229, 255, 0.58);
+  border-radius: 999px;
+  background: rgba(3, 22, 53, 0.78);
+  color: #fff;
+  cursor: pointer;
+  font-size: 2rem;
+  line-height: 1;
+  transform: translateY(-50%);
+}
+
+.landing-video-lightbox-nav:hover,
+.landing-video-lightbox-nav:focus-visible {
+  border-color: #f2c46d;
+  background: rgba(10, 73, 173, 0.94);
+  outline: none;
+}
+
+.landing-video-lightbox-nav-previous {
+  left: clamp(0.75rem, 2vw, 1.25rem);
+}
+
+.landing-video-lightbox-nav-next {
+  right: clamp(0.75rem, 2vw, 1.25rem);
+}
+
+.landing-video-lightbox-swipe-hint {
+  position: absolute;
+  z-index: 4;
+  left: 50%;
+  bottom: clamp(0.9rem, 2vw, 1.35rem);
+  display: none;
+  border-radius: 999px;
+  background: rgba(3, 22, 53, 0.78);
+  color: #fff;
+  padding: 0.45rem 0.75rem;
+  font-size: 0.76rem;
+  font-weight: 800;
+  pointer-events: none;
+  transform: translateX(-50%);
+}
+
 @keyframes landing-video-train-left {
   from {
     transform: translate3d(0, 0, 0);
@@ -7296,6 +7350,44 @@
 }
 
 @media (max-width: 760px), (hover: none) and (pointer: coarse) {
+  .landing-price-swipe-hint {
+    display: block;
+    margin: 0.9rem 0 0.4rem;
+    color: rgba(238, 245, 255, 0.88);
+    font-size: 0.9rem;
+    font-weight: 700;
+  }
+
+  .landing-pricing .landing-price-grid {
+    display: grid;
+    width: 100%;
+    grid-auto-columns: min(82vw, 360px);
+    grid-auto-flow: column;
+    grid-template-columns: none;
+    justify-content: start;
+    gap: 0.8rem;
+    margin-top: 0.75rem;
+    padding: 0.2rem 1rem 1rem 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-inline: contain;
+    scroll-padding-inline: 0;
+    scroll-snap-type: x proximity;
+    touch-action: pan-x pan-y;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .landing-pricing .landing-price-grid::-webkit-scrollbar {
+    display: none;
+  }
+
+  .landing-pricing .landing-price-card {
+    min-width: 0;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+  }
+
   .landing-video-swipe-hint {
     display: block;
     margin: -0.2rem 0 0.7rem;
@@ -7313,7 +7405,7 @@
     overscroll-behavior-inline: contain;
     scroll-padding-inline: 1rem;
     scroll-snap-type: x proximity;
-    touch-action: pan-x;
+    touch-action: pan-x pan-y;
     -webkit-overflow-scrolling: touch;
     -webkit-mask-image: none;
     mask-image: none;
@@ -7357,5 +7449,23 @@
 
   .landing-video-gallery-card-landscape {
     width: min(84vw, 390px);
+  }
+
+  .landing-video-lightbox-nav {
+    width: 42px;
+    height: 48px;
+    background: rgba(3, 22, 53, 0.88);
+  }
+
+  .landing-video-lightbox-nav-previous {
+    left: 0.7rem;
+  }
+
+  .landing-video-lightbox-nav-next {
+    right: 0.7rem;
+  }
+
+  .landing-video-lightbox-swipe-hint {
+    display: block;
   }
 }

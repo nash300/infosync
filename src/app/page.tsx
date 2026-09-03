@@ -1,6 +1,14 @@
 "use client";
 
-import { useEffect, useState, type FormEvent, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type FormEvent,
+  type ReactNode,
+  type TouchEvent,
+} from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { LandingNav } from "@/components/LandingNav";
@@ -227,6 +235,7 @@ export default function Home() {
   const [heroInteractionKey, setHeroInteractionKey] = useState(0);
   const [serviceLogos, setServiceLogos] = useState<LandingAsset[]>([]);
   const [exampleVideos, setExampleVideos] = useState<LandingExampleVideo[]>([]);
+  const exampleSwipeStart = useRef<{ x: number; y: number } | null>(null);
 
   const t = copy.sv;
   const companyEmail = process.env.NEXT_PUBLIC_COMPANY_EMAIL || "service@screenia.se";
@@ -480,6 +489,45 @@ export default function Home() {
     goToHeroSlide(currentHeroIndex + 1);
   };
 
+  const showAdjacentExample = useCallback((offset: number) => {
+    setExpandedExample((current) => {
+      if (!current) return null;
+
+      const matchingExamples = exampleVideos.filter(
+        (example) => example.orientation === current.orientation,
+      );
+      if (matchingExamples.length <= 1) return current;
+
+      const currentIndex = matchingExamples.findIndex(
+        (example) => example.id === current.id,
+      );
+      const nextIndex =
+        (Math.max(currentIndex, 0) + offset + matchingExamples.length) %
+        matchingExamples.length;
+      return matchingExamples[nextIndex];
+    });
+  }, [exampleVideos]);
+
+  const handleExampleSwipeStart = (event: TouchEvent<HTMLElement>) => {
+    const touch = event.touches[0];
+    exampleSwipeStart.current = touch ? { x: touch.clientX, y: touch.clientY } : null;
+  };
+
+  const handleExampleSwipeEnd = (event: TouchEvent<HTMLElement>) => {
+    const start = exampleSwipeStart.current;
+    const touch = event.changedTouches[0];
+    exampleSwipeStart.current = null;
+    if (!start || !touch) return;
+
+    const distanceX = touch.clientX - start.x;
+    const distanceY = touch.clientY - start.y;
+    if (Math.abs(distanceX) < 55 || Math.abs(distanceX) <= Math.abs(distanceY)) {
+      return;
+    }
+
+    showAdjacentExample(distanceX < 0 ? 1 : -1);
+  };
+
   useEffect(() => {
     if (heroSlideCount <= 1) return;
 
@@ -499,6 +547,8 @@ export default function Home() {
     const previousOverflow = document.body.style.overflow;
     const closeOnEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") setExpandedExample(null);
+      if (event.key === "ArrowLeft") showAdjacentExample(-1);
+      if (event.key === "ArrowRight") showAdjacentExample(1);
     };
     document.body.style.overflow = "hidden";
     window.addEventListener("keydown", closeOnEscape);
@@ -507,7 +557,7 @@ export default function Home() {
       document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", closeOnEscape);
     };
-  }, [expandedExample]);
+  }, [expandedExample, showAdjacentExample]);
 
   const submitPlanRequest = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -721,7 +771,16 @@ export default function Home() {
               <b>Visa val</b>
             </a>
           ) : null}
-          <div className="landing-price-grid">
+          <p id="pricing-swipe-hint" className="landing-price-swipe-hint">
+            Svep åt sidan för att se Standard, Premium och Premium Plus.
+          </p>
+          <div
+            className="landing-price-grid"
+            role="region"
+            aria-label="Abonnemangspaket"
+            aria-describedby="pricing-swipe-hint"
+            tabIndex={0}
+          >
             {plans.map((plan) => {
               const planText = planCopy.sv[plan.code];
               return (
@@ -1077,7 +1136,37 @@ export default function Home() {
             role="dialog"
             aria-modal="true"
             aria-label="Förstorad videoförhandsvisning"
+            onTouchStart={handleExampleSwipeStart}
+            onTouchEnd={handleExampleSwipeEnd}
+            onTouchCancel={() => {
+              exampleSwipeStart.current = null;
+            }}
           >
+            {exampleVideos.filter(
+              (example) => example.orientation === expandedExample.orientation,
+            ).length > 1 && (
+              <>
+                <button
+                  type="button"
+                  className="landing-video-lightbox-nav landing-video-lightbox-nav-previous"
+                  onClick={() => showAdjacentExample(-1)}
+                  aria-label="Visa föregående presentation"
+                >
+                  <span aria-hidden="true">‹</span>
+                </button>
+                <button
+                  type="button"
+                  className="landing-video-lightbox-nav landing-video-lightbox-nav-next"
+                  onClick={() => showAdjacentExample(1)}
+                  aria-label="Visa nästa presentation"
+                >
+                  <span aria-hidden="true">›</span>
+                </button>
+                <span className="landing-video-lightbox-swipe-hint">
+                  Svep för nästa
+                </span>
+              </>
+            )}
             <button
               type="button"
               className="landing-video-lightbox-close"
