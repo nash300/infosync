@@ -25,6 +25,7 @@ import {
   additionalShippingDeviceCount,
   calculateShippingFeeSek,
 } from "@/lib/pricing/shipping-fee";
+import { isValidEmailAddress } from "@/lib/validation/email";
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -34,8 +35,6 @@ const supabaseAdmin = createClient(
 const validPlanCodes = new Set<string>(PRICING_PLANS.map((plan) => plan.code));
 const requestRateLimitWindowMs = 60 * 60 * 1000;
 const requestRateLimitMax = 5;
-
-const isValidEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 
 const isValidOptionalPhone = (value: string) => {
   if (!value) return true;
@@ -243,7 +242,7 @@ export async function POST(request: Request) {
       );
     }
 
-    if (!email || !isValidEmail(email)) {
+    if (!email || !isValidEmailAddress(email)) {
       return NextResponse.json(
         { error: "Ange en giltig e-postadress." },
         { status: 400 },

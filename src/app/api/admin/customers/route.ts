@@ -5,14 +5,11 @@ import {
 import { NextResponse } from "next/server";
 import { getRequestIp, recordAuditEvent } from "@/lib/server/audit";
 import { createAdminNotification } from "@/lib/server/admin-notifications";
+import { isValidEmailAddress } from "@/lib/validation/email";
 
 function cleanString(value: unknown, maxLength: number) {
   const trimmed = String(value || "").trim();
   return trimmed ? trimmed.slice(0, maxLength) : null;
-}
-
-function isValidEmail(value: string) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/u.test(value);
 }
 
 async function rollbackCreatedCustomerDraft(customerId: string) {
@@ -42,7 +39,7 @@ export async function POST(request: Request) {
     );
   }
 
-  if (!email || !isValidEmail(email)) {
+  if (!email || !isValidEmailAddress(email)) {
     return NextResponse.json(
       { error: "Enter a valid email address." },
       { status: 400 },

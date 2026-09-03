@@ -195,6 +195,10 @@ function transactionalEmailReadiness(): CheckResult {
 }
 
 function transactionalEmailWorkflowReadiness(): CheckResult {
+  const directResendSendStatement =
+    'response = await fetch("https://api.resend.com/emails", {';
+  const hasDirectResendSend = (source: string) =>
+    source.split(/\r?\n/u).some((line) => line.trim() === directResendSendStatement);
   const emailRouteFiles = [
     "src/app/api/admin/send-onboarding-link/route.ts",
     "src/app/api/admin/prepare-onboarding/route.ts",
@@ -204,7 +208,7 @@ function transactionalEmailWorkflowReadiness(): CheckResult {
     const source = readFileSync(projectFilePath(file), "utf8");
 
     return [
-      source.includes("api.resend.com/emails")
+      hasDirectResendSend(source)
         ? `${file} sends through Resend directly`
         : null,
       !source.includes("sendTransactionalEmail")
@@ -255,7 +259,7 @@ function transactionalEmailWorkflowReadiness(): CheckResult {
   );
   const sharedSenderOk =
     sharedEmailSource.includes("export async function sendTransactionalEmail") &&
-    sharedEmailSource.includes("https://api.resend.com/emails") &&
+    hasDirectResendSend(sharedEmailSource) &&
     sharedEmailSource.includes("configured: false") &&
     sharedEmailSource.includes("getResendErrorMessage") &&
     sharedEmailSource.includes("catch (error)") &&

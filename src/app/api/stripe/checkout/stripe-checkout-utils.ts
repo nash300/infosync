@@ -1,4 +1,5 @@
 import { stripe } from "./stripe-checkout-client";
+import { isValidEmailAddress } from "@/lib/validation/email";
 
 export const stripeAutomaticTaxEnabled =
   process.env.STRIPE_AUTOMATIC_TAX_ENABLED === "true";
@@ -32,7 +33,7 @@ export function normalizeEmail(value: unknown) {
 }
 
 export function isValidEmail(value: string) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/u.test(value);
+  return isValidEmailAddress(value);
 }
 
 export async function withTimeout<T>(

@@ -3,6 +3,7 @@ import {
   contactInquiryReplyAddress,
   extractLatestEmailReply,
   findContactCaseNumber,
+  htmlEmailToText,
   processInboundContactReply,
   type InboundContactEmailEvent,
   type InboundContactReplyDependencies,
@@ -80,6 +81,15 @@ describe("contact inquiry inbound email", () => {
         html: "<div>HTML answer</div><blockquote>Old text</blockquote>",
       }),
     ).toBe("HTML answer");
+  });
+
+  it("converts hostile or malformed email HTML to plain text without double decoding", () => {
+    expect(
+      htmlEmailToText(
+        '<div title=">">Hello &amp; welcome</div><script>bad()</script ><style>bad</style ><blockquote>old</blockquote><p>&amp;lt;b&amp;gt; stays encoded</p>',
+      ),
+    ).toBe("Hello & welcome\n&lt;b&gt; stays encoded\n");
+    expect(htmlEmailToText("Hello<!-- unfinished comment")).toBe("Hello");
   });
 
   it("stores a valid visitor reply, reopens the case, notifies, and audits", async () => {

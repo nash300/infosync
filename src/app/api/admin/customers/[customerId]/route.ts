@@ -14,6 +14,7 @@ import {
   isValidSwedishRegistrationNumber,
   normalizeSwedishRegistrationNumber,
 } from "@/lib/business/sweden";
+import { isValidEmailAddress } from "@/lib/validation/email";
 
 
 function isMissingRelationError(error: { code?: string; message?: string }) {
@@ -449,7 +450,7 @@ export async function PATCH(
     );
   }
 
-  if (billingEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/u.test(billingEmail)) {
+  if (billingEmail && !isValidEmailAddress(billingEmail)) {
     return NextResponse.json(
       { error: "Enter a valid billing email address." },
       { status: 400 },

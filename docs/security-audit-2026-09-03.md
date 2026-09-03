@@ -20,6 +20,9 @@ have been verified against the production endpoints.
 | Display access | New display codes used only eight hexadecimal characters. | New codes use the full UUID payload; lookup input is validated and rate limited. Existing codes are preserved to avoid disconnecting installed screens. |
 | Browser protection | The site had no Content Security Policy and weaker framing/isolation headers. | Added CSP, clickjacking protection, referrer policy, MIME sniffing protection, and same-origin isolation headers. |
 | Stored URLs | Customer-facing stored links were returned without a protocol allowlist. | Only local, HTTP, and HTTPS destinations are accepted; dangerous and ambiguous URL forms are rejected. |
+| Email input | A permissive email regular expression could take excessive time on crafted input. | Replaced every copy with one length-bounded, linear-time validator and added adversarial tests. |
+| Inbound email HTML | Regex-based tag removal could be bypassed by malformed tags and decoded some entities twice. | Replaced it with a plain-text tokenizer that skips scripts, styles, quotes, and comments and decodes entities once. |
+| Admin video preview | A selected file flowed directly into a DOM media URL. | Validate MP4 name, MIME type, and size first, then require a same-origin `blob:` preview URL. |
 | CSV exports | Spreadsheet formula characters could execute when an admin opened an export. | Export cells now neutralize formula prefixes and escape CSV content. |
 | Credentials | Onboarding credentials remained valid after the first completed checkout, and the success URL exposed a customer UUID. | Initial checkout now clears the onboarding token and no longer puts the customer UUID in the URL. |
 | Passwords | Customer passwords allowed six characters. | The app now requires 12–128 characters with a letter and a number. |
@@ -39,7 +42,7 @@ have been verified against the production endpoints.
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY` is intentionally public; its safety depends on
   strict RLS and grants, which the lockdown migration enforces.
 - `npm audit --audit-level=high` reports zero known dependency vulnerabilities.
-- The complete release gate passes: 41 test files, 304 tests, lint, TypeScript,
+- The complete release gate passes: 42 test files, 320 tests, lint, TypeScript,
   security checks, billing checks, framework checks, and production build.
 
 ## Completed production rollout

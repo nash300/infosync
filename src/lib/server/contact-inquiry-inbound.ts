@@ -80,28 +80,163 @@ export function normalizeEmailAddress(value: string) {
 }
 
 function decodeBasicHtmlEntities(value: string) {
-  return value
-    .replace(/&nbsp;/gi, " ")
-    .replace(/&amp;/gi, "&")
-    .replace(/&lt;/gi, "<")
-    .replace(/&gt;/gi, ">")
-    .replace(/&quot;/gi, '"')
-    .replace(/&#39;|&apos;/gi, "'")
-    .replace(/&#(\d+);/g, (_match, code) =>
-      String.fromCodePoint(Number(code)),
-    );
+  const namedEntities: Record<string, string> = {
+    amp: "&",
+    apos: "'",
+    gt: ">",
+    lt: "<",
+    nbsp: " ",
+    quot: '"',
+  };
+  let decoded = "";
+
+  for (let index = 0; index < value.length; index += 1) {
+    if (value[index] !== "&") {
+      decoded += value[index];
+      continue;
+    }
+
+    const semicolon = value.indexOf(";", index + 1);
+    if (semicolon < 0 || semicolon - index > 12) {
+      decoded += "&";
+      continue;
+    }
+
+    const entity = value.slice(index + 1, semicolon);
+    const named = namedEntities[entity.toLowerCase()];
+    let replacement = named;
+
+    if (!replacement && entity.startsWith("#")) {
+      const hexadecimal = entity[1]?.toLowerCase() === "x";
+      const digits = entity.slice(hexadecimal ? 2 : 1);
+      const radix = hexadecimal ? 16 : 10;
+      const codePoint = Number.parseInt(digits, radix);
+      const validDigits = digits.length > 0 && [...digits].every((character) => {
+        const code = character.charCodeAt(0);
+        if (code >= 48 && code <= 57) return true;
+        return hexadecimal && (
+          (code >= 65 && code <= 70) ||
+          (code >= 97 && code <= 102)
+        );
+      });
+
+      if (
+        validDigits &&
+        Number.isInteger(codePoint) &&
+        codePoint > 0 &&
+        codePoint <= 0x10ffff &&
+        !(codePoint >= 0xd800 && codePoint <= 0xdfff)
+      ) {
+        replacement = String.fromCodePoint(codePoint);
+      }
+    }
+
+    if (replacement === undefined) {
+      decoded += value.slice(index, semicolon + 1);
+    } else {
+      decoded += replacement;
+    }
+    index = semicolon;
+  }
+
+  return decoded;
+}
+
+function findHtmlTagEnd(html: string, start: number) {
+  let quote = "";
+
+  for (let index = start + 1; index < html.length; index += 1) {
+    const character = html[index];
+    if (quote) {
+      if (character === quote) quote = "";
+      continue;
+    }
+    if (character === '"' || character === "'") {
+      quote = character;
+      continue;
+    }
+    if (character === ">") return index;
+  }
+
+  return -1;
+}
+
+function parseHtmlTag(value: string) {
+  let cursor = 0;
+  while (value[cursor] === " " || value[cursor] === "\t" || value[cursor] === "\n") {
+    cursor += 1;
+  }
+  const closing = value[cursor] === "/";
+  if (closing) cursor += 1;
+  while (value[cursor] === " " || value[cursor] === "\t" || value[cursor] === "\n") {
+    cursor += 1;
+  }
+
+  let name = "";
+  for (; cursor < value.length; cursor += 1) {
+    const character = value[cursor].toLowerCase();
+    const code = character.charCodeAt(0);
+    if ((code < 97 || code > 122) && (code < 48 || code > 57)) break;
+    name += character;
+  }
+
+  return { closing, name, selfClosing: value.trimEnd().endsWith("/") };
 }
 
 export function htmlEmailToText(html: string) {
-  return decodeBasicHtmlEntities(
-    html
-      .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, "")
-      .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, "")
-      .replace(/<blockquote\b[^>]*>[\s\S]*?<\/blockquote>/gi, "")
-      .replace(/<br\s*\/?\s*>/gi, "\n")
-    .replace(/<\/(p|div|li|h[1-6])>/gi, "\n")
-      .replace(/<[^>]+>/g, ""),
-  );
+  const ignoredTags: string[] = [];
+  const hiddenTags = new Set(["blockquote", "script", "style"]);
+  const lineBreakTags = new Set(["div", "h1", "h2", "h3", "h4", "h5", "h6", "li", "p"]);
+  let text = "";
+
+  const appendLineBreak = () => {
+    if (text && !text.endsWith("\n")) text += "\n";
+  };
+
+  for (let index = 0; index < html.length;) {
+    if (html[index] !== "<") {
+      if (ignoredTags.length === 0) text += html[index];
+      index += 1;
+      continue;
+    }
+
+    if (html.startsWith("<!--", index)) {
+      const commentEnd = html.indexOf("-->", index + 4);
+      index = commentEnd < 0 ? html.length : commentEnd + 3;
+      continue;
+    }
+
+    const tagEnd = findHtmlTagEnd(html, index);
+    if (tagEnd < 0) {
+      if (ignoredTags.length === 0) text += html.slice(index);
+      break;
+    }
+
+    const tag = parseHtmlTag(html.slice(index + 1, tagEnd));
+    const activeIgnoredTag = ignoredTags.at(-1);
+    if (activeIgnoredTag) {
+      if (tag.closing && tag.name === activeIgnoredTag) {
+        ignoredTags.pop();
+      } else if (
+        activeIgnoredTag === "blockquote" &&
+        !tag.closing &&
+        !tag.selfClosing &&
+        tag.name === activeIgnoredTag
+      ) {
+        ignoredTags.push(tag.name);
+      }
+    } else if (!tag.closing && !tag.selfClosing && hiddenTags.has(tag.name)) {
+      ignoredTags.push(tag.name);
+    } else {
+      if (tag.name === "br" || (tag.closing && lineBreakTags.has(tag.name))) {
+        appendLineBreak();
+      }
+    }
+
+    index = tagEnd + 1;
+  }
+
+  return decodeBasicHtmlEntities(text);
 }
 
 export function extractLatestEmailReply({

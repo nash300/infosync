@@ -10,6 +10,7 @@ import {
 } from "@/lib/server/email";
 import { rateLimitHeaders } from "@/lib/server/rate-limit";
 import { checkPersistentRateLimit } from "@/lib/server/persistent-rate-limit";
+import { isValidEmailAddress } from "@/lib/validation/email";
 
 export const dynamic = "force-dynamic";
 
@@ -17,9 +18,6 @@ const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!,
 );
-
-const isValidEmail = (value: string) =>
-  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 
 function caseNumber() {
   const date = new Date().toISOString().slice(0, 10).replace(/-/g, "");
@@ -79,7 +77,7 @@ export async function POST(request: Request) {
     );
   }
 
-  if (!isValidEmail(email) || email.length > 254) {
+  if (!isValidEmailAddress(email)) {
     return NextResponse.json(
       { error: "Ange en giltig e-postadress." },
       { status: 400, headers: rateLimitHeaders(rateLimit) },

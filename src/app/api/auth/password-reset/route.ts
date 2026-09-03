@@ -10,6 +10,7 @@ import { createAdminNotification } from "@/lib/server/admin-notifications";
 import { getRequestIp, recordAuditEvent } from "@/lib/server/audit";
 import { rateLimitHeaders } from "@/lib/server/rate-limit";
 import { checkPersistentRateLimit } from "@/lib/server/persistent-rate-limit";
+import { isValidEmailAddress } from "@/lib/validation/email";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -20,10 +21,6 @@ const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!,
 );
-
-function isValidEmail(value: string) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/u.test(value);
-}
 
 function appOrigin(request: Request) {
   const configuredUrl = process.env.NEXT_PUBLIC_APP_URL?.trim();
@@ -135,7 +132,7 @@ export async function POST(request: Request) {
     );
   }
 
-  if (!isValidEmail(email)) {
+  if (!isValidEmailAddress(email)) {
     return NextResponse.json(
       { success: true, message: PASSWORD_RESET_GENERIC_MESSAGE },
       { headers: rateLimitHeaders(emailLimit) },

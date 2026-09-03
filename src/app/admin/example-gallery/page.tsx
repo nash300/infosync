@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
+import { validateLandingExampleVideo } from "@/lib/landing/example-videos";
 
 type ExampleVideo = {
   id: string;
@@ -40,7 +41,22 @@ function titleFromFileName(fileName: string) {
 }
 
 async function createPosterFile(file: File) {
+  const validationError = validateLandingExampleVideo({
+    fileName: file.name,
+    contentType: file.type,
+    fileSize: file.size,
+  });
+  if (validationError) throw new Error(validationError);
+
   const objectUrl = URL.createObjectURL(file);
+  const parsedObjectUrl = new URL(objectUrl);
+  if (
+    parsedObjectUrl.protocol !== "blob:" ||
+    parsedObjectUrl.origin !== window.location.origin
+  ) {
+    URL.revokeObjectURL(objectUrl);
+    throw new Error("Could not create a safe local video preview.");
+  }
   const video = document.createElement("video");
   video.muted = true;
   video.playsInline = true;
@@ -63,7 +79,7 @@ async function createPosterFile(file: File) {
         window.clearTimeout(timeout);
         reject(new Error("Could not read the MP4 to create its poster."));
       };
-      video.src = objectUrl;
+      video.src = parsedObjectUrl.href;
       video.load();
     });
 

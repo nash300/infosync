@@ -16,6 +16,7 @@ import {
 } from "@/lib/server/customer-account";
 import { rateLimitHeaders } from "@/lib/server/rate-limit";
 import { checkPersistentRateLimit } from "@/lib/server/persistent-rate-limit";
+import { isValidEmailAddress } from "@/lib/validation/email";
 
 type AuthCookie = {
   name: string;
@@ -24,10 +25,6 @@ type AuthCookie = {
 };
 
 type LoginMode = "customer" | "admin";
-
-function isValidEmail(value: string) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/u.test(value);
-}
 
 function normalizeMode(value: unknown): LoginMode {
   return value === "admin" ? "admin" : "customer";
@@ -87,7 +84,7 @@ export async function POST(request: Request) {
     );
   }
 
-  if (!isValidEmail(email) || !password) {
+  if (!isValidEmailAddress(email) || !password) {
     return NextResponse.json(
       { error: LOGIN_ATTEMPT_GENERIC_ERROR },
       { status: 401, headers: rateLimitHeaders(emailLimit) },

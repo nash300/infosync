@@ -6,6 +6,7 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase/client";
 import { showAdminNotification } from "@/lib/admin/notifications";
 import { matchesCustomerFilter } from "@/lib/admin/customer-filters";
+import { isValidEmailAddress } from "@/lib/validation/email";
 
 type Customer = {
   id: string;
@@ -250,7 +251,7 @@ function CustomersContent() {
     loadCustomers();
   }, []);
 
-  const isValidEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+  const isValidEmail = isValidEmailAddress;
 
   const createCustomer = async () => {
     if (!name.trim()) {

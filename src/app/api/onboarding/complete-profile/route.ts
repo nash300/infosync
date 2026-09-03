@@ -15,6 +15,7 @@ import {
   isValidSwedishRegistrationNumber,
   normalizeSwedishRegistrationNumber,
 } from "@/lib/business/sweden";
+import { isValidEmailAddress } from "@/lib/validation/email";
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -24,10 +25,6 @@ const supabaseAdmin = createClient(
 function isMissingOrExpiredToken(expiresAt: string | null | undefined) {
   if (!expiresAt) return true;
   return new Date(expiresAt) < new Date();
-}
-
-function isValidEmail(value: string) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/u.test(value);
 }
 
 export async function POST(request: Request) {
@@ -86,7 +83,7 @@ export async function POST(request: Request) {
     );
   }
 
-  if (billingEmail && !isValidEmail(billingEmail)) {
+  if (billingEmail && !isValidEmailAddress(billingEmail)) {
     return NextResponse.json(
       { error: "Ange en giltig faktura-e-postadress." },
       { status: 400 },
