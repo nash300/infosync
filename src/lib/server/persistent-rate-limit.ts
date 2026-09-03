@@ -9,7 +9,7 @@ type RateLimitOptions = {
 
 type RateLimitRpcResult = {
   data: unknown;
-  error: { message?: string } | null;
+  error: { code?: string; message?: string } | null;
 };
 
 type RateLimitRpcClient = {
@@ -42,6 +42,13 @@ export function hashRateLimitKey(key: string) {
   return createHash("sha256").update(key, "utf8").digest("hex");
 }
 
+function inMemoryDecision(options: RateLimitOptions) {
+  return {
+    ...checkRateLimit(options),
+    persistent: false,
+  };
+}
+
 export async function checkPersistentRateLimit(
   client: RateLimitRpcClient,
   options: RateLimitOptions,
@@ -57,6 +64,13 @@ export async function checkPersistentRateLimit(
     });
     const row = firstRow(data);
     const resetAt = row?.reset_at ? new Date(String(row.reset_at)).getTime() : NaN;
+
+    if (error?.code === "PGRST202") {
+      console.warn(
+        "Persistent rate-limit migration is pending; using the in-memory compatibility limiter.",
+      );
+      return inMemoryDecision(options);
+    }
 
     if (error || !row || typeof row.allowed !== "boolean") {
       throw new Error(error?.message || "Rate-limit service returned an invalid response.");
@@ -80,9 +94,6 @@ export async function checkPersistentRateLimit(
       };
     }
 
-    return {
-      ...checkRateLimit(options),
-      persistent: false,
-    };
+    return inMemoryDecision(options);
   }
 }

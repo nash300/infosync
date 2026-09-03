@@ -1,10 +1,14 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   checkPersistentRateLimit,
   hashRateLimitKey,
 } from "./persistent-rate-limit";
 
 describe("persistent rate limits", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
   it("hashes bucket identifiers before storage", () => {
     const digest = hashRateLimitKey("login-email:user@example.com");
     expect(digest).toMatch(/^[a-f0-9]{64}$/u);
@@ -38,5 +42,35 @@ describe("persistent rate limits", () => {
       }),
     );
     expect(JSON.stringify(rpc.mock.calls)).not.toContain("user@example.com");
+  });
+
+  it("uses the compatibility limiter only when the migration RPC is missing", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    const rpc = vi.fn().mockResolvedValue({
+      data: null,
+      error: { code: "PGRST202", message: "Function not found" },
+    });
+
+    const result = await checkPersistentRateLimit(
+      { rpc },
+      { key: "migration-pending:198.51.100.1", limit: 3, windowMs: 60_000 },
+    );
+
+    expect(result).toMatchObject({ allowed: true, persistent: false });
+  });
+
+  it("still fails closed for other production database failures", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    const rpc = vi.fn().mockResolvedValue({
+      data: null,
+      error: { code: "PGRST301", message: "Database unavailable" },
+    });
+
+    const result = await checkPersistentRateLimit(
+      { rpc },
+      { key: "database-failure:198.51.100.2", limit: 3, windowMs: 60_000 },
+    );
+
+    expect(result).toMatchObject({ allowed: false, persistent: false });
   });
 });

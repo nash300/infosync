@@ -15,7 +15,7 @@ build until the staged rollout is completed.
 | Customer accounts | A confirmed Supabase user with an email matching an unpaid lead could reach the portal through the email fallback. | The shared account data layer now requires a paid, trialing, or otherwise eligible customer state. |
 | Redirects | A path such as `/\\security-test.invalid` could become an external redirect. | Redirect destinations are parsed and restricted to safe local paths. |
 | Query construction | Admin asset search inserted input into a raw PostgREST `or` expression. | Replaced it with encoded field queries and escaped wildcard literals. |
-| Rate limiting | Process-memory limits did not reliably span Vercel instances. | Added an atomic Supabase-backed limiter with hashed bucket identifiers and a production fail-closed policy. |
+| Rate limiting | Process-memory limits did not reliably span Vercel instances. | Added an atomic Supabase-backed limiter with hashed bucket identifiers. A missing migration RPC uses the previous in-memory limiter during rollout; all other production database failures fail closed. |
 | Cron authentication | Missing `CRON_SECRET` was accepted outside production. | All cron routes now fail closed and compare the secret safely. |
 | Display access | New display codes used only eight hexadecimal characters. | New codes use the full UUID payload; lookup input is validated and rate limited. Existing codes are preserved to avoid disconnecting installed screens. |
 | Browser protection | The site had no Content Security Policy and weaker framing/isolation headers. | Added CSP, clickjacking protection, referrer policy, MIME sniffing protection, and same-origin isolation headers. |
@@ -44,19 +44,21 @@ build until the staged rollout is completed.
 
 ## Required production rollout order
 
-1. Apply `202609030000_security_hardening.sql`. This creates the shared rate
+1. Deploy this application build and smoke-test login, password reset, contact,
+   onboarding, display playback, Stripe checkout, and both provider webhooks.
+   Until the first migration is applied, only the missing-RPC case uses the
+   previous in-memory compatibility limiter.
+2. Apply `202609030000_security_hardening.sql`. This activates the shared rate
    limiter and strengthens the default for future display codes without
    removing an existing public path.
-2. Deploy this application build and smoke-test login, password reset, contact,
-   onboarding, display playback, Stripe checkout, and both provider webhooks.
 3. Apply `202609030100_private_data_api_lockdown.sql` immediately after the new
    build is healthy. This removes the old anonymous table access.
 4. Confirm anonymous Data API queries to `customers`, `devices`, and
    `playlists` are denied, then repeat the application smoke tests.
 
 Applying both migrations before the code deployment would interrupt the old
-onboarding/display client. Deploying the code before the first migration would
-make production rate-limited routes fail closed. Keep the sequence above.
+onboarding/display client. Keep the sequence above and apply both migrations as
+soon as Supabase management access is available.
 
 ## External settings and remaining work
 
