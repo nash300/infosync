@@ -2189,8 +2189,8 @@
 .landing-request-form textarea {
   width: 100%;
   border: 1px solid var(--landing-line);
-  border-radius: 14px;
-  background: var(--landing-bg);
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.94);
   color: var(--landing-ink);
   font: inherit;
   padding: 12px 13px;
@@ -4977,12 +4977,6 @@
 .landing-contact p {
   max-width: 60ch;
   color: rgba(255, 255, 255, 0.78);
-}
-
-.landing-request-form input,
-.landing-request-form textarea {
-  border-radius: 7px;
-  background: rgba(255, 255, 255, 0.94);
 }
 
 .landing-request-checkbox {
