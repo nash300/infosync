@@ -81,6 +81,10 @@ have been verified against the production endpoints.
   `screenia.se`. The separate inbound-processing key is retained because it
   needs different permissions. Two obsolete sending keys were removed after a
   successful deployment and delivery check.
+- Resend receiving is disabled on the main `screenia.se` domain so it cannot
+  replace Zoho's mailbox routing. Customer conversation replies use the
+  account's isolated Resend receiving domain. A real reply was received,
+  verified by the webhook, and displayed in the Admin conversation.
 - DMARC moved from monitoring-only to a staged 25% quarantine policy, with
   aggregate reports sent to `service@screenia.se`. Review delivery and reports
   before increasing enforcement to 100%.
