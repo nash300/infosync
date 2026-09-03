@@ -8,6 +8,19 @@ export const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!,
 );
 
+const customerPortalStatuses = new Set(["paid", "content_received", "active"]);
+const customerPortalPaymentStatuses = new Set(["paid", "trialing", "active"]);
+
+export function hasCustomerPortalAccess(customer: {
+  status?: string | null;
+  payment_status?: string | null;
+}) {
+  return (
+    customerPortalStatuses.has(customer.status || "") ||
+    customerPortalPaymentStatuses.has(customer.payment_status || "")
+  );
+}
+
 export async function getAuthenticatedUser() {
   const cookieStore = await cookies();
 
@@ -75,7 +88,7 @@ export async function getCustomerForUser(
     }
 
     if (data && data.email?.toLowerCase() === user.email.toLowerCase()) {
-      return data;
+      return hasCustomerPortalAccess(data) ? data : null;
     }
   }
 
@@ -86,7 +99,7 @@ export async function getCustomerForUser(
       console.error("Customer account auth lookup error:", error);
     }
 
-    if (data) return data;
+    if (data) return hasCustomerPortalAccess(data) ? data : null;
   }
 
   const { data, error } = await loadCustomer("email", user.email);
@@ -96,7 +109,7 @@ export async function getCustomerForUser(
     return null;
   }
 
-  return data;
+  return data && hasCustomerPortalAccess(data) ? data : null;
 }
 
 export async function markCustomerAccountActivated(

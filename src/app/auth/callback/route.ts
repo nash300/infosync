@@ -2,18 +2,11 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { recordAuditEvent, getRequestIp } from "@/lib/server/audit";
-import { supabaseAdmin } from "@/lib/server/customer-account";
-
-const customerPortalStatuses = new Set(["paid", "content_received", "active"]);
-const customerPaymentStatuses = new Set(["paid", "trialing", "active"]);
-
-function getSafeNextPath(value: string | null) {
-  if (!value || !value.startsWith("/") || value.startsWith("//")) {
-    return "/account";
-  }
-
-  return value;
-}
+import {
+  hasCustomerPortalAccess,
+  supabaseAdmin,
+} from "@/lib/server/customer-account";
+import { getSafeNextPath } from "@/lib/auth/safe-next-path";
 
 function withLoginMessage(origin: string, message: string) {
   const url = new URL("/login", origin);
@@ -81,8 +74,7 @@ export async function GET(request: Request) {
       const isEligibleCustomer =
         customer &&
         (customer.auth_user_id === user.id || !customer.auth_user_id) &&
-        (customerPortalStatuses.has(customer.status) ||
-          customerPaymentStatuses.has(customer.payment_status));
+        hasCustomerPortalAccess(customer);
 
       if (customerError || !isEligibleCustomer) {
         await supabase.auth.signOut();

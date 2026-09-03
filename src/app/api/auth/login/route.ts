@@ -14,7 +14,8 @@ import {
   markCustomerAccountActivated,
   supabaseAdmin,
 } from "@/lib/server/customer-account";
-import { checkRateLimit, rateLimitHeaders } from "@/lib/server/rate-limit";
+import { rateLimitHeaders } from "@/lib/server/rate-limit";
+import { checkPersistentRateLimit } from "@/lib/server/persistent-rate-limit";
 
 type AuthCookie = {
   name: string;
@@ -46,16 +47,18 @@ export async function POST(request: Request) {
   const emailKey = email || "missing";
   const rateKeyPrefix = mode === "admin" ? "admin-login" : "customer-login";
 
-  const ipLimit = checkRateLimit({
-    key: `${rateKeyPrefix}-ip:${ipAddress || "unknown"}`,
-    limit: LOGIN_ATTEMPT_IP_LIMIT,
-    windowMs: LOGIN_ATTEMPT_WINDOW_MS,
-  });
-  const emailLimit = checkRateLimit({
-    key: `${rateKeyPrefix}-email:${emailKey}`,
-    limit: LOGIN_ATTEMPT_EMAIL_LIMIT,
-    windowMs: LOGIN_ATTEMPT_WINDOW_MS,
-  });
+  const [ipLimit, emailLimit] = await Promise.all([
+    checkPersistentRateLimit(supabaseAdmin, {
+      key: `${rateKeyPrefix}-ip:${ipAddress || "unknown"}`,
+      limit: LOGIN_ATTEMPT_IP_LIMIT,
+      windowMs: LOGIN_ATTEMPT_WINDOW_MS,
+    }),
+    checkPersistentRateLimit(supabaseAdmin, {
+      key: `${rateKeyPrefix}-email:${emailKey}`,
+      limit: LOGIN_ATTEMPT_EMAIL_LIMIT,
+      windowMs: LOGIN_ATTEMPT_WINDOW_MS,
+    }),
+  ]);
 
   if (!ipLimit.allowed || !emailLimit.allowed) {
     await recordAuditEvent(supabaseAdmin, {

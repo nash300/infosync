@@ -7,6 +7,7 @@ import {
   renderBrandedEmail,
   sendTransactionalEmail,
 } from "@/lib/server/email";
+import { authorizeCronRequest } from "@/lib/server/cron-auth";
 
 export const dynamic = "force-dynamic";
 
@@ -48,21 +49,8 @@ function formatSek(value: number | null | undefined) {
   return `${(value ?? 0).toLocaleString("sv-SE")} kr`;
 }
 
-function authorizeCron(request: Request) {
-  const cronSecret = process.env.CRON_SECRET?.trim();
-
-  if (!cronSecret) {
-    if (process.env.NODE_ENV === "production") {
-      return false;
-    }
-    return true;
-  }
-
-  return request.headers.get("authorization") === `Bearer ${cronSecret}`;
-}
-
 export async function GET(request: Request) {
-  if (!authorizeCron(request)) {
+  if (!authorizeCronRequest(request)) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
 

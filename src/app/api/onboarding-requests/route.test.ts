@@ -67,13 +67,17 @@ vi.mock("@/lib/server/admin-notifications", () => ({
 }));
 
 vi.mock("@/lib/server/rate-limit", () => ({
-  checkRateLimit: () => ({
+  rateLimitHeaders: () => ({}),
+}));
+
+vi.mock("@/lib/server/persistent-rate-limit", () => ({
+  checkPersistentRateLimit: async () => ({
     allowed: true,
     limit: 5,
     remaining: 4,
     resetAt: Date.now() + 60_000,
+    persistent: true,
   }),
-  rateLimitHeaders: () => ({}),
 }));
 
 vi.mock("@/lib/server/email", () => ({

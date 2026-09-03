@@ -545,6 +545,12 @@ export async function POST(request: Request) {
         service_access_status: entitlement?.serviceAccessStatus || "active",
         service_access_until: entitlement?.serviceAccessUntil || null,
         inactive_reason: null,
+        ...(isExistingCustomerAddOn
+          ? {}
+          : {
+              onboarding_token: null,
+              onboarding_token_expires_at: null,
+            }),
       };
 
       const { error } = await supabaseAdmin

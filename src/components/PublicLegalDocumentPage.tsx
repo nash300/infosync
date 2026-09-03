@@ -1,4 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
+import "server-only";
+
 import Link from "next/link";
 import LegalDocumentActions from "@/components/LegalDocumentActions";
 import {

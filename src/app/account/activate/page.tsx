@@ -10,6 +10,7 @@ import {
 } from "@/lib/supabase/sync-browser-session";
 import ScreeniaLogo from "@/components/ScreeniaLogo";
 import {
+  PASSWORD_POLICY_MAX_LENGTH,
   passwordPolicyDescription,
   validatePasswordPolicy,
 } from "@/lib/auth/password-policy";
@@ -149,7 +150,8 @@ function PasswordFields({
         </span>
         <input
           type="password"
-          placeholder="Minst 6 tecken, bokstäver och siffror"
+          maxLength={PASSWORD_POLICY_MAX_LENGTH}
+          placeholder="Minst 12 tecken, bokstäver och siffror"
           value={password}
           onChange={(event) => onPassword(event.target.value)}
           onKeyDown={(event) => {
@@ -164,6 +166,7 @@ function PasswordFields({
         </span>
         <input
           type="password"
+          maxLength={PASSWORD_POLICY_MAX_LENGTH}
           placeholder="Skriv lösenordet igen"
           value={confirmPassword}
           onChange={(event) => onConfirmPassword(event.target.value)}

@@ -13,6 +13,7 @@ vi.mock("@/lib/server/audit", () => ({ recordAuditEvent: mocks.recordAuditEvent 
 import {
   customerAccessDeniedResponse,
   getCustomerForUser,
+  hasCustomerPortalAccess,
   hasCustomerServiceAccess,
   markCustomerAccountActivated,
   sanitizeFileName,
@@ -47,6 +48,13 @@ function lookupClient(
 }
 
 describe("customer account access controls", () => {
+  it("allows only paid or active identities into the customer portal", () => {
+    expect(hasCustomerPortalAccess({ status: "paid", payment_status: "paid" })).toBe(true);
+    expect(
+      hasCustomerPortalAccess({ status: "new_request", payment_status: "pending" }),
+    ).toBe(false);
+  });
+
   it.each(["paid", "content_pending", "content_received", "active"])(
     "allows paid customers in the %s lifecycle state",
     (status) => {
@@ -110,7 +118,12 @@ describe("customer account access controls", () => {
 
   it("uses a matching metadata customer id first", async () => {
     const calls: Array<[string, string]> = [];
-    const customer = { id: "customer-1", email: "customer@example.test" };
+    const customer = {
+      id: "customer-1",
+      email: "customer@example.test",
+      status: "paid",
+      payment_status: "paid",
+    };
     const client = lookupClient((field, value) => {
       calls.push([field, value]);
       return { data: customer, error: null };
@@ -127,7 +140,12 @@ describe("customer account access controls", () => {
 
   it("falls back from mismatched metadata to auth user and then email", async () => {
     const calls: Array<[string, string]> = [];
-    const emailCustomer = { id: "customer-email", email: "customer@example.test" };
+    const emailCustomer = {
+      id: "customer-email",
+      email: "customer@example.test",
+      status: "active",
+      payment_status: "paid",
+    };
     const client = lookupClient((field, value) => {
       calls.push([field, value]);
       if (field === "id") {
@@ -152,7 +170,12 @@ describe("customer account access controls", () => {
 
   it("supports a database that has not received newer optional columns", async () => {
     const selectedColumns: string[] = [];
-    const customer = { id: "customer-legacy", email: "customer@example.test" };
+    const customer = {
+      id: "customer-legacy",
+      email: "customer@example.test",
+      status: "paid",
+      payment_status: "paid",
+    };
     const client = lookupClient((_field, _value, select) => {
       selectedColumns.push(select);
       return select.includes("service_access_status")
@@ -166,10 +189,27 @@ describe("customer account access controls", () => {
     );
   });
 
+  it("rejects an authenticated signup that only matches an unpaid lead", async () => {
+    const lead = {
+      id: "lead-1",
+      email: "customer@example.test",
+      status: "new_request",
+      payment_status: "pending",
+    };
+    const client = lookupClient((field) => ({
+      data: field === "email" ? lead : null,
+      error: null,
+    }));
+
+    await expect(getCustomerForUser(user(), client)).resolves.toBeNull();
+  });
+
   it("links and audits a newly activated customer account", async () => {
     const customer = {
       id: "customer-1",
       email: "customer@example.test",
+      status: "paid",
+      payment_status: "paid",
       activated_at: null,
       auth_user_id: null,
     };

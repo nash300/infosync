@@ -5,6 +5,7 @@ import {
 import { NextResponse } from "next/server";
 import { getRequestIp, recordAuditEvent } from "@/lib/server/audit";
 import { createAdminNotification } from "@/lib/server/admin-notifications";
+import { literalContainsPattern } from "@/lib/server/postgrest-search";
 
 
 const ASSET_STATUSES = new Set(["new", "reviewed", "archived"]);
@@ -67,7 +68,8 @@ export async function GET(request: Request) {
   const customerId = searchParams.get("customerId");
   const category = searchParams.get("category");
   const status = searchParams.get("status");
-  const query = searchParams.get("q")?.trim();
+  const query = searchParams.get("q")?.trim().slice(0, 200);
+  const searchPattern = query ? literalContainsPattern(query) : null;
 
   const baseSelect = `
     id,
@@ -103,7 +105,10 @@ export async function GET(request: Request) {
     customers(name, email)
   `;
 
-  const buildQuery = (selectStatement: string) => {
+  const buildQuery = (
+    selectStatement: string,
+    searchColumn?: "file_name" | "description",
+  ) => {
     let assetQuery = supabaseAdmin
       .from("customer_display_assets")
       .select(selectStatement)
@@ -117,19 +122,38 @@ export async function GET(request: Request) {
     if (status && status !== "all") {
       assetQuery = assetQuery.eq("status", status);
     }
-    if (query) {
-      assetQuery = assetQuery.or(
-        `file_name.ilike.%${query}%,description.ilike.%${query}%`,
-      );
+    if (searchColumn && searchPattern) {
+      assetQuery = assetQuery.ilike(searchColumn, searchPattern);
     }
 
     return assetQuery;
   };
 
-  let { data: assets, error } = await buildQuery(baseSelect);
+  const loadAssets = async (selectStatement: string) => {
+    if (!searchPattern) return buildQuery(selectStatement);
+
+    const results = await Promise.all([
+      buildQuery(selectStatement, "file_name"),
+      buildQuery(selectStatement, "description"),
+    ]);
+    const error = results.find((result) => result.error)?.error || null;
+    const rowsById = new Map<string, Record<string, unknown>>();
+
+    if (!error) {
+      results.forEach((result) => {
+        ((result.data || []) as unknown as Record<string, unknown>[]).forEach((row) => {
+          if (typeof row.id === "string") rowsById.set(row.id, row);
+        });
+      });
+    }
+
+    return { data: Array.from(rowsById.values()), error };
+  };
+
+  let { data: assets, error } = await loadAssets(baseSelect);
 
   if (error?.code === "42703" || error?.code === "PGRST204") {
-    const fallback = await buildQuery(fallbackSelect);
+    const fallback = await loadAssets(fallbackSelect);
     assets = fallback.data;
     error = fallback.error;
   }

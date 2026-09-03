@@ -7,11 +7,13 @@ import {
 
 describe("customer password policy", () => {
   it.each([
-    ["Abc123", true],
-    ["Åäö123", true],
+    ["A-secure-passphrase-123", true],
+    ["SäkertLösen123", true],
+    ["Abc123", false],
     ["abcdef", false],
     ["123456", false],
     ["Ab12", false],
+    [`A1${"x".repeat(127)}`, false],
   ])("validates %s", (password, expected) => {
     expect(validatePasswordPolicy(password)).toBe(expected);
   });

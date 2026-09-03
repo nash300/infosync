@@ -8,7 +8,8 @@ import {
 } from "@/lib/auth/password-reset-policy";
 import { createAdminNotification } from "@/lib/server/admin-notifications";
 import { getRequestIp, recordAuditEvent } from "@/lib/server/audit";
-import { checkRateLimit, rateLimitHeaders } from "@/lib/server/rate-limit";
+import { rateLimitHeaders } from "@/lib/server/rate-limit";
+import { checkPersistentRateLimit } from "@/lib/server/persistent-rate-limit";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -74,16 +75,18 @@ export async function POST(request: Request) {
   const mode = body.mode === "admin" ? "admin" : "customer";
   const emailKey = email || "missing";
 
-  const ipLimit = checkRateLimit({
-    key: `password-reset-ip:${ipAddress || "unknown"}`,
-    limit: PASSWORD_RESET_IP_LIMIT,
-    windowMs: PASSWORD_RESET_WINDOW_MS,
-  });
-  const emailLimit = checkRateLimit({
-    key: `password-reset-email:${emailKey}`,
-    limit: PASSWORD_RESET_EMAIL_LIMIT,
-    windowMs: PASSWORD_RESET_WINDOW_MS,
-  });
+  const [ipLimit, emailLimit] = await Promise.all([
+    checkPersistentRateLimit(supabaseAdmin, {
+      key: `password-reset-ip:${ipAddress || "unknown"}`,
+      limit: PASSWORD_RESET_IP_LIMIT,
+      windowMs: PASSWORD_RESET_WINDOW_MS,
+    }),
+    checkPersistentRateLimit(supabaseAdmin, {
+      key: `password-reset-email:${emailKey}`,
+      limit: PASSWORD_RESET_EMAIL_LIMIT,
+      windowMs: PASSWORD_RESET_WINDOW_MS,
+    }),
+  ]);
 
   if (!ipLimit.allowed || !emailLimit.allowed) {
     try {

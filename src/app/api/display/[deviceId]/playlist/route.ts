@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { hasDisplayEntitlement } from "@/lib/server/subscription-entitlements";
+import { getRequestIp } from "@/lib/server/audit";
+import { checkPersistentRateLimit } from "@/lib/server/persistent-rate-limit";
+import { rateLimitHeaders } from "@/lib/server/rate-limit";
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -38,6 +41,8 @@ type PlaylistRow = {
 };
 
 const SIGNED_URL_SECONDS = 10 * 60;
+const DISPLAY_LOOKUP_LIMIT = 60;
+const DISPLAY_LOOKUP_WINDOW_MS = 60 * 1000;
 
 export const dynamic = "force-dynamic";
 
@@ -52,10 +57,30 @@ function noStoreJson(body: unknown, init?: ResponseInit) {
 }
 
 export async function GET(
-  _request: Request,
+  request: Request,
   context: { params: Promise<{ deviceId: string }> },
 ) {
   const { deviceId } = await context.params;
+  const normalizedDeviceId = deviceId.trim().toUpperCase();
+  const rateLimit = await checkPersistentRateLimit(supabaseAdmin, {
+    key: `display-playlist:${getRequestIp(request) || "unknown"}`,
+    limit: DISPLAY_LOOKUP_LIMIT,
+    windowMs: DISPLAY_LOOKUP_WINDOW_MS,
+  });
+
+  if (!rateLimit.allowed) {
+    return noStoreJson(
+      { error: "Too many display requests." },
+      { status: 429, headers: rateLimitHeaders(rateLimit) },
+    );
+  }
+
+  if (!/^[A-Z0-9]{6,64}$/u.test(normalizedDeviceId)) {
+    return noStoreJson(
+      { error: "Display is not active." },
+      { status: 403, headers: rateLimitHeaders(rateLimit) },
+    );
+  }
 
   const { data: device, error: deviceError } = await supabaseAdmin
     .from("devices")
@@ -66,7 +91,7 @@ export async function GET(
       customers(status, payment_status, service_access_status, service_access_until)
     `,
     )
-    .eq("device_code", deviceId)
+    .eq("device_code", normalizedDeviceId)
     .maybeSingle<DisplayDevice>();
 
   if (deviceError) {

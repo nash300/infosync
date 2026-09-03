@@ -2,7 +2,6 @@
 
 import { use, useEffect, useState, type ReactNode } from "react";
 import Image from "next/image";
-import { supabase } from "@/lib/supabase/client";
 import { isValidSwedishRegistrationNumber } from "@/lib/business/sweden";
 import {
   getInitialOnboardingStep,
@@ -59,27 +58,21 @@ export default function OnboardingPage({
 
   useEffect(() => {
     const loadCustomer = async () => {
-      const { data, error } = await supabase
-        .from("customers")
-        .select(
-          "id, name, email, status, payment_status, onboarding_token_expires_at",
-        )
-        .eq("onboarding_token", token)
-        .single();
+      const orderStatusResponse = await fetch("/api/onboarding/order-status", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token }),
+        cache: "no-store",
+      });
+      const orderStatus = await orderStatusResponse.json().catch(() => null);
 
-      if (error || !data) {
+      if (!orderStatusResponse.ok || !orderStatus?.customer) {
         setCustomer(null);
         setLoading(false);
         return;
       }
 
-      const loadedCustomer = data as Customer;
-      const orderStatusResponse = await fetch(
-        `/api/onboarding/order-status?token=${encodeURIComponent(token)}`,
-      );
-      const orderStatus = orderStatusResponse.ok
-        ? await orderStatusResponse.json()
-        : { hasPayableOrder: false };
+      const loadedCustomer = orderStatus.customer as Customer;
 
       setCustomer(loadedCustomer);
       setHasPayableOrder(Boolean(orderStatus.hasPayableOrder));

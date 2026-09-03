@@ -5,7 +5,8 @@ import {
   supabaseAdmin,
 } from "@/lib/server/customer-account";
 import { getRequestIp, recordAuditEvent } from "@/lib/server/audit";
-import { checkRateLimit, rateLimitHeaders } from "@/lib/server/rate-limit";
+import { rateLimitHeaders } from "@/lib/server/rate-limit";
+import { checkPersistentRateLimit } from "@/lib/server/persistent-rate-limit";
 import { createAdminNotification } from "@/lib/server/admin-notifications";
 
 export const dynamic = "force-dynamic";
@@ -68,7 +69,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
 
-  const rateLimit = checkRateLimit({
+  const rateLimit = await checkPersistentRateLimit(supabaseAdmin, {
     key: `account-export:${customer.id}`,
     limit: DATA_EXPORT_LIMIT,
     windowMs: DATA_EXPORT_WINDOW_MS,

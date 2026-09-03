@@ -891,7 +891,7 @@ export async function POST(request: Request) {
               },
             },
           }),
-      success_url: `${appUrl}/onboarding/payment-success?customer_id=${customerId}`,
+      success_url: `${appUrl}/onboarding/payment-success`,
       cancel_url: `${appUrl}/onboarding/payment-cancelled?token=${encodeURIComponent(
         customer.onboarding_token,
       )}`,

@@ -139,6 +139,9 @@ function LandingVideoPreviewCard({
             className="landing-video-gallery-playing-video"
           />
         )}
+        <span className="landing-video-gallery-play" aria-hidden="true">
+          <span>▶</span>
+        </span>
       </div>
     </article>
   );
@@ -983,6 +986,9 @@ export default function Home() {
         </LandingSection>
 
         <LandingSection id="examples" title={t.galleryTitle} text={t.galleryText}>
+          <p className="landing-video-swipe-hint">
+            Svep åt sidan och tryck på en presentation för att spela.
+          </p>
           <div className="landing-video-rails">
             <LandingVideoRail
               items={exampleVideos.filter((example) => example.orientation === "portrait")}
@@ -1087,6 +1093,7 @@ export default function Home() {
               poster={expandedExample.poster_url || undefined}
               aria-label={expandedExample.title}
               autoPlay
+              controls
               loop
               muted
               playsInline

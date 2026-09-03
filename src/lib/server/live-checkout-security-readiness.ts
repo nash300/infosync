@@ -1,6 +1,9 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
-import { securityHeaders } from "@/lib/security-headers";
+import {
+  contentSecurityPolicy,
+  securityHeaders,
+} from "@/lib/security-headers";
 import {
   isCsrfExemptPath,
   shouldDisableRouteCaching,
@@ -75,10 +78,14 @@ export function securityHeaderReadiness(): CheckResult {
     securityHeaders.map((header) => [header.key.toLowerCase(), header.value]),
   );
   const requiredHeaders = new Map([
+    ["content-security-policy", contentSecurityPolicy],
     ["strict-transport-security", "max-age=63072000; includeSubDomains; preload"],
-    ["x-frame-options", "SAMEORIGIN"],
+    ["x-frame-options", "DENY"],
     ["x-content-type-options", "nosniff"],
-    ["referrer-policy", "origin-when-cross-origin"],
+    ["referrer-policy", "strict-origin-when-cross-origin"],
+    ["cross-origin-opener-policy", "same-origin"],
+    ["cross-origin-resource-policy", "same-origin"],
+    ["x-permitted-cross-domain-policies", "none"],
     [
       "permissions-policy",
       "camera=(), microphone=(), geolocation=(), payment=(), usb=(), browsing-topics=()",

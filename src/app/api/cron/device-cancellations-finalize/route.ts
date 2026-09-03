@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createAdminNotification } from "@/lib/server/admin-notifications";
 import { recordAuditEvent } from "@/lib/server/audit";
 import { supabaseAdmin } from "@/lib/server/customer-account";
+import { authorizeCronRequest } from "@/lib/server/cron-auth";
 
 export const dynamic = "force-dynamic";
 
@@ -20,16 +21,8 @@ function firstRelation<T>(value: T | T[] | null | undefined) {
   return Array.isArray(value) ? value[0] || null : value || null;
 }
 
-function authorizeCron(request: Request) {
-  const cronSecret = process.env.CRON_SECRET?.trim();
-
-  if (!cronSecret) return process.env.NODE_ENV !== "production";
-
-  return request.headers.get("authorization") === `Bearer ${cronSecret}`;
-}
-
 export async function GET(request: Request) {
-  if (!authorizeCron(request)) {
+  if (!authorizeCronRequest(request)) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
 

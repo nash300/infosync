@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getSafeWebUrl } from "@/lib/security/safe-web-url";
 import {
   getAuthenticatedUser,
   getCustomerForUser,
@@ -245,15 +246,41 @@ export async function GET() {
           };
         });
 
+  const customerResponse = {
+    ...customer,
+    preview_url: getSafeWebUrl(
+      "preview_url" in customer ? customer.preview_url : null,
+    ),
+  };
+  const subscriptionResponse = (subscriptions || []).map((subscription) => ({
+    ...subscription,
+    tracking_url: getSafeWebUrl(subscription.tracking_url),
+  }));
+  const previewDecisionResponse = (previewDecisions || []).map((decision) => ({
+    ...decision,
+    preview_url: getSafeWebUrl(decision.preview_url),
+  }));
+  const agreementResponse = (agreements || []).map((agreement) => ({
+    ...agreement,
+    document_url: getSafeWebUrl(agreement.document_url),
+    pdf_url: getSafeWebUrl(agreement.pdf_url),
+  }));
+  const legalDocumentResponse = latestLegalDocuments(legalDocuments || []).map(
+    (document) => ({
+      ...document,
+      pdf_url: getSafeWebUrl(document.pdf_url),
+    }),
+  );
+
   return NextResponse.json({
-    customer,
-    subscriptions: subscriptions || [],
+    customer: customerResponse,
+    subscriptions: subscriptionResponse,
     devices: devices || [],
     messages: messagesWithFiles,
     displayAssets: displayAssetsWithUrls,
-    previewDecisions: previewDecisions || [],
-    agreements: agreements || [],
-    legalDocuments: latestLegalDocuments(legalDocuments || []),
+    previewDecisions: previewDecisionResponse,
+    agreements: agreementResponse,
+    legalDocuments: legalDocumentResponse,
     subscriptionAdjustments: subscriptionAdjustments || [],
     videoUploadEnabled,
     devicePauses,

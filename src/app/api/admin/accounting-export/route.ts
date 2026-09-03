@@ -4,6 +4,7 @@ import {
 } from "@/lib/server/admin-api";
 import { NextResponse } from "next/server";
 import { getRequestIp, recordAuditEvent } from "@/lib/server/audit";
+import { safeCsvCell } from "@/lib/server/csv";
 
 export const dynamic = "force-dynamic";
 
@@ -177,12 +178,6 @@ const headers = [
   "updated_at",
 ];
 
-function csvCell(value: unknown) {
-  if (value === null || value === undefined) return "";
-  const text = String(value);
-  return /[",\r\n]/u.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
-}
-
 function oreToSek(value: number | null) {
   if (typeof value !== "number" || Number.isNaN(value)) return "";
   return (value / 100).toFixed(2);
@@ -268,7 +263,7 @@ export async function GET(request: Request) {
   const exportedAt = new Date().toISOString();
   const rows = ((data || []) as unknown) as AccountingExportRow[];
   const csvRows = [
-    headers.join(","),
+    headers.map(safeCsvCell).join(","),
     ...rows.map((row) => {
       const customer = firstRelation<CustomerRelation>(row.customers);
       const pricingPlan = firstRelation<PricingRelation>(row.pricing_plans);
@@ -330,7 +325,7 @@ export async function GET(request: Request) {
         row.tracking_number,
         row.tracking_url,
         row.updated_at,
-      ].map(csvCell).join(",");
+      ].map(safeCsvCell).join(",");
     }),
   ];
 

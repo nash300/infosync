@@ -431,12 +431,12 @@ function passwordPolicyReadiness(): CheckResult {
   const rejectsShortPassword = !validatePasswordPolicy("abc12");
   const rejectsNoNumber = !validatePasswordPolicy("abcdef");
   const rejectsNoLetter = !validatePasswordPolicy("123456");
-  const acceptsValidPassword = validatePasswordPolicy("abc123");
+  const acceptsValidPassword = validatePasswordPolicy("secure-pass-123");
   const descriptionMatches = passwordPolicyDescription.includes(
     String(PASSWORD_POLICY_MIN_LENGTH),
   );
   const ok =
-    PASSWORD_POLICY_MIN_LENGTH >= 6 &&
+    PASSWORD_POLICY_MIN_LENGTH >= 12 &&
     rejectsShortPassword &&
     rejectsNoNumber &&
     rejectsNoLetter &&
@@ -463,8 +463,8 @@ function passwordResetReadiness(): CheckResult {
     !PASSWORD_RESET_GENERIC_MESSAGE.toLowerCase().includes("hittades") &&
     !PASSWORD_RESET_GENERIC_MESSAGE.toLowerCase().includes("saknas");
   const sourceIssues = [
-    !routeSource.includes("checkRateLimit")
-      ? "password reset route does not rate limit requests"
+    !routeSource.includes("checkPersistentRateLimit")
+      ? "password reset route does not use a persistent rate limit"
       : null,
     !routeSource.includes("password-reset-ip") ||
     !routeSource.includes("password-reset-email")
@@ -518,8 +518,8 @@ function loginAttemptReadiness(): CheckResult {
     LOGIN_ATTEMPT_GENERIC_ERROR.length > 0 &&
     LOGIN_ATTEMPT_RATE_LIMIT_ERROR.length > 0;
   const sourceIssues = [
-    !routeSource.includes("checkRateLimit")
-      ? "login route does not rate limit requests"
+    !routeSource.includes("checkPersistentRateLimit")
+      ? "login route does not use a persistent rate limit"
       : null,
     !routeSource.includes("-ip:") || !routeSource.includes("-email:")
       ? "login route does not rate limit both IP and email"
@@ -571,7 +571,7 @@ async function publicRequestIntakeReady(
     "utf8",
   );
   const sourceIssues = [
-    !requestRouteSource.includes("checkRateLimit") ||
+    !requestRouteSource.includes("checkPersistentRateLimit") ||
     !requestRouteSource.includes("landing-request")
       ? "public request route does not rate limit repeated submissions"
       : null,
@@ -944,8 +944,8 @@ async function customerDataExportReady(
     !exportRouteSource.includes("actor_type !== \"stripe\"")
       ? "customer export does not filter provider/internal audit records"
       : null,
-    !exportRouteSource.includes("checkRateLimit")
-      ? "customer export is not rate limited"
+    !exportRouteSource.includes("checkPersistentRateLimit")
+      ? "customer export does not use a persistent rate limit"
       : null,
     !exportRouteSource.includes("customer_data_export_rate_limited")
       ? "customer export rate-limit events are not audited"
@@ -1107,6 +1107,9 @@ async function accountingExportReady(
       : null,
     !exportRouteSource.includes("\"Cache-Control\": \"no-store\"")
       ? "accounting export is missing no-store headers"
+      : null,
+    !exportRouteSource.includes("safeCsvCell")
+      ? "accounting export does not neutralize spreadsheet formulas"
       : null,
     !exportRouteSource.includes("stripe_invoice_id") ||
     !exportRouteSource.includes("stripe_checkout_session_id")

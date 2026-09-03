@@ -8,7 +8,8 @@ import {
   renderBrandedEmail,
   sendTransactionalEmail,
 } from "@/lib/server/email";
-import { checkRateLimit, rateLimitHeaders } from "@/lib/server/rate-limit";
+import { rateLimitHeaders } from "@/lib/server/rate-limit";
+import { checkPersistentRateLimit } from "@/lib/server/persistent-rate-limit";
 
 export const dynamic = "force-dynamic";
 
@@ -58,7 +59,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true, received: true });
   }
 
-  const rateLimit = checkRateLimit({
+  const rateLimit = await checkPersistentRateLimit(supabaseAdmin, {
     key: `contact-inquiry:${ipAddress || email || "unknown"}`,
     limit: 5,
     windowMs: 60 * 60 * 1000,

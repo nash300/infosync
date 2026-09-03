@@ -3,7 +3,8 @@ import { createClient } from "@supabase/supabase-js";
 import { PRICING_PLANS } from "@/lib/pricing/plans";
 import { getRequestIp, recordAuditEvent, recordConsent } from "@/lib/server/audit";
 import { createAdminNotification } from "@/lib/server/admin-notifications";
-import { checkRateLimit, rateLimitHeaders } from "@/lib/server/rate-limit";
+import { rateLimitHeaders } from "@/lib/server/rate-limit";
+import { checkPersistentRateLimit } from "@/lib/server/persistent-rate-limit";
 import { CURRENT_PRIVACY_DOCUMENT } from "@/lib/legal/documents";
 import {
   escapeHtml,
@@ -172,7 +173,7 @@ export async function POST(request: Request) {
     }
 
     const rateLimitKey = `landing-request:${ipAddress || email || "unknown"}`;
-    const rateLimit = checkRateLimit({
+    const rateLimit = await checkPersistentRateLimit(supabaseAdmin, {
       key: rateLimitKey,
       limit: requestRateLimitMax,
       windowMs: requestRateLimitWindowMs,

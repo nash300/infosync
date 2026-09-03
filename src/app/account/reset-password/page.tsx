@@ -10,6 +10,7 @@ import {
 } from "@/lib/supabase/sync-browser-session";
 import ScreeniaLogo from "@/components/ScreeniaLogo";
 import {
+  PASSWORD_POLICY_MAX_LENGTH,
   adminPasswordPolicyDescription,
   passwordPolicyDescription,
   validateAdminPasswordPolicy,
@@ -114,10 +115,11 @@ export default function ResetPasswordPage() {
                 </span>
                 <input
                   type="password"
+                  maxLength={PASSWORD_POLICY_MAX_LENGTH}
                   placeholder={
                     adminMode
                       ? "Minst 12 tecken, bokstäver, siffror och specialtecken"
-                      : "Minst 6 tecken, bokstäver och siffror"
+                      : "Minst 12 tecken, bokstäver och siffror"
                   }
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
@@ -130,6 +132,7 @@ export default function ResetPasswordPage() {
                 </span>
                 <input
                   type="password"
+                  maxLength={PASSWORD_POLICY_MAX_LENGTH}
                   placeholder="Skriv lösenordet igen"
                   value={confirmPassword}
                   onChange={(event) => setConfirmPassword(event.target.value)}

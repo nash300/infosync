@@ -9,6 +9,7 @@ import {
   legalDocumentTypes,
   type LegalDocumentType,
 } from "@/lib/legal/document-catalog";
+import { getSafeWebUrl } from "@/lib/security/safe-web-url";
 
 export const dynamic = "force-dynamic";
 
@@ -119,6 +120,12 @@ export async function POST(request: Request) {
   if (version.length < 2) return NextResponse.json({ error: "Document version is required." }, { status: 400 });
   if (!effectiveAt) return NextResponse.json({ error: "Choose a valid effective date." }, { status: 400 });
   if (content.length < 20) return NextResponse.json({ error: "Document text must be at least 20 characters." }, { status: 400 });
+  if (pdfUrl && !getSafeWebUrl(pdfUrl)) {
+    return NextResponse.json(
+      { error: "PDF links must use http, https, or a site-relative path." },
+      { status: 400 },
+    );
+  }
 
   const payload = {
     document_type: documentType,
