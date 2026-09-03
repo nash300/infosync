@@ -1,25 +1,7 @@
--- New display codes use the full random UUID payload. Existing codes are kept
--- so installed displays do not stop working; the API also rate-limits lookups.
-alter table public.devices
-  alter column device_code
-  set default upper(replace(gen_random_uuid()::text, '-', ''));
-
--- A shared, atomic limiter works across serverless instances and deployments.
--- Only the service role can call it; bucket identifiers are hashed in the app.
-create table if not exists public.security_rate_limits (
-  bucket_key_hash text primary key,
-  window_started_at timestamptz not null,
-  attempt_count integer not null check (attempt_count > 0),
-  expires_at timestamptz not null
-);
-
-create index if not exists security_rate_limits_expires_at_idx
-  on public.security_rate_limits(expires_at);
-
-alter table public.security_rate_limits enable row level security;
-revoke all privileges on table public.security_rate_limits from public, anon, authenticated;
-grant select, insert, update, delete on table public.security_rate_limits to service_role;
-
+-- PostgreSQL implements GREATEST as an expression, not as a schema-qualified
+-- function. Keep the security-definer function's empty search_path while using
+-- explicit CASE expressions for the three lower-bound calculations. Avoid the
+-- reserved CURRENT_TIME expression as a PL/pgSQL variable name as well.
 create or replace function public.consume_security_rate_limit(
   p_bucket_key_hash text,
   p_limit integer,

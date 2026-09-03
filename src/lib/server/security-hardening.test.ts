@@ -14,6 +14,9 @@ describe("security hardening invariants", () => {
     const lockdownMigration = source(
       "supabase/migrations/202609030100_private_data_api_lockdown.sql",
     );
+    const rateLimitCorrection = source(
+      "supabase/migrations/202609030200_fix_security_rate_limit_greatest.sql",
+    );
 
     expect(lockdownMigration).toContain(
       'drop policy if exists "Setup links can read pending customer records"',
@@ -29,6 +32,13 @@ describe("security hardening invariants", () => {
     );
     expect(rateLimitMigration).toContain("consume_security_rate_limit");
     expect(rateLimitMigration).toContain("to service_role");
+    for (const migration of [rateLimitMigration, rateLimitCorrection]) {
+      expect(migration).toContain(
+        "request_now timestamptz := pg_catalog.clock_timestamp()",
+      );
+      expect(migration).not.toMatch(/pg_catalog\.(?:greatest|least)\s*\(/iu);
+      expect(migration).not.toMatch(/\bcurrent_time\s+timestamptz\b/iu);
+    }
   });
 
   it("loads onboarding data only through the narrow server API", () => {

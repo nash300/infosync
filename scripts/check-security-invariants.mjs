@@ -55,6 +55,24 @@ for (const file of repositoryFiles()) {
   ) {
     issues.push(`${file}: server credential referenced by a client module`);
   }
+
+  if (
+    file.startsWith("supabase/migrations/") &&
+    /pg_catalog\.(?:greatest|least)\s*\(/iu.test(source)
+  ) {
+    issues.push(
+      `${file}: PostgreSQL GREATEST/LEAST expressions must not be schema-qualified`,
+    );
+  }
+
+  if (
+    file.startsWith("supabase/migrations/20260903") &&
+    /\bcurrent_time\s+timestamptz\b/iu.test(source)
+  ) {
+    issues.push(
+      `${file}: CURRENT_TIME must not be reused as a PL/pgSQL variable name`,
+    );
+  }
 }
 
 if (issues.length > 0) {

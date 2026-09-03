@@ -4,7 +4,7 @@
 
 This review found and fixed several meaningful security weaknesses. No security
 review can guarantee that a changing internet service is 100% safe. The
-application hardening and both production database migrations are now live and
+application hardening and all production database migrations are now live and
 have been verified against the production endpoints.
 
 ## Fixed in this change
@@ -15,7 +15,7 @@ have been verified against the production endpoints.
 | Customer accounts | A confirmed Supabase user with an email matching an unpaid lead could reach the portal through the email fallback. | The shared account data layer now requires a paid, trialing, or otherwise eligible customer state. |
 | Redirects | A path such as `/\\security-test.invalid` could become an external redirect. | Redirect destinations are parsed and restricted to safe local paths. |
 | Query construction | Admin asset search inserted input into a raw PostgREST `or` expression. | Replaced it with encoded field queries and escaped wildcard literals. |
-| Rate limiting | Process-memory limits did not reliably span Vercel instances. | Added an atomic Supabase-backed limiter with hashed bucket identifiers. A missing migration RPC uses the previous in-memory limiter during rollout; all other production database failures fail closed. |
+| Rate limiting | Process-memory limits did not reliably span Vercel instances. | Added an atomic Supabase-backed limiter with hashed bucket identifiers. A follow-up migration corrected PostgreSQL expression and identifier ambiguities found during live verification. A missing migration RPC uses the previous in-memory limiter during rollout; all other production database failures fail closed. |
 | Cron authentication | Missing `CRON_SECRET` was accepted outside production. | All cron routes now fail closed and compare the secret safely. |
 | Display access | New display codes used only eight hexadecimal characters. | New codes use the full UUID payload; lookup input is validated and rate limited. Existing codes are preserved to avoid disconnecting installed screens. |
 | Browser protection | The site had no Content Security Policy and weaker framing/isolation headers. | Added CSP, clickjacking protection, referrer policy, MIME sniffing protection, and same-origin isolation headers. |
@@ -47,7 +47,9 @@ have been verified against the production endpoints.
 1. The hardened application build was deployed and its public, authentication,
    cron, onboarding, display, Stripe, and Resend boundaries were smoke-tested.
 2. `202609030000_security_hardening.sql` was applied. The shared rate-limit RPC
-   is present and production requests use the persistent limiter.
+   is present. `202609030200_fix_security_rate_limit_greatest.sql` corrected two
+   PostgreSQL runtime ambiguities found by the live check. The RPC now proves
+   the intended allow, allow, block sequence and its QA row was removed.
 3. `202609030100_private_data_api_lockdown.sql` was applied after the new build
    was healthy.
 4. Anonymous Data API requests to `customers`, `devices`, and `playlists` now
@@ -74,7 +76,7 @@ have been verified against the production endpoints.
   WAF rules are not available on the current plan.
 - Production email sending now uses a dedicated Resend key restricted to
   `screenia.se`. The separate inbound-processing key is retained because it
-  needs different permissions. Obsolete sending keys are removed only after a
+  needs different permissions. Two obsolete sending keys were removed after a
   successful deployment and delivery check.
 - DMARC moved from monitoring-only to a staged 25% quarantine policy, with
   aggregate reports sent to `service@screenia.se`. Review delivery and reports
@@ -98,4 +100,7 @@ have been verified against the production endpoints.
 On 2026-09-03 production returned the hardened CSP and browser headers, rejected
 the external redirect payload, rejected anonymous access to the three sensitive
 Data API tables, and kept the supported homepage, onboarding, display, cron, and
-provider-webhook boundaries healthy.
+provider-webhook boundaries healthy. A uniquely labelled contact-form check
+sent both outbound messages and recorded both delivery events; its inquiry,
+notification, audit, and delivery-event rows were then removed and verified
+absent.
